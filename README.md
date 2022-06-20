@@ -5,17 +5,17 @@
 
 ## Features:
 
-- [ ] Preproccessor
+- [ ] Preproccessor?
   - [ ] #include
   - [ ] #ifndef
   - [ ] #if
-  - [ ] the Rest
+  - [ ] ...
 - [ ] Lexer
-  - [ ] Sensible Error 
+  - [ ] Sensible Error Generation
 - [ ] Parser
-  - [ ] Sensible Errors
+  - [ ] Sensible Error Generation
   - [ ] Error Continuation
-  - [ ] Full Parse
+  - [ ] Full Parse for subset? of C11 Standard
 - [ ] Type Checking on AST
 - [ ] Conversion to SSA
 - [ ] SSA optimisier
