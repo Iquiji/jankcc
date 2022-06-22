@@ -451,3 +451,16 @@ struct Line {
     ident_level: usize,
     word_list: Vec<String>,
 }
+
+
+enum PreproccesorDirective{
+
+}
+
+// if statements have a condition
+enum PreprocessorIfCondition{
+    Equals,
+    Not,
+    And,
+    Or,
+}
