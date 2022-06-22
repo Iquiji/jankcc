@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fs::{read_to_string, File}, io::Write, path::Path};
 
 mod lexer;
 mod preprocessor;
@@ -20,9 +20,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let read_in_file = read_to_string(in_file_path)?;
 
-    let preprocessed_file = Preprocessor::new().preprocess_code_string(read_in_file);
+    let preprocessed_file = Preprocessor::new().preprocess_code_string(read_in_file,in_file_path.to_string());
 
-    println!("-------\n{}\n-------",preprocessed_file);
+    println!("-------\n{}\n-------", preprocessed_file);
+
+    let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
+    file.write_all(preprocessed_file.as_bytes())?;
 
     Ok(())
 }

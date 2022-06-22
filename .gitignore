@@ -18,3 +18,4 @@ Cargo.lock
 /C_Testfiles/**/*.i
 /C_Testfiles/**/*.o
 /C_Testfiles/**/*.s
+/C_Testfiles/**/*.out
