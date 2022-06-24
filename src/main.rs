@@ -11,9 +11,12 @@ struct Opt {
     /// Verbose mode (-v, -vv, -vvv, etc)
     #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
     verbose: usize,
-    /// Use Internal preprocessor instead of gcc
-    #[structopt(short = "p", long = "internal-preprocessor")]
+    /// Use Internal preprocessor
+    #[structopt(short = "ipp", long = "internal-preprocessor")]
     internal_preprocessor: bool,
+    /// Use gcc preprocessor
+    #[structopt(short = "gccpp", long = "gcc-preprocessor")]
+    gcc_preprocessor: bool,
 }
 
 mod lexer;
@@ -72,6 +75,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
         let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
         file.write_all(preprocessed_file.as_bytes())?;
+    }
+    if opt.gcc_preprocessor{
+        // TODO!
     }
 
     Ok(())
