@@ -12,8 +12,12 @@ Statements:
 - defined
 - can be connected by: "!", "||", "&&"
 */
+#![allow(clippy::needless_range_loop)]
 
+use core::panic;
 use std::{collections::HashMap, path::Path, fs::read_to_string, iter::{Enumerate, Fuse}, slice::Iter};
+
+use log::{trace, debug, warn, error, info};
 
 pub struct Preprocessor {
     define_map: HashMap<String, String>,
@@ -24,7 +28,16 @@ impl Preprocessor {
             define_map: HashMap::new(),
         }
     }
+    pub fn replace_final(&self,string_to_finalize: String) -> String{
+        let mut output = string_to_finalize;
+        for defined in self.define_map.iter(){
+            output = output.replace(defined.0, defined.1);
+        }
+        output
+    }
     pub fn preprocess_code_string(&mut self, code_string: String,file_path: String) -> String {
+        info!("Preprocessing File: '{:?}'",file_path);
+        debug!("DEFINE MAP: {:#?}",self.define_map);
         // 1. Physical source file multibyte characters are mapped, in an implementation-
         // defined manner, to the source character set (introducing new-line characters for
         // end-of-line indicators) if necessary. Trigraph sequences are replaced by
@@ -53,23 +66,26 @@ impl Preprocessor {
         // through phase 4, recursively. All preprocessing directives are then deleted.
 
         // set by if and elif and endif statements
-        let mut execute_macro = true;
         let mut line_iter = split_code.iter().enumerate().fuse();
 
-
-        let output = self.execute_preprocessor(&mut line_iter, file_path);
-
-        output
+        self.execute_preprocessor(&mut line_iter, file_path)
     }
     fn execute_preprocessor(&mut self,line_iter: &mut Fuse<Enumerate<Iter<Line>>>,file_path: String) -> String{
+        trace!("iter to execute preprocessor on: {:#?}",line_iter);
         let mut output_buf: Vec<String> = vec![];
 
         while let Some(enumerated_line) = line_iter.next() {
-            let line = enumerated_line.1;
+            let mut line = enumerated_line.1.clone();
             let line_num = enumerated_line.0;
 
+            for item in line.word_list.iter_mut(){
+                for defined in self.define_map.iter(){
+                    *item = item.replace(defined.0, defined.1);
+                }
+            }
+
             if line.word_list.is_empty(){
-                output_buf.push(String::new());
+                // output_buf.push(String::new());
                 continue;
             }
             if line.word_list[0] == "#" {
@@ -83,7 +99,6 @@ impl Preprocessor {
 
                 // ifs can be nested:
                 // so we go until a endif with equal nesting is found?
-
 
                 match line.word_list[1].as_str() {
                     "include" => {
@@ -100,25 +115,25 @@ impl Preprocessor {
 
                         // emit new file is started
                         if Path::new(&file_to_include).exists(){
-                            output_buf.push(format!("# 1 {} 1 3 4",file_to_include));
+                            output_buf.push(format!(r#"# 1 "{}" 1 3 4"#,file_to_include));
                             let preprocessed_include = self.preprocess_code_string(read_to_string(file_to_include.clone()).unwrap(),file_to_include.clone());
                             output_buf.push(preprocessed_include);
-                            output_buf.push(format!("# {} {} 2 3 4",line_num,file_to_include));
+                            output_buf.push(format!(r#"# {} "{}" 2 3 4"#,line_num,file_to_include));
                         }else {
-                            eprintln!("file we want to include doesnot exist! {:?}",file_to_include);
+                            error!("file we want to include doesnot exist! {:?}",file_to_include);
                         }
 
                     },
                     "if" => {
                         let mut nesting_level = 0;
-                        let mut if_else_toggle = false; // if true we are in if_else
-                        let mut if_true: Vec<Line> = vec![];
-                        let mut if_else: Vec<Line> = vec![];
+                        let mut if_else_chain_idx = 0; // if true we are in if_else
+                        let mut if_else_chain_else_reached = false;
+                        let mut if_else_list: Vec<Vec<Line>> = vec![vec![];2];
                         for enumerated_line in line_iter.by_ref(){
                             let line = enumerated_line.1;
-                            let line_num = enumerated_line.0;
+                            let _line_num = enumerated_line.0;
                             if line.word_list.is_empty(){
-                                output_buf.push(String::new());
+                                // output_buf.push(String::new());
                                 continue;
                             }
                             if line.word_list[0] == "#" {
@@ -127,7 +142,11 @@ impl Preprocessor {
                                     nesting_level += 1;
                                 }
                                 if line.word_list[1] == "else" && nesting_level == 0{
-                                    if_else_toggle = true;
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed! {:?}",&line);
+                                    }
+                                    if_else_chain_idx += 1;
+                                    if_else_chain_else_reached = true;
                                     continue;
                                 }
                                 if line.word_list[1] == "endif"{
@@ -137,34 +156,53 @@ impl Preprocessor {
                                         nesting_level -= 1;
                                     }
                                 }
+                                if line.word_list[1] == "elif" && nesting_level == 0 {
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed!");
+                                    }
+                                    if_else_list.insert(if_else_list.len() - 1, vec![]);
+                                    if_else_chain_idx += 1;
+                                }
                             }
-                            if !if_else_toggle{
-                                if_true.push(line.clone());
-                            }else{
-                                if_else.push(line.clone());
-                            }
+                            if_else_list[if_else_chain_idx].push(line.clone());
                         }
                         let mut if_processor = IfProcessor::new(line.clone().word_list);
-                        let is_true = if_processor.process(self);
+                        let top_is_true = if_processor.process(self);
 
-                        if is_true{
-                            unimplemented!()
+                        trace!("if_else_list: {:#?}",if_else_list);
+
+                        if top_is_true{
+                            output_buf.push(self.execute_preprocessor(&mut if_else_list[0].iter().enumerate().fuse(), file_path.clone()));
                         }else{
-                            unimplemented!()
+                            // check all elif lines
+                            // last in if_else_list is the else that is unconditional
+                            let mut used_elif_flag = false;
+                            for elif_idx in 1..(if_else_list.len() - 1){
+                                let mut if_processor = IfProcessor::new(if_else_list[elif_idx][0].clone().word_list);
+                                let elif_is_true = if_processor.process(self);
+                                if elif_is_true{
+                                    used_elif_flag = true;
+                                    output_buf.push(self.execute_preprocessor(&mut if_else_list[elif_idx][1..].iter().enumerate().fuse(), file_path.clone()));
+                                    continue;
+                                }
+                            }
+                            if !used_elif_flag{
+                                output_buf.push(self.execute_preprocessor(&mut if_else_list[if_else_list.len() - 1].iter().enumerate().fuse(), file_path.clone()));
+                            }
                         }
                     },
                     "ifdef" => {
                         let define_subject = line.word_list[3].clone();
 
                         let mut nesting_level = 0;
-                        let mut if_else_toggle = false; // if true we are in if_else
-                        let mut if_true: Vec<Line> = vec![];
-                        let mut if_else: Vec<Line> = vec![];
+                        let mut if_else_chain_idx = 0; // if true we are in if_else
+                        let mut if_else_chain_else_reached = false;
+                        let mut if_else_list: Vec<Vec<Line>> = vec![vec![];2];
                         for enumerated_line in line_iter.by_ref(){
                             let line = enumerated_line.1;
-                            let line_num = enumerated_line.0;
+                            let _line_num = enumerated_line.0;
                             if line.word_list.is_empty(){
-                                output_buf.push(String::new());
+                                // output_buf.push(String::new());
                                 continue;
                             }
                             if line.word_list[0] == "#" {
@@ -173,7 +211,11 @@ impl Preprocessor {
                                     nesting_level += 1;
                                 }
                                 if line.word_list[1] == "else" && nesting_level == 0{
-                                    if_else_toggle = true;
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed! {:?}",&line);
+                                    }
+                                    if_else_chain_idx += 1;
+                                    if_else_chain_else_reached = true;
                                     continue;
                                 }
                                 if line.word_list[1] == "endif"{
@@ -183,31 +225,51 @@ impl Preprocessor {
                                         nesting_level -= 1;
                                     }
                                 }
+                                if line.word_list[1] == "elif" && nesting_level == 0 {
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed!");
+                                    }
+                                    if_else_list.insert(if_else_list.len() - 1, vec![]);
+                                    if_else_chain_idx += 1;
+                                }
                             }
-                            if !if_else_toggle{
-                                if_true.push(line.clone());
-                            }else{
-                                if_else.push(line.clone());
-                            }
+                            if_else_list[if_else_chain_idx].push(line.clone());
                         }
+
+                        trace!("if_else_list: {:#?}",if_else_list);
+
                         if self.define_map.contains_key(&define_subject){
-                            output_buf.push(self.execute_preprocessor(&mut if_true.iter().enumerate().fuse(), file_path.clone()));
+                            output_buf.push(self.execute_preprocessor(&mut if_else_list[0].iter().enumerate().fuse(), file_path.clone()));
                         }else{
-                            output_buf.push(self.execute_preprocessor(&mut if_else.iter().enumerate().fuse(), file_path.clone()));
+                            // check all elif lines
+                            // last in if_else_list is the else that is unconditional
+                            let mut used_elif_flag = false;
+                            for elif_idx in 1..(if_else_list.len() - 1){
+                                let mut if_processor = IfProcessor::new(if_else_list[elif_idx][0].clone().word_list);
+                                let elif_is_true = if_processor.process(self);
+                                if elif_is_true{
+                                    used_elif_flag = true;
+                                    output_buf.push(self.execute_preprocessor(&mut if_else_list[elif_idx][1..].iter().enumerate().fuse(), file_path.clone()));
+                                    continue;
+                                }
+                            }
+                            if !used_elif_flag{
+                                output_buf.push(self.execute_preprocessor(&mut if_else_list[if_else_list.len() - 1].iter().enumerate().fuse(), file_path.clone()));
+                            }
                         }
                     },
                     "ifndef" => {
                         let define_subject = line.word_list[3].clone();
 
                         let mut nesting_level = 0;
-                        let mut if_else_toggle = false; // if true we are in if_else
-                        let mut if_true: Vec<Line> = vec![];
-                        let mut if_else: Vec<Line> = vec![];
+                        let mut if_else_chain_idx = 0; // if true we are in if_else
+                        let mut if_else_chain_else_reached = false;
+                        let mut if_else_list: Vec<Vec<Line>> = vec![vec![];2];
                         for enumerated_line in line_iter.by_ref(){
                             let line = enumerated_line.1;
-                            let line_num = enumerated_line.0;
+                            let _line_num = enumerated_line.0;
                             if line.word_list.is_empty(){
-                                output_buf.push(String::new());
+                                // output_buf.push(String::new());
                                 continue;
                             }
                             if line.word_list[0] == "#" {
@@ -216,7 +278,11 @@ impl Preprocessor {
                                     nesting_level += 1;
                                 }
                                 if line.word_list[1] == "else" && nesting_level == 0{
-                                    if_else_toggle = true;
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed! {:?}",&line);
+                                    }
+                                    if_else_chain_idx += 1;
+                                    if_else_chain_else_reached = true;
                                     continue;
                                 }
                                 if line.word_list[1] == "endif"{
@@ -226,32 +292,52 @@ impl Preprocessor {
                                         nesting_level -= 1;
                                     }
                                 }
+                                if line.word_list[1] == "elif" && nesting_level == 0 {
+                                    if if_else_chain_else_reached{
+                                        panic!("already elsed!");
+                                    }
+                                    if_else_list.insert(if_else_list.len() - 1, vec![]);
+                                    if_else_chain_idx += 1;
+                                }
                             }
-                            if !if_else_toggle{
-                                if_true.push(line.clone());
-                            }else{
-                                if_else.push(line.clone());
-                            }
+                            if_else_list[if_else_chain_idx].push(line.clone());
                         }
-                        if self.define_map.contains_key(&define_subject){
-                            output_buf.push(self.execute_preprocessor(&mut if_else.iter().enumerate().fuse(), file_path.clone()));
+
+                        trace!("if_else_list: {:#?}",if_else_list);
+
+                        if !self.define_map.contains_key(&define_subject){
+                            output_buf.push(self.execute_preprocessor(&mut if_else_list[0].iter().enumerate().fuse(), file_path.clone()));
                         }else{
-                            output_buf.push(self.execute_preprocessor(&mut if_true.iter().enumerate().fuse(), file_path.clone()));
+                            // check all elif lines
+                            // last in if_else_list is the else that is unconditional
+                            let mut used_elif_flag = false;
+                            for elif_idx in 1..(if_else_list.len() - 1){
+                                let mut if_processor = IfProcessor::new(if_else_list[elif_idx][0].clone().word_list);
+                                let elif_is_true = if_processor.process(self);
+                                if elif_is_true{
+                                    used_elif_flag = true;
+                                    output_buf.push(self.execute_preprocessor(&mut if_else_list[elif_idx][1..].iter().enumerate().fuse(), file_path.clone()));
+                                    continue;
+                                }
+                            }
+                            if !used_elif_flag{
+                                output_buf.push(self.execute_preprocessor(&mut if_else_list[if_else_list.len() - 1].iter().enumerate().fuse(), file_path.clone()));
+                            }
                         }
                     },
-                    "else" => {unimplemented!("on line: {:?}",line)},
+                    "else" => {unimplemented!("{:?}: on line: {:?}!: {:#?}",file_path,enumerated_line,line_iter)},
                     "elif" => {unimplemented!("on line: {:?}",line)},
                     "define" => {
                         let define_subject = line.word_list[3].clone();
                         let define_val = if line.word_list.len() > 5{
-                            line.word_list[5].clone()
+                            line.word_list[5..].join("")
                         }else{
-                            String::new()
+                            "".to_string()
                         };
                         if let std::collections::hash_map::Entry::Vacant(e) = self.define_map.entry(define_subject.clone()) {
                             e.insert(define_val);
                         } else {
-                            eprintln!("'{}' is already defined! {:?}",define_subject,line);
+                            warn!("'{}' is already defined to '{}'",define_subject,self.define_map.get(&define_subject).unwrap());
                             self.define_map.insert(define_subject,define_val);
                         }
                     },
@@ -259,12 +345,16 @@ impl Preprocessor {
                         let undefine_subject = line.word_list[3].clone();
                         self.define_map.remove(&undefine_subject);
                     },
-                    "error" => {unimplemented!("on line: {:?}",line)},
+                    "warning" => {warn!("#warning {:?}",line.word_list[2..].join(" "))},
+                    "error" => {error!("#error {:?}",line.word_list[2..].join(" "))},
                     "line" => {unimplemented!("on line: {:?}",line)},
                     "pragma" => {unimplemented!("on line: {:?}",line)},
                     unknown_command => panic!("Unknown Preprocessor command!: {}", unknown_command),
                 }
             } else {
+                if line.word_list.is_empty(){
+                    continue;
+                }
                 // flush to our output
                 output_buf.push(format!(
                     "{}{}",
@@ -295,7 +385,7 @@ impl Preprocessor {
 // , # ##
 // <: :> <% %> %: %:%:
 //      each non-white-space character that cannot be one of the above
-static PUNCTUATOR_LIST: &[&str] = &["#", "(", ")", "!", "||", "&&","=="];
+static PUNCTUATOR_LIST: &[&str] = &["#", "(", ")", "!", "||", "&&","==",","];
 
 fn split_code_string_into_words(code_string: String) -> Vec<Line> {
     let mut line_buf: Vec<Line> = vec![];
@@ -316,7 +406,7 @@ fn split_code_string_into_words(code_string: String) -> Vec<Line> {
         if c == '/'{
             if chars.peek().is_some() && chars.peek().unwrap() == &'/'{
                 chars.next();
-                while let Some(c) = chars.next(){
+                for c in chars.by_ref(){
                     if c == '\n'{
                         if !current_word.is_empty() {
                             current_line.word_list.push(current_word.clone());
@@ -422,7 +512,7 @@ fn split_code_string_into_words(code_string: String) -> Vec<Line> {
     }
 
     for line in &line_buf {
-        println!("{:?}", line);
+        trace!("{:?}", line);
     }
 
     line_buf
@@ -435,17 +525,17 @@ struct Line {
 }
 
 
-enum PreproccesorDirective{
+// enum PreproccesorDirective{
 
-}
+// }
 
-// if statements have a condition
-enum PreprocessorIfCondition{
-    Equals,
-    Not,
-    And,
-    Or,
-}
+// // if statements have a condition
+// enum PreprocessorIfCondition{
+//     Equals,
+//     Not,
+//     And,
+//     Or,
+// }
 
 struct IfProcessor{
     idx: usize,
@@ -453,78 +543,126 @@ struct IfProcessor{
 }
 impl IfProcessor{
     fn new(word_list: Vec<String>) -> Self{
-        Self { idx: 0, word_list}
+        Self { idx: 0, word_list: word_list.iter().filter(|x| x.as_str() != " ").cloned().collect::<Vec<String>>()}
     }
     fn process(&mut self,preprocessor: &mut Preprocessor) -> bool{
         self.get_next(); // #
         self.get_next(); // if
         // no start
         let init = self.parse();
-        println!("NEXT: {:?}",self.get_next());
+        trace!("NEXT: {:?}",self.get_next());
         self.idx -= 1;
         self.idx -= 1;
         let parsed = match self.get_next().as_str(){
             "&&" => {
                 self.idx -= 1;
-                self.parseAnd(init)
+                self.parse_and(init)
             },
             "||" => {
                 self.idx -= 1;
-                self.parseOr(init)
+                self.parse_or(init)
             },
             x => {
-                println!("IDK: {:?}",x);
+                trace!("IDK: {:?}",x);
                 init
             },
         };
-
-        println!("PARSED IF: {:#?} \nFROM: {:?}",parsed,self.word_list);
         
-        true
+        let res = self.execute_if(preprocessor, parsed.clone());
+
+        debug!("PARSED IF: {:#?} \nFROM: {:?} \nRESULTING: {:?}",parsed,self.word_list,res);
+        
+        res
     }
     fn execute_if(&mut self,preprocessor: &mut Preprocessor,statement: IfStatements) -> bool{
-        match statement{
+        match statement.clone(){
             IfStatements::Parenthesised(inner) => {
                 self.execute_if(preprocessor, *inner)
             },
             IfStatements::Or(inner) => {
-                
+                inner.iter().map(|statement| self.execute_if(preprocessor, statement.clone())).any(|x| x)
             },
             IfStatements::And(inner) => {
-                
+                inner.iter().map(|statement| self.execute_if(preprocessor, statement.clone())).all(|x| x)
             },
-            IfStatements::EqualsCond(arg1, comp, arg2) => {
+            IfStatements::EqualsCond(arg1, op, arg2) => {
+                let dissallowed_error = ["(",")","&&","||",","];
+
+                let contender1 = if preprocessor.define_map.contains_key(&arg1){
+                    preprocessor.define_map.get(&arg1).unwrap().clone()
+                }else{
+                    arg1
+                };
+                let contender2 = if preprocessor.define_map.contains_key(&arg2){
+                    preprocessor.define_map.get(&arg2).unwrap().clone()
+                }else{
+                    arg2
+                };
+                if contender1.is_empty() || contender2.is_empty() || dissallowed_error.contains(&contender1.as_str()) || dissallowed_error.contains(&contender2.as_str()) || dissallowed_error.contains(&op.as_str()){
+                    error!("Weird If Parsing Bug!: {:?}",statement);
+                }
+
+                match op.as_str(){
+                    "==" => {
+                        contender1 == contender2
+                    },
+                    ">" => {
+                        let contender1: i32 = contender1.parse().unwrap_or_default();
+                        let contender2: i32 = contender2.parse().unwrap_or_default();
+
+                        contender1 > contender2
+                    },
+                    unsuported_op => {
+                        error!("unsuported operator: {:?} DECLARING FALSE",unsuported_op);
+                        false
+                    }
+                }
+
                 
             },
             IfStatements::DefinedCond(inner) => {
-                
+                preprocessor.define_map.contains_key(&inner)
             },
             IfStatements::Not(inner) => {
                 !self.execute_if(preprocessor, *inner)
             },
+            IfStatements::SomethingCall(first, second) => {
+                info!("{:?} CALL {:?} DECLARED FALSE",first,second);
+                false
+            },
+            IfStatements::SomethingSingle(single) => {
+                // Just check if it is in define_map
+                preprocessor.define_map.contains_key(&single)
+            },
         }
     }
     fn parse(&mut self) -> IfStatements{
-        println!("idx: {:?}",self.idx);
+        trace!("idx: {:?}",self.idx);
         match self.get_next().as_str(){
             "!" => {
                 IfStatements::Not(Box::new(self.parse()))
             },
             "(" => {
                 self.idx -= 1;
-                self.parseParanthesised()
+                self.parse_paranthesised()
             },
             "defined" => {
-                self.parseDefinedCond()
+                self.parse_defined_cond()
             },
             _first_op_comp => {
-                println!("idx: {:?}",self.idx);
-                self.idx -= 1;
-                self.parseEqualsCond()
+                if self.get_next() == "("{
+                    self.idx -= 1;
+                    self.idx -= 1;
+                    self.parse_something_call()
+                }else{
+                    self.idx -= 1;
+                    self.idx -= 1;
+                    self.parse_equals_cond()
+                }
             },
         }
     }
-    fn parseParanthesised(&mut self) -> IfStatements{
+    fn parse_paranthesised(&mut self) -> IfStatements{
         self.get_next();
         let temp = IfStatements::Parenthesised(Box::new(self.parse()));
         self.get_next();
@@ -533,76 +671,130 @@ impl IfProcessor{
     // fn parseNot(&mut self) -> IfStatements::Not{
         
     // }
-    fn parseOr(&mut self,init: IfStatements) -> IfStatements{
+    fn parse_or(&mut self,init: IfStatements) -> IfStatements{
         let mut or_vec: Vec<IfStatements> = vec![init];
 
         while self.get_next() == "||"{
-            let mut next = self.get_next();
+            let next = self.get_next();
             match next.as_str(){
                 "!" => {
                     or_vec.push(IfStatements::Not(Box::new(self.parse())))
                 },
                 "(" => {
-                    or_vec.push(self.parseParanthesised())
+                    self.idx -= 1;
+                    or_vec.push(self.parse_paranthesised())
                 },
                 "defined" => {
-                    or_vec.push(self.parseDefinedCond())
+                    or_vec.push(self.parse_defined_cond())
                 },
-                first_op_com => {
-                    self.idx -= 1;
-                    or_vec.push(self.parseEqualsCond())
+                _first_op_com => {
+                    if self.get_next() == "("{
+                        self.idx -= 1;
+                        self.idx -= 1;
+                        or_vec.push(self.parse_something_call());
+                    }else{
+                        self.idx -= 1;
+                        self.idx -= 1;
+                        or_vec.push(self.parse_equals_cond());
+                    }
                 },
             }
         }
         self.idx -= 1;
         if self.get_next() == "&&"{
-            self.parseAnd(IfStatements::Or(or_vec))
+            self.parse_and(IfStatements::Or(or_vec))
         }else{
             self.idx -= 1;
             IfStatements::Or(or_vec)
         }
     }
-    fn parseAnd(&mut self,init: IfStatements) -> IfStatements{
+    fn parse_and(&mut self,init: IfStatements) -> IfStatements{
         let mut or_vec: Vec<IfStatements> = vec![init];
 
         while self.get_next() == "&&"{
-            let mut next = self.get_next();
+            let next: String = self.get_next();
             match next.as_str(){
                 "!" => {
                     or_vec.push(IfStatements::Not(Box::new(self.parse())))
                 },
                 "(" => {
-                    or_vec.push(self.parseParanthesised())
+                    self.idx -= 1;
+                    or_vec.push(self.parse_paranthesised())
                 },
                 "defined" => {
-                    or_vec.push(self.parseDefinedCond())
+                    or_vec.push(self.parse_defined_cond())
                 },
-                first_op_com => {
-                    self.idx -= 1;
-                    or_vec.push(self.parseEqualsCond())
+                _first_op_com => {
+                    if self.get_next() == "("{
+                        self.idx -= 1;
+                        self.idx -= 1;
+                        or_vec.push(self.parse_something_call());
+                    }else{
+                        self.idx -= 1;
+                        self.idx -= 1;
+                        or_vec.push(self.parse_equals_cond());
+                    }
                 },
             }
         }
         self.idx -= 1;
         if self.get_next() == "||"{
-            self.parseOr(IfStatements::And(or_vec))
+            self.parse_or(IfStatements::And(or_vec))
         }else{
             self.idx -= 1;
             IfStatements::And(or_vec)
         }
     }
-    fn parseEqualsCond(&mut self) -> IfStatements{
+    fn parse_equals_cond(&mut self) -> IfStatements{
+        let operator_list = ["==",">","<",">=","<="];
+        let dissallowed_error = ["(",")","&&","||",","];
+
         let first = self.get_next();
         let op = self.get_next();
         let second = self.get_next();
 
+        // no op so reverse back and do somethingsingle return instead
+        if !operator_list.contains(&op.as_str()){
+            self.idx -= 2;
+            return IfStatements::SomethingSingle(first);
+        }
+
+        if dissallowed_error.contains(&first.as_str()) || dissallowed_error.contains(&op.as_str()) || dissallowed_error.contains(&second.as_str()){
+            warn!("WEIRD BUG FROM LINE: {:?}",self.word_list);
+        }
+
         IfStatements::EqualsCond(first, op, second)
     }
-    fn parseDefinedCond(&mut self) -> IfStatements{
-        // self.get_next(); // (
-        let temp = self.get_next();
-        // self.get_next(); // )
+    fn parse_defined_cond(&mut self) -> IfStatements{
+
+        // if ( then we only care about the name in the inner parantheses
+        let mut temp = self.get_next();
+        if &temp == "("{
+            temp = self.get_next();
+            warn!("{:?}",self.get_next());
+        }
+
         IfStatements::DefinedCond(temp)
+    }
+    fn parse_something_call(&mut self) -> IfStatements{
+        let first = self.get_next();
+        self.get_next(); // parenthesis 1
+        
+        // until second parantheses
+        let mut second = vec![];
+        let mut next = self.get_next();
+        while next != ")" {
+            second.push(next);
+            next = self.get_next();
+            if next.is_empty(){
+                error!("parse_something_call next is none!");
+                break;
+            }
+        }
+        
+        // self.get_next(); // parenthesis 2 implicit now
+
+        IfStatements::SomethingCall(first, second)
     }
     fn get_next(&mut self) -> String{
         if self.idx >= self.word_list.len(){
@@ -628,4 +820,6 @@ enum IfStatements{
     EqualsCond(String,String,String),
     DefinedCond(String),
     Not(Box<IfStatements>),
+    SomethingCall(String,Vec<String>),
+    SomethingSingle(String),
 }
