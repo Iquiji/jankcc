@@ -144,32 +144,14 @@ impl Preprocessor {
                                 if_else.push(line.clone());
                             }
                         }
-                        // now handle if statement:
-                        fn process_if(define_map: &mut  HashMap<String,String>,line: Vec<String>,idx: usize) -> bool{
-                            let mut is_true = false;
-                            match line[idx].as_ref(){
-                                "!" => {
-                                    is_true = !process_if(define_map,line.clone(), idx + 1);
-                                },
-                                "(" => {
-                                    
-                                },
-                                "||" => {
+                        let mut if_processor = IfProcessor::new(line.clone().word_list);
+                        let is_true = if_processor.process(self);
 
-                                },
-                                "&&" => {
-
-                                },
-                                "defined" => {
-                                    let is_true = define_map.contains_key(&line[idx + 2]);
-                                },
-                                defined_to_check => {
-                                    
-                                },
-                            }
-                            is_true
+                        if is_true{
+                            unimplemented!()
+                        }else{
+                            unimplemented!()
                         }
-                        let is_true = process_if(&mut self.define_map,line.word_list.clone(),3);
                     },
                     "ifdef" => {
                         let define_subject = line.word_list[3].clone();
@@ -463,4 +445,187 @@ enum PreprocessorIfCondition{
     Not,
     And,
     Or,
+}
+
+struct IfProcessor{
+    idx: usize,
+    word_list: Vec<String>
+}
+impl IfProcessor{
+    fn new(word_list: Vec<String>) -> Self{
+        Self { idx: 0, word_list}
+    }
+    fn process(&mut self,preprocessor: &mut Preprocessor) -> bool{
+        self.get_next(); // #
+        self.get_next(); // if
+        // no start
+        let init = self.parse();
+        println!("NEXT: {:?}",self.get_next());
+        self.idx -= 1;
+        self.idx -= 1;
+        let parsed = match self.get_next().as_str(){
+            "&&" => {
+                self.idx -= 1;
+                self.parseAnd(init)
+            },
+            "||" => {
+                self.idx -= 1;
+                self.parseOr(init)
+            },
+            x => {
+                println!("IDK: {:?}",x);
+                init
+            },
+        };
+
+        println!("PARSED IF: {:#?} \nFROM: {:?}",parsed,self.word_list);
+        
+        true
+    }
+    fn execute_if(&mut self,preprocessor: &mut Preprocessor,statement: IfStatements) -> bool{
+        match statement{
+            IfStatements::Parenthesised(inner) => {
+                self.execute_if(preprocessor, *inner)
+            },
+            IfStatements::Or(inner) => {
+                
+            },
+            IfStatements::And(inner) => {
+                
+            },
+            IfStatements::EqualsCond(arg1, comp, arg2) => {
+                
+            },
+            IfStatements::DefinedCond(inner) => {
+                
+            },
+            IfStatements::Not(inner) => {
+                !self.execute_if(preprocessor, *inner)
+            },
+        }
+    }
+    fn parse(&mut self) -> IfStatements{
+        println!("idx: {:?}",self.idx);
+        match self.get_next().as_str(){
+            "!" => {
+                IfStatements::Not(Box::new(self.parse()))
+            },
+            "(" => {
+                self.idx -= 1;
+                self.parseParanthesised()
+            },
+            "defined" => {
+                self.parseDefinedCond()
+            },
+            _first_op_comp => {
+                println!("idx: {:?}",self.idx);
+                self.idx -= 1;
+                self.parseEqualsCond()
+            },
+        }
+    }
+    fn parseParanthesised(&mut self) -> IfStatements{
+        self.get_next();
+        let temp = IfStatements::Parenthesised(Box::new(self.parse()));
+        self.get_next();
+        temp
+    }
+    // fn parseNot(&mut self) -> IfStatements::Not{
+        
+    // }
+    fn parseOr(&mut self,init: IfStatements) -> IfStatements{
+        let mut or_vec: Vec<IfStatements> = vec![init];
+
+        while self.get_next() == "||"{
+            let mut next = self.get_next();
+            match next.as_str(){
+                "!" => {
+                    or_vec.push(IfStatements::Not(Box::new(self.parse())))
+                },
+                "(" => {
+                    or_vec.push(self.parseParanthesised())
+                },
+                "defined" => {
+                    or_vec.push(self.parseDefinedCond())
+                },
+                first_op_com => {
+                    self.idx -= 1;
+                    or_vec.push(self.parseEqualsCond())
+                },
+            }
+        }
+        self.idx -= 1;
+        if self.get_next() == "&&"{
+            self.parseAnd(IfStatements::Or(or_vec))
+        }else{
+            self.idx -= 1;
+            IfStatements::Or(or_vec)
+        }
+    }
+    fn parseAnd(&mut self,init: IfStatements) -> IfStatements{
+        let mut or_vec: Vec<IfStatements> = vec![init];
+
+        while self.get_next() == "&&"{
+            let mut next = self.get_next();
+            match next.as_str(){
+                "!" => {
+                    or_vec.push(IfStatements::Not(Box::new(self.parse())))
+                },
+                "(" => {
+                    or_vec.push(self.parseParanthesised())
+                },
+                "defined" => {
+                    or_vec.push(self.parseDefinedCond())
+                },
+                first_op_com => {
+                    self.idx -= 1;
+                    or_vec.push(self.parseEqualsCond())
+                },
+            }
+        }
+        self.idx -= 1;
+        if self.get_next() == "||"{
+            self.parseOr(IfStatements::And(or_vec))
+        }else{
+            self.idx -= 1;
+            IfStatements::And(or_vec)
+        }
+    }
+    fn parseEqualsCond(&mut self) -> IfStatements{
+        let first = self.get_next();
+        let op = self.get_next();
+        let second = self.get_next();
+
+        IfStatements::EqualsCond(first, op, second)
+    }
+    fn parseDefinedCond(&mut self) -> IfStatements{
+        // self.get_next(); // (
+        let temp = self.get_next();
+        // self.get_next(); // )
+        IfStatements::DefinedCond(temp)
+    }
+    fn get_next(&mut self) -> String{
+        if self.idx >= self.word_list.len(){
+            self.idx += 1;
+            return String::new();
+        }
+        let mut non_empty = self.word_list[self.idx].clone();
+        while non_empty.is_empty() || non_empty == " "{
+            non_empty = self.word_list[self.idx].clone();
+            self.idx += 1;
+        }
+        self.idx += 1;
+        non_empty
+    }
+}
+
+#[derive(Debug,Clone)]
+enum IfStatements{
+    Parenthesised(Box<IfStatements>),
+    Or(Vec<IfStatements>),
+    And(Vec<IfStatements>),
+    // Op1 Cmp Op2
+    EqualsCond(String,String,String),
+    DefinedCond(String),
+    Not(Box<IfStatements>),
 }
