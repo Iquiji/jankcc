@@ -15,7 +15,7 @@ Cargo.lock
 /target
 
 # ignore preprocessor output we want to compare against
-/C_Testfiles/**/*.i
+# /C_Testfiles/**/*.i
 /C_Testfiles/**/*.o
 /C_Testfiles/**/*.s
 /C_Testfiles/**/*.out

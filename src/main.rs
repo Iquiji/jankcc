@@ -1,4 +1,10 @@
-use std::{fs::{read_to_string, File}, io::Write, path::Path};
+use log::{debug, error, info};
+use std::{
+    fs::{read_to_string, File},
+    io::Write,
+    path::Path,
+    process::Command,
+};
 use structopt::StructOpt;
 
 /// A StructOpt example
@@ -17,6 +23,8 @@ struct Opt {
     /// Use gcc preprocessor
     #[structopt(short = "gccpp", long = "gcc-preprocessor")]
     gcc_preprocessor: bool,
+    /// Input file
+    input_file_path: String,
 }
 
 mod lexer;
@@ -24,14 +32,15 @@ mod preprocessor;
 
 use preprocessor::Preprocessor;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+use crate::lexer::Lexer;
 
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
 
-    let log_level = if opt.quiet{
+    let log_level = if opt.quiet {
         log::LevelFilter::Off
     } else {
-        match opt.verbose{
+        match opt.verbose {
             0 => log::LevelFilter::Info,
             1 => log::LevelFilter::Error,
             2 => log::LevelFilter::Warn,
@@ -42,15 +51,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    env_logger::builder().format_timestamp(None).filter_level(log_level).init();
-    
+    env_logger::builder()
+        .format_timestamp(None)
+        .filter_level(log_level)
+        .init();
+
     // new()
     //     .module(module_path!())
     //     .quiet(opt.quiet)
     //     .verbosity(opt.verbose)
     //     .init()
     //     .unwrap();
-
 
     println!(
         r#"      _             _       ____ ____ 
@@ -60,24 +71,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
  \___/ \__,_|_| |_|_|\_\  \____\____|
                                      "#
     );
-    println!("by Iquiji --- v0.0.1");
+    println!("by Iquiji --- v0.0.2");
 
-    let in_file_path = "./C_Testfiles/hello_world/hello_world.c";
+    let in_file_path = opt.input_file_path;
 
-    let read_in_file = read_to_string(in_file_path)?;
+    let read_in_file = read_to_string(in_file_path.clone())?;
 
-    if opt.internal_preprocessor{
+    let mut preprocessed_file = String::new();
+
+    if opt.internal_preprocessor {
         let mut preprocessor = Preprocessor::new();
-        let preprocessed_file = preprocessor.preprocess_code_string(read_in_file,in_file_path.to_string());
-        let preprocessed_file = preprocessor.replace_final(preprocessed_file);
-    
+        let preprocessed_file_temp =
+            preprocessor.preprocess_code_string(read_in_file, in_file_path.clone());
+        preprocessed_file = preprocessor.replace_final(preprocessed_file_temp);
+
         // println!("-------\n{}\n-------", preprocessed_file);
-    
-        let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
-        file.write_all(preprocessed_file.as_bytes())?;
-    }
-    if opt.gcc_preprocessor{
+
+        // let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
+        // file.write_all(preprocessed_file.as_bytes())?;
+    } else if opt.gcc_preprocessor {
         // TODO!
+        preprocessed_file = String::from_utf8(
+            Command::new("gcc")
+                .args(&["-E", &in_file_path])
+                .output()?
+                .stdout,
+        )?;
+    } else {
+        error!("require either Internal or GCC preprocessor! see -h for help!");
+        return Ok(());
+    }
+
+    info!("Starting Lexing of file: {:?}", in_file_path);
+
+    // call lexer
+    let mut lexer = Lexer::new();
+    let token_arr = lexer.string_to_token_arr(preprocessed_file);
+
+    for token in token_arr {
+        debug!("{}", token);
     }
 
     Ok(())

@@ -1,10 +1,15 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CTokenType {
+    /// one of CKeyword
     Keyword(CKeyword),
-    Constant,
-    Comparision,
-    Symbol,
+    /// nondigit (nondigit | digit)*
     Identifier,
+    /// integer-constant floating-constant enumeration-constant character-constant
+    Constant,
+    /// encoding-prefix opt " s-char-sequence opt "
+    StringLiteral,
+    /// one of see helper_funcs.rs/is_punctuator
+    Punctuator,
 }
 
 #[allow(clippy::upper_case_acronyms)]
