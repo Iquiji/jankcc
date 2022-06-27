@@ -93,14 +93,16 @@ impl Lexer {
                                 punctuator_temp.push(character);
                                 if !helper_funcs::is_punctuator(&punctuator_temp){
                                     // we do this until it isnt a punctioator anymore in which case we push the last char outside
+                                    trace!("current punctuator temp: {:?}",punctuator_temp);
                                     punctuator_temp.remove(punctuator_temp.len() - 1);
                                     buf.push(CToken {
                                         t_type: CTokenType::Punctuator,
-                                        original: current_token_string.clone(),
+                                        original: punctuator_temp.clone(),
                                         loc: self.current_loc.clone(),
                                     });
                                     current_token_string = String::new();
                                     current_token_string.push(character);
+                                    break;
                                 }
                             }
 
