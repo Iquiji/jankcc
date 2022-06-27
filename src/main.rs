@@ -1,8 +1,5 @@
 use log::{debug, error, info};
-use std::{
-    fs::{read_to_string},
-    process::Command, time::Instant,
-};
+use std::{fs::read_to_string, process::Command, time::Instant};
 use structopt::StructOpt;
 
 /// A StructOpt example
@@ -99,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!("require either Internal or GCC preprocessor! see -h for help!");
         return Ok(());
     }
-    
+
     let timer_start_lexing = Instant::now();
     info!("Starting Lexing of file: {:?}", in_file_path);
 
@@ -110,8 +107,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for token in token_arr {
         debug!("{}", token);
     }
+
     let timer_end_lexing = timer_start_lexing.elapsed();
-    info!("Lexing of file took: {:?}",timer_end_lexing);
+    info!("Lexing of file took: {:?}", timer_end_lexing);
 
     Ok(())
 }

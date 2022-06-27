@@ -1,6 +1,9 @@
 mod helper_funcs;
 mod token_types;
 
+#[cfg(test)]
+mod tests;
+
 use std::{fmt, fs::read_to_string};
 
 use log::{error, trace};
@@ -67,7 +70,7 @@ impl Lexer {
                 let mut char_line_iter = line.chars().into_iter().peekable().fuse();
 
                 while let Some(character) = char_line_iter.next() {
-                    if current_token_string == " "{
+                    if current_token_string == " " {
                         current_token_string = String::new();
                     }
                     // current_token_string = current_token_string.trim_start().to_string();
@@ -75,8 +78,8 @@ impl Lexer {
                         // punctuator
                         let mut punctuator_temp = current_token_string.clone();
                         punctuator_temp.push(character);
-                        if punctuator_temp == ".."{
-                            if char_line_iter.next() == Some('.'){
+                        if punctuator_temp == ".." {
+                            if char_line_iter.next() == Some('.') {
                                 buf.push(CToken {
                                     t_type: CTokenType::Punctuator,
                                     original: "...".to_string(),
@@ -84,16 +87,16 @@ impl Lexer {
                                 });
                                 current_token_string = String::new();
                                 continue;
-                            } else{
+                            } else {
                                 error!("ellipsis hack exception! seek help!");
                             }
-                        } else if helper_funcs::is_punctuator(&punctuator_temp){
+                        } else if helper_funcs::is_punctuator(&punctuator_temp) {
                             // we continue till longest punctuator
-                            for character in char_line_iter.by_ref(){
+                            for character in char_line_iter.by_ref() {
                                 punctuator_temp.push(character);
-                                if !helper_funcs::is_punctuator(&punctuator_temp){
+                                if !helper_funcs::is_punctuator(&punctuator_temp) {
                                     // we do this until it isnt a punctioator anymore in which case we push the last char outside
-                                    trace!("current punctuator temp: {:?}",punctuator_temp);
+                                    trace!("current punctuator temp: {:?}", punctuator_temp);
                                     punctuator_temp.remove(punctuator_temp.len() - 1);
                                     buf.push(CToken {
                                         t_type: CTokenType::Punctuator,
@@ -107,7 +110,7 @@ impl Lexer {
                             }
 
                             continue;
-                        } else{
+                        } else {
                             // we just push this one and continue on
                             buf.push(CToken {
                                 t_type: CTokenType::Punctuator,
@@ -154,21 +157,17 @@ impl Lexer {
                             });
                         }
                         current_token_string = String::new();
-                        if end_char != '`'{
+                        if end_char != '`' {
                             current_token_string.push(end_char);
                         }
-                    } else if helper_funcs::is_digit(
-                            character,
-                        )
-                    {
+                    } else if helper_funcs::is_digit(character) {
                         // number
                         current_token_string.push(character);
                         let mut end_char = '`';
                         let mut point_seperator_reached = false;
                         for character in char_line_iter.by_ref() {
                             // as long as we have digit or nondigit
-                            if helper_funcs::is_digit(character)
-                            {
+                            if helper_funcs::is_digit(character) {
                                 current_token_string.push(character);
                             } else if character == '.' {
                                 if point_seperator_reached {
@@ -186,7 +185,7 @@ impl Lexer {
                             loc: self.current_loc.clone(),
                         });
                         current_token_string = String::new();
-                        if end_char != '`'{
+                        if end_char != '`' {
                             current_token_string.push(end_char);
                         }
                     } else {
@@ -200,44 +199,45 @@ impl Lexer {
                     //         loc: self.current_loc.clone(),
                     //     });
                     // }
-                    if current_token_string.clone().ends_with('\"')
-                        {
-                            current_token_string.remove(current_token_string.len() - 1);
-                            // warn!(
-                            //     "string-start: {:?} - {:?}",
-                            //     char_line_iter, self.current_loc
-                            // );
-                            // char_line_iter.next();
-                            for character_next in char_line_iter.by_ref() {
-                                // error!("string: !{}!'{}'", character_next, current_token_string);
-    
-                                // as long as we have are still in a string:
-                                if character_next == '"' {
-                                    if current_token_string.ends_with('\\') {
-                                        current_token_string.remove(current_token_string.len() - 1);
-                                        current_token_string.push('"');
-                                        continue;
-                                    } else {
-                                        break;
-                                    }
+                    if current_token_string.clone().ends_with('\"') {
+                        current_token_string.remove(current_token_string.len() - 1);
+                        // warn!(
+                        //     "string-start: {:?} - {:?}",
+                        //     char_line_iter, self.current_loc
+                        // );
+                        // char_line_iter.next();
+                        for character_next in char_line_iter.by_ref() {
+                            // error!("string: !{}!'{}'", character_next, current_token_string);
+
+                            // as long as we have are still in a string:
+                            if character_next == '"' {
+                                if current_token_string.ends_with('\\') {
+                                    current_token_string.remove(current_token_string.len() - 1);
+                                    current_token_string.push('"');
+                                    continue;
                                 } else {
-                                    current_token_string.push(character_next);
+                                    break;
                                 }
+                            } else {
+                                current_token_string.push(character_next);
                             }
-                            buf.push(CToken {
-                                t_type: CTokenType::StringLiteral,
-                                original: current_token_string
-                                    .clone()
-                                    .trim_start_matches('"')
-                                    .trim_end_matches('"')
-                                    .to_string(),
-                                loc: self.current_loc.clone(),
-                            });
-                            trace!(
-                                "string-end!: '{}' - {:?}-{:?}",
-                                current_token_string, self.current_loc.line,self.current_loc.collumn
-                            );
-                            current_token_string = String::new();
+                        }
+                        buf.push(CToken {
+                            t_type: CTokenType::StringLiteral,
+                            original: current_token_string
+                                .clone()
+                                .trim_start_matches('"')
+                                .trim_end_matches('"')
+                                .to_string(),
+                            loc: self.current_loc.clone(),
+                        });
+                        trace!(
+                            "string-end!: '{}' - {:?}-{:?}",
+                            current_token_string,
+                            self.current_loc.line,
+                            self.current_loc.collumn
+                        );
+                        current_token_string = String::new();
                     }
                 }
                 if helper_funcs::is_punctuator(&current_token_string) {
