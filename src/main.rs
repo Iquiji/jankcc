@@ -1,9 +1,7 @@
 use log::{debug, error, info};
 use std::{
-    fs::{read_to_string, File},
-    io::Write,
-    path::Path,
-    process::Command,
+    fs::{read_to_string},
+    process::Command, time::Instant,
 };
 use structopt::StructOpt;
 
@@ -71,13 +69,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
  \___/ \__,_|_| |_|_|\_\  \____\____|
                                      "#
     );
-    println!("by Iquiji --- v0.0.2");
+    println!("by Iquiji --- v0.0.3");
 
     let in_file_path = opt.input_file_path;
 
     let read_in_file = read_to_string(in_file_path.clone())?;
 
-    let mut preprocessed_file = String::new();
+    let preprocessed_file: String;
 
     if opt.internal_preprocessor {
         let mut preprocessor = Preprocessor::new();
@@ -101,7 +99,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!("require either Internal or GCC preprocessor! see -h for help!");
         return Ok(());
     }
-
+    
+    let timer_start_lexing = Instant::now();
     info!("Starting Lexing of file: {:?}", in_file_path);
 
     // call lexer
@@ -111,6 +110,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for token in token_arr {
         debug!("{}", token);
     }
+    let timer_end_lexing = timer_start_lexing.elapsed();
+    info!("Lexing of file took: {:?}",timer_end_lexing);
 
     Ok(())
 }

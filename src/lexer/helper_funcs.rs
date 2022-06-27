@@ -1,4 +1,4 @@
-pub fn is_nonzero_digit(ch: char) -> bool {
+pub fn _is_nonzero_digit(ch: char) -> bool {
     ['1', '2', '3', '4', '5', '6', '7', '8', '9'].contains(&ch)
 }
 pub fn is_digit(ch: char) -> bool {
