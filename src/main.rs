@@ -24,6 +24,7 @@ struct Opt {
 
 mod lexer;
 mod preprocessor;
+mod parser;
 
 use preprocessor::Preprocessor;
 
