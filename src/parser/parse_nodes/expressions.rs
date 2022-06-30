@@ -1,3 +1,5 @@
+use super::{Identifier, Constant, StringLiteral, declarations::TypeName};
+
 /*
 (6.5.1) primary-expression:
     identifier
@@ -6,7 +8,13 @@
     ( expression )
     generic-selection
 */
-
+pub(crate) enum PrimaryExpression{
+    Identifier(Identifier),
+    Constant(Constant),
+    StringLiteral(StringLiteral),
+    Expression(Expression),
+    GenericSelecetion(GenericSelection),
+}
 
 /*
 (6.5.1.1) generic-selection:
@@ -18,6 +26,20 @@
     type-name : assignment-expression
     default : assignment-expression
 */
+pub(crate) struct GenericSelection{
+    assignment_expression: AssignmentExpression,
+    generic_assoc_list: GenericAssociationList,
+}
+
+pub(crate) enum GenericAssociation{
+    TypeName{
+        type_name: TypeName,
+        assignment_expression: AssignmentExpression,
+    },
+    Default(AssignmentExpression),
+}
+
+pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
 
 /*
 (6.5.2) postfix-expression:
@@ -31,6 +53,9 @@
     ( type-name ) { initializer-list }
     ( type-name ) { initializer-list , }
 */
+pub(crate) enum PostfixExpression{
+    
+}
 
 /*
 (6.5.2) argument-expression-list:
@@ -111,6 +136,9 @@
 (6.5.16) assignment-operator: one of
     = *= /= %= += -= <<= >>= &= ^= |=
 */
+pub(crate) struct AssignmentExpression{
+
+}
 
 /*
 (6.5.17) expression:
@@ -126,9 +154,5 @@ pub(crate) enum Expression{
     conditional-expression
 */
 pub(crate) struct ConstantExpression{
-
-}
-
-pub(crate) struct AssignmentExpression{
 
 }

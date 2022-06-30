@@ -12,6 +12,10 @@ pub(crate) struct StringLiteral{
     value: String,
 }
 
+pub(crate) enum Constant{
+    Integer(NumberLike),
+}
+
 /*
 A.2.4 External definitions
     (6.9) translation-unit:
