@@ -2,6 +2,16 @@ mod expressions;
 mod declarations;
 mod statements;
 
+pub(crate) struct Identifier{
+    string: String,
+}
+pub(crate) struct NumberLike{
+    from: String,
+}
+pub(crate) struct StringLiteral{
+    value: String,
+}
+
 /*
 A.2.4 External definitions
     (6.9) translation-unit:

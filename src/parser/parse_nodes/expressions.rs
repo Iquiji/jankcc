@@ -117,9 +117,18 @@
     assignment-expression
     expression , assignment-expression
 */
+pub(crate) enum Expression{
 
+}
 
 /*
 (6.6) constant-expression:
     conditional-expression
 */
+pub(crate) struct ConstantExpression{
+
+}
+
+pub(crate) struct AssignmentExpression{
+
+}
