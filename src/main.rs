@@ -28,7 +28,7 @@ mod parser;
 
 use preprocessor::Preprocessor;
 
-use crate::lexer::Lexer;
+use crate::{lexer::Lexer, parser::CParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
@@ -111,6 +111,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let timer_end_lexing = timer_start_lexing.elapsed();
     info!("Lexing of file took: {:?}", timer_end_lexing);
+
+    let timer_start_parsing = Instant::now();
+    info!("Starting Parsing of file: {:?}", in_file_path);
+
+    let mut parser = CParser::new(String::new());
+
 
     Ok(())
 }

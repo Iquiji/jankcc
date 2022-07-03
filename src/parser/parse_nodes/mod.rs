@@ -1,3 +1,5 @@
+use self::{declarations::{Declaration, DeclarationSpecifiers, Declarator}, statements::CompoundStatement};
+
 mod expressions;
 mod declarations;
 mod statements;
@@ -30,3 +32,17 @@ A.2.4 External definitions
         declaration
         declaration-list declaration
 */
+pub(crate) type TranslationUnit = Vec<ExternalDeclaration>;
+
+pub(crate) enum ExternalDeclaration{
+    FunctionDefinition(Box<FunctionDefinition>),
+    Declaration(Box<Declaration>),
+} 
+
+pub(crate) struct FunctionDefinition{
+    specifiers: DeclarationSpecifiers,
+    declarator: Declarator,
+    declaration_list: Option<DeclarationList>,
+    body: CompoundStatement,
+}
+pub(crate) type DeclarationList = Vec<Declaration>;

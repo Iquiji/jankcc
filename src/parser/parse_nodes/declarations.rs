@@ -323,7 +323,7 @@ pub(crate) enum ParameterDeclaration{
 */
 pub (crate) struct TypeName{
     specifiers: SpecifierQualifierList,
-    abstract_declarator: Option<AbstractDeclarator>,
+    abstract_declarator: Option<Box<AbstractDeclarator>>,
 }
 
 pub (crate) enum AbstractDeclarator{
