@@ -1,4 +1,7 @@
-use super::{Identifier, Constant, StringLiteral, declarations::{TypeName, InitializerList}};
+use super::{
+    declarations::{InitializerList, TypeName},
+    Constant, Identifier, StringLiteral,
+};
 
 /*
 (6.5.1) primary-expression:
@@ -8,7 +11,7 @@ use super::{Identifier, Constant, StringLiteral, declarations::{TypeName, Initia
     ( expression )
     generic-selection
 */
-pub(crate) enum PrimaryExpression{
+pub(crate) enum PrimaryExpression {
     Identifier(Identifier),
     Constant(Constant),
     StringLiteral(StringLiteral),
@@ -26,13 +29,13 @@ pub(crate) enum PrimaryExpression{
     type-name : assignment-expression
     default : assignment-expression
 */
-pub(crate) struct GenericSelection{
+pub(crate) struct GenericSelection {
     assignment_expression: Box<AssignmentExpression>,
     generic_assoc_list: GenericAssociationList,
 }
 
-pub(crate) enum GenericAssociation{
-    TypeName{
+pub(crate) enum GenericAssociation {
+    TypeName {
         type_name: TypeName,
         assignment_expression: Box<AssignmentExpression>,
     },
@@ -53,35 +56,35 @@ pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
     ( type-name ) { initializer-list }
     ( type-name ) { initializer-list , }
 */
-pub(crate) enum PostfixExpression{
+pub(crate) enum PostfixExpression {
     PrimaryExpression(PrimaryExpression),
-    ArraySubscription{
+    ArraySubscription {
         on: Box<Self>,
         index: Expression,
     },
-    FunctionCall{
+    FunctionCall {
         on: Box<Self>,
         args: Option<ArgumentExpressionList>,
     },
-    MemberAccess{
+    MemberAccess {
         on: Box<Self>,
         member: Identifier,
     },
-    DereferencedMemberAccess{
+    DereferencedMemberAccess {
         on: Box<Self>,
         member: Identifier,
     },
-    IncrementSelf{
+    IncrementSelf {
         on: Box<Self>,
     },
-    DecrementSelf{
+    DecrementSelf {
         on: Box<Self>,
     },
     /// Compound literals
-    TypeInitializer{
+    TypeInitializer {
         type_to_init: TypeName,
         initializer_list: InitializerList,
-    }
+    },
 }
 
 /*
@@ -101,25 +104,25 @@ pub(crate) type ArgumentExpressionList = Vec<AssignmentExpression>;
     sizeof ( type-name )
     _Alignof ( type-name )
 */
-pub(crate) enum UnaryExpression{
+pub(crate) enum UnaryExpression {
     PostfixExpression(PostfixExpression),
-    PrefixIncrementSelf{
+    PrefixIncrementSelf {
         on: Box<Self>,
     },
-    PrefixDecrementSelf{
+    PrefixDecrementSelf {
         on: Box<Self>,
     },
-    UnaryArithmetic{
+    UnaryArithmetic {
         operator: UnaryOperator,
         on: Box<CastExpression>,
     },
-    SizeOf{
+    SizeOf {
         on: Box<Self>,
     },
-    SizeOfType{
+    SizeOfType {
         type_name: TypeName,
     },
-    AlignOfType{
+    AlignOfType {
         type_name: TypeName,
     },
 }
@@ -129,7 +132,7 @@ pub(crate) enum UnaryExpression{
     & * + - ~ !
 */
 #[allow(clippy::upper_case_acronyms)]
-pub(crate) enum UnaryOperator{
+pub(crate) enum UnaryOperator {
     AND,
     POINTER,
     POSITIVE,
@@ -145,9 +148,9 @@ pub(crate) enum UnaryOperator{
     ( type-name ) cast-expression
 */
 
-pub(crate) enum CastExpression{
+pub(crate) enum CastExpression {
     UnaryExpression(UnaryExpression),
-    Cast{
+    Cast {
         type_name: TypeName,
         expresion: Box<Self>,
     },
@@ -196,121 +199,121 @@ pub(crate) enum CastExpression{
     logical-OR-expression
     logical-OR-expression ? expression : conditional-expression
 */
-pub(crate) enum MultiplicativeExpression{
+pub(crate) enum MultiplicativeExpression {
     CastExpression(CastExpression),
-    Expression{
+    Expression {
         on: Box<Self>,
         operation: MultiplicativeOperator,
         operand: CastExpression,
     },
 }
-pub(crate) enum MultiplicativeOperator{
+pub(crate) enum MultiplicativeOperator {
     Mult,
     Div,
     Mod,
 }
 
-pub(crate) enum AdditiveExpression{
+pub(crate) enum AdditiveExpression {
     MultiplicativeExpression(MultiplicativeExpression),
-    Expression{
+    Expression {
         on: Box<Self>,
         operation: AdditiveOperator,
         operand: MultiplicativeExpression,
     },
 }
-pub(crate) enum AdditiveOperator{
+pub(crate) enum AdditiveOperator {
     Plus,
     Minus,
 }
 
-pub(crate) enum ShiftExpression{
+pub(crate) enum ShiftExpression {
     AdditiveExpression(AdditiveExpression),
-    Shift{
+    Shift {
         on: Box<Self>,
         operation: ShiftOperator,
         operand: AdditiveExpression,
     },
 }
-pub(crate) enum ShiftOperator{
+pub(crate) enum ShiftOperator {
     Left,
     Right,
 }
 
-pub(crate) enum RelationalExpression{
+pub(crate) enum RelationalExpression {
     ShiftExpression(ShiftExpression),
-    Relational{
+    Relational {
         on: Box<Self>,
         operation: RelationalOperator,
         operand: ShiftExpression,
-    }
+    },
 }
-pub(crate) enum RelationalOperator{
+pub(crate) enum RelationalOperator {
     Lesser,
     Greater,
     LesserEqual,
     GreaterEqual,
 }
 
-pub(crate) enum EqualityExpression{
+pub(crate) enum EqualityExpression {
     RelationalExpression(RelationalExpression),
-    EqualityCheck{
+    EqualityCheck {
         on: Box<Self>,
         operation: EqualityOperator,
         operand: RelationalExpression,
-    }
+    },
 }
-pub(crate) enum EqualityOperator{
+pub(crate) enum EqualityOperator {
     Equal,
     NotEqual,
 }
 
-pub(crate) enum ANDExpression{
+pub(crate) enum ANDExpression {
     EqualityExpression(EqualityExpression),
-    ANDExpression{
+    ANDExpression {
         on: Box<Self>,
         operand: EqualityExpression,
-    }
+    },
 }
 
-pub(crate) enum ExclusiveOrExpression{
+pub(crate) enum ExclusiveOrExpression {
     ANDExpression(ANDExpression),
-    ExclusiveOrExpression{
+    ExclusiveOrExpression {
         on: Box<Self>,
         operand: ANDExpression,
-    }
+    },
 }
 
-pub(crate) enum InclusiveOrExpression{
+pub(crate) enum InclusiveOrExpression {
     ExclusiveOrExpression(ExclusiveOrExpression),
-    InclusiveOrExpression{
+    InclusiveOrExpression {
         on: Box<Self>,
         operand: ExclusiveOrExpression,
-    }
+    },
 }
 
-pub(crate) enum LogicalANDExpression{
+pub(crate) enum LogicalANDExpression {
     InclusiveOrExpression(InclusiveOrExpression),
-    LogicalANDExpression{
+    LogicalANDExpression {
         on: Box<Self>,
         operand: InclusiveOrExpression,
-    }
+    },
 }
 
-pub(crate) enum LogicalORExpression{
+pub(crate) enum LogicalORExpression {
     LogicalANDExpression(LogicalANDExpression),
-    LogicalORExpression{
+    LogicalORExpression {
         on: Box<Self>,
         operand: LogicalANDExpression,
-    }
+    },
 }
 
-pub(crate) enum ConditionalExpression{
+pub(crate) enum ConditionalExpression {
     LogicalORExpression(LogicalORExpression),
-    Ternary{
+    Ternary {
         on: LogicalORExpression,
         if_true: Expression,
         operand: Box<ConditionalExpression>,
-    }
+    },
 }
 
 /*
@@ -320,16 +323,16 @@ pub(crate) enum ConditionalExpression{
 (6.5.16) assignment-operator: one of
     = *= /= %= += -= <<= >>= &= ^= |=
 */
-pub(crate) enum AssignmentExpression{
+pub(crate) enum AssignmentExpression {
     ConditionalExpression(ConditionalExpression),
-    Assignment{
+    Assignment {
         unary: UnaryExpression,
         operator: AssignmentOperator,
         value: Box<AssignmentExpression>,
-    }
+    },
 }
 
-pub(crate) enum AssignmentOperator{
+pub(crate) enum AssignmentOperator {
     Assign,
     AssignMult,
     AssignDiv,
@@ -348,9 +351,9 @@ pub(crate) enum AssignmentOperator{
     assignment-expression
     expression , assignment-expression
 */
-pub(crate) enum Expression{
+pub(crate) enum Expression {
     AssignmentExpression(Box<AssignmentExpression>),
-    Chain{
+    Chain {
         on: Box<Self>,
         expr: Box<AssignmentExpression>,
     },
@@ -360,6 +363,6 @@ pub(crate) enum Expression{
 (6.6) constant-expression:
     conditional-expression
 */
-pub(crate) struct ConstantExpression{
+pub(crate) struct ConstantExpression {
     internal: ConditionalExpression,
 }

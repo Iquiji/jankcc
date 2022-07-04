@@ -1,20 +1,23 @@
-use self::{declarations::{Declaration, DeclarationSpecifiers, Declarator}, statements::CompoundStatement};
+use self::{
+    declarations::{Declaration, DeclarationSpecifiers, Declarator},
+    statements::CompoundStatement,
+};
 
-mod expressions;
-mod declarations;
-mod statements;
+pub mod declarations;
+pub mod expressions;
+pub mod statements;
 
-pub(crate) struct Identifier{
+pub(crate) struct Identifier {
     string: String,
 }
-pub(crate) struct NumberLike{
+pub(crate) struct NumberLike {
     from: String,
 }
-pub(crate) struct StringLiteral{
+pub(crate) struct StringLiteral {
     value: String,
 }
 
-pub(crate) enum Constant{
+pub(crate) enum Constant {
     Integer(NumberLike),
 }
 
@@ -34,12 +37,12 @@ A.2.4 External definitions
 */
 pub(crate) type TranslationUnit = Vec<ExternalDeclaration>;
 
-pub(crate) enum ExternalDeclaration{
+pub(crate) enum ExternalDeclaration {
     FunctionDefinition(Box<FunctionDefinition>),
     Declaration(Box<Declaration>),
-} 
+}
 
-pub(crate) struct FunctionDefinition{
+pub(crate) struct FunctionDefinition {
     specifiers: DeclarationSpecifiers,
     declarator: Declarator,
     declaration_list: Option<DeclarationList>,

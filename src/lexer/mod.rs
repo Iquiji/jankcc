@@ -1,5 +1,5 @@
 mod helper_funcs;
-mod token_types;
+pub mod token_types;
 
 #[cfg(test)]
 mod tests;

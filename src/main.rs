@@ -1,8 +1,8 @@
+use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 use chumsky::Parser;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use std::{fs::read_to_string, process::Command, time::Instant};
 use structopt::StructOpt;
-use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 
 /// A StructOpt example
 #[derive(StructOpt, Debug)]
@@ -25,8 +25,8 @@ struct Opt {
 }
 
 mod lexer;
-mod preprocessor;
 mod parser;
+mod preprocessor;
 
 use preprocessor::Preprocessor;
 
@@ -106,28 +106,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // call lexer
     let mut lexer = Lexer::new();
     let token_arr = lexer.string_to_token_arr(preprocessed_file.clone());
-    
-    for token in token_arr {
+
+    for token in &token_arr {
         debug!("{}", token);
     }
 
     let timer_end_lexing = timer_start_lexing.elapsed();
     info!("Lexing of file took: {:?}", timer_end_lexing);
 
-    let timer_start_parsing = Instant::now();
-    info!("Starting Lexing-New of file: {:?}", in_file_path);
-    
-    let (tokens, errs) = crate::parser::lexer().parse_recovery(preprocessed_file.as_str());
+    let timer_start_lexing_new = Instant::now();
+    info!("Starting Lexing-new of file: {:?}", in_file_path);
 
-    println!("tokens: {:?}",tokens);
-    println!("errs: {:?}",errs);
-            
+    let (trans_unit, errs) = crate::parser::lexer().parse_recovery(preprocessed_file.clone());
+
+    for pair in trans_unit.unwrap().iter().zip(token_arr.iter()){
+        let new_parser = &(*pair.0).0;
+        let old_parser = pair.1;
+        if new_parser.to_inner_string() != old_parser.original{
+            debug!("!=! '{}' & '{}'",new_parser.to_inner_string(),old_parser.original);
+        }
+
+    }
+
+    // println!("translation unit: {:?}", trans_unit);
+    // println!("errs: {:?}", errs);
+
     errs.into_iter()
         .map(|e| e.map(|c| c.to_string()))
         .for_each(|e| {
             let report = Report::build(ReportKind::Error, (), e.span().start);
 
-            println!("err: {:?}",e);
+            println!("err: {:?}", e);
 
             let report = match e.reason() {
                 chumsky::error::SimpleReason::Unclosed { span, delimiter } => report
@@ -190,7 +199,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
             };
 
-            report.finish().print(Source::from(&preprocessed_file)).unwrap();
+            report
+                .finish()
+                .print(Source::from(&preprocessed_file))
+                .unwrap();
         });
+
+    let timer_end_lexingg_new = timer_start_lexing_new.elapsed();
+    info!("Lexing-New of file took: {:?}", timer_end_lexingg_new);
+    
     Ok(())
 }

@@ -17,25 +17,25 @@ use super::{expressions::*, Identifier, StringLiteral};
     declarator
     declarator = initializer
 */
-pub(crate) enum Declaration{
-    Normal{
+pub(crate) enum Declaration {
+    Normal {
         declaration_specifiers: DeclarationSpecifiers,
         init_declaratior_list: Option<InitDeclaratorList>,
     },
     StaticAssertDeclaration(StaticAssertDeclaration),
 }
 
-pub(crate) enum DeclarationSpecifiers{
-    StorageClassSpecifier(StorageClassSpecifier,Option<Box<DeclarationSpecifiers>>),
-    TypeSpecifier(TypeSpecifier,Option<Box<DeclarationSpecifiers>>),
-    TypeQualifier(TypeQualifier,Option<Box<DeclarationSpecifiers>>),
-    FunctionSpecifier(FunctionSpecifier,Option<Box<DeclarationSpecifiers>>),
-    AlignmentSpecifier(AlignmentSpecifier,Option<Box<DeclarationSpecifiers>>),
+pub(crate) enum DeclarationSpecifiers {
+    StorageClassSpecifier(StorageClassSpecifier, Option<Box<DeclarationSpecifiers>>),
+    TypeSpecifier(TypeSpecifier, Option<Box<DeclarationSpecifiers>>),
+    TypeQualifier(TypeQualifier, Option<Box<DeclarationSpecifiers>>),
+    FunctionSpecifier(FunctionSpecifier, Option<Box<DeclarationSpecifiers>>),
+    AlignmentSpecifier(AlignmentSpecifier, Option<Box<DeclarationSpecifiers>>),
 }
 
-pub(crate) enum InitDeclarator{
+pub(crate) enum InitDeclarator {
     Normal(Declarator),
-    Initialized(Declarator,Initializer),
+    Initialized(Declarator, Initializer),
 }
 pub(crate) type InitDeclaratorList = Vec<InitDeclarator>;
 
@@ -98,7 +98,7 @@ pub(crate) type InitDeclaratorList = Vec<InitDeclarator>;
     _Atomic ( type-name )
 */
 #[allow(clippy::upper_case_acronyms)]
-pub(crate) enum StorageClassSpecifier{
+pub(crate) enum StorageClassSpecifier {
     TYPEDEF,
     EXTERN,
     STATIC,
@@ -108,7 +108,7 @@ pub(crate) enum StorageClassSpecifier{
 }
 
 #[allow(clippy::upper_case_acronyms)]
-pub(crate) enum TypeSpecifier{
+pub(crate) enum TypeSpecifier {
     VOID,
     CHAR,
     SHORT,
@@ -126,48 +126,48 @@ pub(crate) enum TypeSpecifier{
     TypedefName(TypedefName),
 }
 
-pub(crate) enum StructOrUnionSpecifier{
-    Declare{
+pub(crate) enum StructOrUnionSpecifier {
+    Declare {
         identifier: Option<Identifier>,
         declaration_list: StructDeclarationList,
     },
     Identifier(Identifier),
 }
 
-pub(crate) enum StructOrUnion{
+pub(crate) enum StructOrUnion {
     Struct,
     Union,
 }
 
 pub(crate) type StructDeclarationList = Vec<StructDeclaration>;
 
-pub(crate) enum StructDeclaration{
-    Normal{
+pub(crate) enum StructDeclaration {
+    Normal {
         specifier_qualifier_list: SpecifierQualifierList,
-        declarator_list: Option<StructDeclaratorList>
+        declarator_list: Option<StructDeclaratorList>,
     },
     StaticAssert(StaticAssertDeclaration),
 }
 
 pub(crate) type StructDeclaratorList = Vec<StructDeclarator>;
 
-pub(crate) enum SpecifierQualifier{
+pub(crate) enum SpecifierQualifier {
     TypeSpecifier(TypeSpecifier),
     TypeQualifier(TypeQualifier),
 }
 
 pub(crate) type SpecifierQualifierList = Vec<SpecifierQualifier>;
 
-pub(crate) enum StructDeclarator{
+pub(crate) enum StructDeclarator {
     Normal(Declarator),
-    ConstExpr{
+    ConstExpr {
         declarator: Option<Declarator>,
         constant_expression: ConstantExpression,
-    }
+    },
 }
 
-pub(crate) enum EnumSpecifier{
-    List{
+pub(crate) enum EnumSpecifier {
+    List {
         identifier: Option<Identifier>,
         enumerator_list: EnumeratorList,
     },
@@ -176,9 +176,9 @@ pub(crate) enum EnumSpecifier{
 
 pub(crate) type EnumeratorList = Vec<Enumerator>;
 
-pub(crate) enum Enumerator{
+pub(crate) enum Enumerator {
     Const(EnumerationConstant),
-    ConstEquals{
+    ConstEquals {
         enumeration_constant: EnumerationConstant,
         constant_expression: ConstantExpression,
     },
@@ -193,7 +193,7 @@ pub(crate) type EnumerationConstant = Identifier;
     volatile
     _Atomic
 */
-pub(crate) enum TypeQualifier{
+pub(crate) enum TypeQualifier {
     Const,
     Restrict,
     Volatile,
@@ -205,7 +205,7 @@ pub(crate) enum TypeQualifier{
     inline
     _Noreturn
 */
-pub(crate) enum FunctionSpecifier{
+pub(crate) enum FunctionSpecifier {
     Inline,
     Noreturn,
 }
@@ -215,7 +215,7 @@ pub(crate) enum FunctionSpecifier{
     _Alignas ( type-name )
     _Alignas ( constant-expression )
 */
-pub (crate) enum AlignmentSpecifier{
+pub(crate) enum AlignmentSpecifier {
     AsType(TypeName),
     AsConstExpr(ConstantExpression),
 }
@@ -251,40 +251,40 @@ pub (crate) enum AlignmentSpecifier{
     identifier
     identifier-list , identifier
 */
-pub(crate) struct Declarator{
+pub(crate) struct Declarator {
     pointer: Option<Pointer>,
     direct: Box<DirectDeclarator>,
 }
-pub(crate) enum DirectDeclarator{
+pub(crate) enum DirectDeclarator {
     Identifier(Identifier),
     Declarator(Declarator),
-    IndexedNormal{
+    IndexedNormal {
         qualifier: Option<TypeQualifierList>,
         assignment: Option<AssignmentExpression>,
     },
-    IndexedStatic{
+    IndexedStatic {
         qualifier: Option<TypeQualifierList>,
         assignment: AssignmentExpression,
     },
-    IndexedStaticType2{
+    IndexedStaticType2 {
         qualifier: TypeQualifierList,
         assignment: AssignmentExpression,
     },
-    IndexedStar{
+    IndexedStar {
         qualifier: Option<TypeQualifierList>,
     },
     Called(ParameterTypeList),
     CalledType2(Option<IdentifierList>),
 }
 
-pub(crate) struct Pointer{
+pub(crate) struct Pointer {
     qualifier_list: TypeQualifierList,
     opt_next: Box<Pointer>,
 }
 
 pub(crate) type TypeQualifierList = Vec<TypeQualifier>;
 
-pub(crate) struct ParameterTypeList{
+pub(crate) struct ParameterTypeList {
     parameter_list: ParameterList,
     /// flag for has elipsis
     ellipsis: bool,
@@ -293,12 +293,12 @@ pub(crate) struct ParameterTypeList{
 pub(crate) type ParameterList = Vec<ParameterDeclaration>;
 pub(crate) type IdentifierList = Vec<Identifier>;
 
-pub(crate) enum ParameterDeclaration{
-    Normal{
+pub(crate) enum ParameterDeclaration {
+    Normal {
         specifier: DeclarationSpecifiers,
         declarator: Declarator,
     },
-    Abstract{
+    Abstract {
         specifier: DeclarationSpecifiers,
         abstract_declarator: AbstractDeclarator,
     },
@@ -321,41 +321,41 @@ pub(crate) enum ParameterDeclaration{
     direct-abstract-declaratoropt [ * ]
     direct-abstract-declaratoropt ( parameter-type-list opt )
 */
-pub (crate) struct TypeName{
+pub(crate) struct TypeName {
     specifiers: SpecifierQualifierList,
     abstract_declarator: Option<Box<AbstractDeclarator>>,
 }
 
-pub (crate) enum AbstractDeclarator{
+pub(crate) enum AbstractDeclarator {
     Pointer(Pointer),
-    Direct{
+    Direct {
         pointer: Option<Pointer>,
         direct: DirectAbstractDeclarator,
-    }
+    },
 }
 
-pub(crate) enum DirectAbstractDeclarator{
+pub(crate) enum DirectAbstractDeclarator {
     Abstract(Box<AbstractDeclarator>),
-    IndexedNormal{
+    IndexedNormal {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: Option<TypeQualifierList>,
         assignment: Option<AssignmentExpression>,
     },
-    IndexedStatic{
+    IndexedStatic {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: Option<TypeQualifierList>,
         assignment: AssignmentExpression,
     },
-    IndexedStaticType2{
+    IndexedStaticType2 {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: TypeQualifierList,
         assignment: AssignmentExpression,
     },
-    IndexedStar{
+    IndexedStar {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: Option<TypeQualifierList>,
     },
-    Called{
+    Called {
         chain: Option<Box<DirectAbstractDeclarator>>,
         parameter_type_list: ParameterTypeList,
     },
@@ -384,22 +384,22 @@ pub(crate) type TypedefName = Identifier;
     [ constant-expression ]
     . identifier
 */
-pub(crate) enum Initializer{
+pub(crate) enum Initializer {
     AssignmentExpression(AssignmentExpression),
     InitializerList(InitializerList),
 }
 
-pub(crate) struct InitializerListItem{
+pub(crate) struct InitializerListItem {
     designation: Option<Designation>,
     initializer: Initializer,
 }
 pub(crate) type InitializerList = Vec<InitializerListItem>;
 
-pub(crate) struct Designation{
+pub(crate) struct Designation {
     designator_list: DesignatorList,
 }
 
-pub(crate) enum Designator{
+pub(crate) enum Designator {
     Indexed(ConstantExpression),
     Pointed(Identifier),
 }
@@ -409,7 +409,7 @@ pub(crate) type DesignatorList = Vec<Designator>;
 (6.7.10) static_assert-declaration:
     _Static_assert ( constant-expression , string-literal ) ;
 */
-pub(crate) struct StaticAssertDeclaration{
+pub(crate) struct StaticAssertDeclaration {
     expression: ConstantExpression,
     string_literal: StringLiteral,
 }

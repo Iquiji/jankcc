@@ -3,10 +3,8 @@
 // function pointer
 // union & struct
 // arrays
-// type qualifiers: const (C89), volatile (C89), restrict (C99) and _Atomic (C11) 
-pub struct CType{
-
-}
+// type qualifiers: const (C89), volatile (C89), restrict (C99) and _Atomic (C11)
+pub struct CType {}
 
 // pub enum CTypeQualifier{
 //     None,
