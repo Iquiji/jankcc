@@ -118,10 +118,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // do da stuff
     let mut parser = CParser::new(token_arr);
     let parsed = parser.parse();
-    info!("parsed program: {:?}",parsed);
+    info!("Parsed Program: {:?}", parsed);
 
     let timer_end_parsing = timer_start_parsing.elapsed();
     info!("Parsing of file took: {:?}", timer_end_parsing);
-    
+
     Ok(())
 }

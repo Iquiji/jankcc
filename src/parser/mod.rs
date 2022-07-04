@@ -13,9 +13,11 @@ pub struct CParser {
 
 impl CParser {
     pub fn new(program_tokens: Vec<CToken>) -> Self {
-        CParser { tokens: program_tokens }
+        CParser {
+            tokens: program_tokens,
+        }
     }
-    pub(crate) fn parse(&mut self) -> TranslationUnit{
+    pub(crate) fn parse(&mut self) -> TranslationUnit {
         vec![]
     }
 }
