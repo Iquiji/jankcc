@@ -13,6 +13,7 @@ use super::*;
     iteration-statement
     jump-statement
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum Statement {
     Labeled(Box<LabeledStatement>),
     Compound(Box<CompoundStatement>),
@@ -28,11 +29,13 @@ pub(crate) enum Statement {
     case constant-expression : statement
     default : statement
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct LabeledStatement {
     ident: Identifier,
     body: Statement,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum SwitchLabeledStatement {
     Case {
         const_expr: ConstantExpression,
@@ -53,10 +56,11 @@ pub(crate) enum SwitchLabeledStatement {
     declaration
     statemen
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct CompoundStatement {
     body: Vec<BlockItem>,
 }
-
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum BlockItem {
     Declaration(Declaration),
     Statement(Statement),
@@ -66,6 +70,7 @@ pub(crate) enum BlockItem {
 (6.8.3) expression-statement:
     expressionopt ;
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct ExpressionStatement {
     body: Option<Expression>,
 }
@@ -76,6 +81,7 @@ pub(crate) struct ExpressionStatement {
     if ( expression ) statement else statement
     switch ( expression ) statement
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum SelectionStatement {
     If {
         cond: Expression,
@@ -99,6 +105,7 @@ pub(crate) enum SelectionStatement {
     for ( expression opt ; expression opt ; expression opt ) statement
     for ( declaration expression opt ; expression opt ) statement
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum IterationStatement {
     While {
         cond: Expression,
@@ -129,6 +136,7 @@ pub(crate) enum IterationStatement {
     break ;
     return expression opt ;
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum JumpStatement {
     Goto(Identifier),
     Continue,

@@ -7,16 +7,22 @@ pub mod declarations;
 pub mod expressions;
 pub mod statements;
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct Identifier {
     string: String,
 }
+
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct NumberLike {
     from: String,
 }
+
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct StringLiteral {
     value: String,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum Constant {
     Integer(NumberLike),
 }
@@ -37,15 +43,17 @@ A.2.4 External definitions
 */
 pub(crate) type TranslationUnit = Vec<ExternalDeclaration>;
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ExternalDeclaration {
     FunctionDefinition(Box<FunctionDefinition>),
     Declaration(Box<Declaration>),
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct FunctionDefinition {
-    specifiers: DeclarationSpecifiers,
-    declarator: Declarator,
-    declaration_list: Option<DeclarationList>,
-    body: CompoundStatement,
+    specifiers: Box<DeclarationSpecifiers>,
+    declarator: Box<Declarator>,
+    declaration_list: Option<Box<DeclarationList>>,
+    body: Box<CompoundStatement>,
 }
 pub(crate) type DeclarationList = Vec<Declaration>;

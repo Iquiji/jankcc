@@ -11,6 +11,7 @@ use super::{
     ( expression )
     generic-selection
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum PrimaryExpression {
     Identifier(Identifier),
     Constant(Constant),
@@ -29,11 +30,13 @@ pub(crate) enum PrimaryExpression {
     type-name : assignment-expression
     default : assignment-expression
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct GenericSelection {
     assignment_expression: Box<AssignmentExpression>,
     generic_assoc_list: GenericAssociationList,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum GenericAssociation {
     TypeName {
         type_name: TypeName,
@@ -56,6 +59,7 @@ pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
     ( type-name ) { initializer-list }
     ( type-name ) { initializer-list , }
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum PostfixExpression {
     PrimaryExpression(PrimaryExpression),
     ArraySubscription {
@@ -104,6 +108,7 @@ pub(crate) type ArgumentExpressionList = Vec<AssignmentExpression>;
     sizeof ( type-name )
     _Alignof ( type-name )
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum UnaryExpression {
     PostfixExpression(PostfixExpression),
     PrefixIncrementSelf {
@@ -132,6 +137,7 @@ pub(crate) enum UnaryExpression {
     & * + - ~ !
 */
 #[allow(clippy::upper_case_acronyms)]
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum UnaryOperator {
     AND,
     POINTER,
@@ -148,6 +154,7 @@ pub(crate) enum UnaryOperator {
     ( type-name ) cast-expression
 */
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum CastExpression {
     UnaryExpression(UnaryExpression),
     Cast {
@@ -199,6 +206,7 @@ pub(crate) enum CastExpression {
     logical-OR-expression
     logical-OR-expression ? expression : conditional-expression
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum MultiplicativeExpression {
     CastExpression(CastExpression),
     Expression {
@@ -207,12 +215,14 @@ pub(crate) enum MultiplicativeExpression {
         operand: CastExpression,
     },
 }
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum MultiplicativeOperator {
     Mult,
     Div,
     Mod,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum AdditiveExpression {
     MultiplicativeExpression(MultiplicativeExpression),
     Expression {
@@ -221,11 +231,13 @@ pub(crate) enum AdditiveExpression {
         operand: MultiplicativeExpression,
     },
 }
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum AdditiveOperator {
     Plus,
     Minus,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ShiftExpression {
     AdditiveExpression(AdditiveExpression),
     Shift {
@@ -234,11 +246,13 @@ pub(crate) enum ShiftExpression {
         operand: AdditiveExpression,
     },
 }
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ShiftOperator {
     Left,
     Right,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum RelationalExpression {
     ShiftExpression(ShiftExpression),
     Relational {
@@ -247,6 +261,7 @@ pub(crate) enum RelationalExpression {
         operand: ShiftExpression,
     },
 }
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum RelationalOperator {
     Lesser,
     Greater,
@@ -254,6 +269,7 @@ pub(crate) enum RelationalOperator {
     GreaterEqual,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum EqualityExpression {
     RelationalExpression(RelationalExpression),
     EqualityCheck {
@@ -262,11 +278,13 @@ pub(crate) enum EqualityExpression {
         operand: RelationalExpression,
     },
 }
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum EqualityOperator {
     Equal,
     NotEqual,
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ANDExpression {
     EqualityExpression(EqualityExpression),
     ANDExpression {
@@ -275,6 +293,7 @@ pub(crate) enum ANDExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ExclusiveOrExpression {
     ANDExpression(ANDExpression),
     ExclusiveOrExpression {
@@ -283,6 +302,7 @@ pub(crate) enum ExclusiveOrExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum InclusiveOrExpression {
     ExclusiveOrExpression(ExclusiveOrExpression),
     InclusiveOrExpression {
@@ -291,6 +311,7 @@ pub(crate) enum InclusiveOrExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum LogicalANDExpression {
     InclusiveOrExpression(InclusiveOrExpression),
     LogicalANDExpression {
@@ -299,6 +320,7 @@ pub(crate) enum LogicalANDExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum LogicalORExpression {
     LogicalANDExpression(LogicalANDExpression),
     LogicalORExpression {
@@ -307,6 +329,7 @@ pub(crate) enum LogicalORExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum ConditionalExpression {
     LogicalORExpression(LogicalORExpression),
     Ternary {
@@ -323,6 +346,7 @@ pub(crate) enum ConditionalExpression {
 (6.5.16) assignment-operator: one of
     = *= /= %= += -= <<= >>= &= ^= |=
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum AssignmentExpression {
     ConditionalExpression(ConditionalExpression),
     Assignment {
@@ -332,6 +356,7 @@ pub(crate) enum AssignmentExpression {
     },
 }
 
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum AssignmentOperator {
     Assign,
     AssignMult,
@@ -351,6 +376,7 @@ pub(crate) enum AssignmentOperator {
     assignment-expression
     expression , assignment-expression
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) enum Expression {
     AssignmentExpression(Box<AssignmentExpression>),
     Chain {
@@ -363,6 +389,7 @@ pub(crate) enum Expression {
 (6.6) constant-expression:
     conditional-expression
 */
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub(crate) struct ConstantExpression {
     internal: ConditionalExpression,
 }
