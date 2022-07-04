@@ -1,6 +1,8 @@
+use chumsky::Parser;
 use log::{debug, error, info};
 use std::{fs::read_to_string, process::Command, time::Instant};
 use structopt::StructOpt;
+use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 
 /// A StructOpt example
 #[derive(StructOpt, Debug)]
@@ -103,8 +105,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // call lexer
     let mut lexer = Lexer::new();
-    let token_arr = lexer.string_to_token_arr(preprocessed_file);
-
+    let token_arr = lexer.string_to_token_arr(preprocessed_file.clone());
+    
     for token in token_arr {
         debug!("{}", token);
     }
@@ -113,10 +115,82 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Lexing of file took: {:?}", timer_end_lexing);
 
     let timer_start_parsing = Instant::now();
-    info!("Starting Parsing of file: {:?}", in_file_path);
+    info!("Starting Lexing-New of file: {:?}", in_file_path);
+    
+    let (tokens, errs) = crate::parser::lexer().parse_recovery(preprocessed_file.as_str());
 
-    let mut parser = CParser::new(String::new());
+    println!("tokens: {:?}",tokens);
+    println!("errs: {:?}",errs);
+            
+    errs.into_iter()
+        .map(|e| e.map(|c| c.to_string()))
+        .for_each(|e| {
+            let report = Report::build(ReportKind::Error, (), e.span().start);
 
+            println!("err: {:?}",e);
 
+            let report = match e.reason() {
+                chumsky::error::SimpleReason::Unclosed { span, delimiter } => report
+                    .with_message(format!(
+                        "Unclosed delimiter {}",
+                        delimiter.fg(Color::Yellow)
+                    ))
+                    .with_label(
+                        Label::new(span.clone())
+                            .with_message(format!(
+                                "Unclosed delimiter {}",
+                                delimiter.fg(Color::Yellow)
+                            ))
+                            .with_color(Color::Yellow),
+                    )
+                    .with_label(
+                        Label::new(e.span())
+                            .with_message(format!(
+                                "Must be closed before this {}",
+                                e.found()
+                                    .unwrap_or(&"end of file".to_string())
+                                    .fg(Color::Red)
+                            ))
+                            .with_color(Color::Red),
+                    ),
+                chumsky::error::SimpleReason::Unexpected => report
+                    .with_message(format!(
+                        "{}, expected {}",
+                        if e.found().is_some() {
+                            "Unexpected token in input"
+                        } else {
+                            "Unexpected end of input"
+                        },
+                        if e.expected().len() == 0 {
+                            "something else".to_string()
+                        } else {
+                            e.expected()
+                                .map(|expected| match expected {
+                                    Some(expected) => expected.to_string(),
+                                    None => "end of input".to_string(),
+                                })
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        }
+                    ))
+                    .with_label(
+                        Label::new(e.span())
+                            .with_message(format!(
+                                "Unexpected token {}",
+                                e.found()
+                                    .unwrap_or(&"end of file".to_string())
+                                    .fg(Color::Red)
+                            ))
+                            .with_color(Color::Red),
+                    ),
+                chumsky::error::SimpleReason::Custom(msg) => report.with_message(msg).with_label(
+                    Label::new(e.span())
+                        .with_message(format!("{}", msg.fg(Color::Red)))
+                        .with_color(Color::Red),
+                ),
+            };
+
+            report.finish().print(Source::from(&preprocessed_file)).unwrap();
+        });
     Ok(())
 }
