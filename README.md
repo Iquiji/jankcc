@@ -12,12 +12,12 @@
 
 ## Features:
 
-- [ ] Preproccessor?
+- [ ] Preproccessor? (Put on Low Priority for now)
   - [ ] #include
   - [ ] #ifndef
   - [ ] #if
   - [ ] ...
-- [ ] Lexer
+- [x] Lexer
   - [ ] Sensible Error Generation
 - [ ] Parser
   - [ ] Sensible Error Generation
