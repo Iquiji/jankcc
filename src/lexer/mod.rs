@@ -33,9 +33,9 @@ impl fmt::Display for CToken {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OriginalLocation {
-    file: String,
-    line: usize,
-    collumn: usize,
+    pub file: String,
+    pub line: usize,
+    pub collumn: usize,
 }
 
 pub struct Lexer {

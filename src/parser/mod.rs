@@ -69,12 +69,22 @@ impl CParser{
         unimplemented!()
     }
     pub(crate) fn current_token(&self) -> CToken{
-        unimplemented!()
+        self.tokens[self.idx].clone()
     }
     pub(crate) fn next_token(&self) -> CToken{
-        unimplemented!()
+        self.tokens[self.idx + 1].clone()
     }
-    pub(crate) fn advance_idx(&mut self){
-        unimplemented!()
+    pub(crate) fn advance_idx(&mut self) -> CToken{
+        let temp = self.tokens[self.idx].clone();
+        self.idx += 1;
+        temp
+    }
+}
+/*
+    Error handling when something is expected
+*/
+impl CParser{
+    pub(crate) fn error_unexpected(&mut self,found: CToken,expected: &str){
+        panic!("Line {}-{}: Expected: {}, Instead found Token: {:?}",found.loc.line,found.loc.collumn,expected,found);
     }
 }
