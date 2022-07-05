@@ -393,3 +393,43 @@ pub(crate) enum Expression {
 pub(crate) struct ConstantExpression {
     internal: ConditionalExpression,
 }
+/* 
+expression can be either:
+
+- Expression => Vec<Assignment> seperated by ,
+- Assignment => Cond or Assignment ==> difficult
+- Conditional <= ConstantExpression (needs to be handled differently because compile time)
+
+arithmetic expression:
+- Log Or
+- Log And
+- inclusive or
+- exclusive or
+- and 
+- equality
+- relational
+- shift
+- add
+- mult
+
+weird stuff
+- cast
+- undary
+- postfix
+- primary
+
+the chain resolves to vec<one_down>
+just have to check for operator at the end, if this chaining goes on or not
+
+arithmetic expression?
+from log or => mult
+
+assigment,expr,primary,generic seperatily
+
+*/ 
+
+impl super::super::CParser{
+    pub(crate) fn parse_expression(&mut self,) -> Expression{
+        unimplemented!()
+    }
+}
