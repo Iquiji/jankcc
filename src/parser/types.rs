@@ -1,4 +1,4 @@
-use super::{CParser, span::Spanned};
+use super::{span::Spanned, CParser};
 
 // we need to save the amount of bytes needed to represent
 // different sized char,int,unsigned int
@@ -43,12 +43,12 @@ EZ
     _Bool
     _Complex
     atomic-type-specifier           =-=-> _Atomic ( type-name )
-    struct-or-union-specifier       
+    struct-or-union-specifier
     enum-specifier
     typedef-name
 */
-impl CParser{
-    pub(crate) fn parse_type_name(&mut self) -> Box<Spanned<CTypeName>>{
+impl CParser {
+    pub(crate) fn parse_type_name(&mut self) -> Box<Spanned<CTypeName>> {
         unimplemented!()
     }
 }

@@ -1,8 +1,11 @@
-use crate::parser::{span::{Span, Spanned}, types::CTypeName};
+use crate::parser::{
+    span::{Span, Spanned},
+    types::CTypeName,
+};
 
 use super::{
     declarations::{InitializerList, TypeName},
-    Constant, Identifier, StringLiteral,
+    Constant, Identifier, StringLiteral, NumberLike,
 };
 
 /*
@@ -402,8 +405,6 @@ pub(crate) enum IncrementType {
     Decrement,
 }
 
-
-
 /*
 expression can be either:
 
@@ -494,44 +495,44 @@ pub(crate) enum CExpression {
         type_name: Box<Spanned<CTypeName>>,
         value: Box<Spanned<Self>>,
     },
-    PrefixIncrement{
+    PrefixIncrement {
         increment_type: IncrementType,
         value: Box<Spanned<Self>>,
     },
-    Unary{
+    Unary {
         unary_op: UnaryOperator,
         value: Box<Spanned<Self>>,
     },
-    SizeOf{
+    SizeOf {
         value: Box<Spanned<Self>>,
     },
-    SizeOfType{
+    SizeOfType {
         type_name: Box<Spanned<CTypeName>>,
     },
-    AlignOfType{
+    AlignOfType {
         type_name: Box<Spanned<CTypeName>>,
     },
-    ArraySubscription{
+    ArraySubscription {
         array: Box<Spanned<Self>>,
         index: Box<Spanned<Self>>,
     },
-    FunctionCall{
+    FunctionCall {
         function: Box<Spanned<Self>>,
         arguments: Vec<Box<Spanned<Self>>>,
     },
-    DirectMemberAccess{
+    DirectMemberAccess {
         to_access: Box<Spanned<Self>>,
         member: Identifier,
     },
-    IndirectMemberAccess{
+    IndirectMemberAccess {
         to_access: Box<Spanned<Self>>,
         member: Identifier,
     },
-    PostfixIncrement{
+    PostfixIncrement {
         increment_type: IncrementType,
         value: Box<Spanned<Self>>,
     },
-    TypeInitializer{
+    TypeInitializer {
         type_name: CTypeName,
         // FIXME:
         initializer_list: InitializerList,
@@ -540,7 +541,7 @@ pub(crate) enum CExpression {
     Constant(Constant),
     StringLiteral(StringLiteral),
     Paranthesised(Box<Spanned<Self>>),
-    GenericSelection(Box<Spanned<GenericSelection>>)
+    GenericSelection(Box<Spanned<GenericSelection>>),
 }
 
 impl super::super::CParser {
@@ -615,6 +616,45 @@ impl super::super::CParser {
         unimplemented!()
     }
     pub(crate) fn parse_expr_primary(&mut self) -> Box<Spanned<CExpression>> {
+        let current_token = self.current_token();
+        match current_token.t_type {
+            crate::lexer::token_types::CTokenType::Keyword(keyword) => {
+                // only GENERIC for generic Selection
+                todo!()
+            },
+            crate::lexer::token_types::CTokenType::Identifier => {
+                return Spanned::boxed_new(
+                    CExpression::Identifier(Identifier {
+                        string: current_token.original,
+                    }),
+                    current_token.loc.clone(),
+                    current_token.loc,
+                );
+            },
+            crate::lexer::token_types::CTokenType::Constant => {
+                // return constant
+                return Spanned::boxed_new(
+                    CExpression::Constant(Constant::Number(NumberLike {
+                        from: current_token.original,
+                    })),
+                    current_token.loc.clone(),
+                    current_token.loc,
+                );
+            },
+            crate::lexer::token_types::CTokenType::StringLiteral => {
+                return Spanned::boxed_new(
+                    CExpression::StringLiteral(StringLiteral {
+                        value: current_token.original,
+                    }),
+                    current_token.loc.clone(),
+                    current_token.loc,
+                );
+            }
+            crate::lexer::token_types::CTokenType::Punctuator => {
+                // only '(' allowed for paranthesised expr
+                todo!()
+            },
+        }
         unimplemented!()
     }
 }

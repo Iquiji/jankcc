@@ -2,6 +2,9 @@ pub(crate) mod parse_nodes;
 pub(crate) mod span;
 pub(crate) mod types;
 
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashSet;
 
 use crate::lexer::token_types::CKeyword;

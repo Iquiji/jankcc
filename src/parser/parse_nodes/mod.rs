@@ -24,7 +24,7 @@ pub(crate) struct StringLiteral {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Constant {
-    Integer(NumberLike),
+    Number(NumberLike),
 }
 
 /*

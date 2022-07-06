@@ -28,3 +28,15 @@
 - [ ] SSA optimisier
 - [ ] Register Allocator
 - [ ] Code Generation from SSA
+
+---
+
+## Implementation Details:
+
+#### Lexer:
+  - Only Integer/Float Numbers ([0-9+(.0-9*)?])
+
+
+#### Parser:
+ - Handwritten Recursive Descent Parser
+ - Still in Progress

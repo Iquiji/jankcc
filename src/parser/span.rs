@@ -27,6 +27,25 @@ impl<T: Clone + Debug> DerefMut for Spanned<T> {
     }
 }
 
+impl<T: Clone + Debug> Spanned<T> {
+    pub(crate) fn new(value: T, start: OriginalLocation, end: OriginalLocation) -> Spanned<T> {
+        Self {
+            inner: value,
+            span: Span::new(start, end),
+        }
+    }
+    pub(crate) fn boxed_new(
+        value: T,
+        start: OriginalLocation,
+        end: OriginalLocation,
+    ) -> Box<Spanned<T>> {
+        Box::new(Self {
+            inner: value,
+            span: Span::new(start, end),
+        })
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Span {
     start: OriginalLocation,
