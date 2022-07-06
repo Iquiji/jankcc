@@ -174,6 +174,7 @@ impl Lexer {
                                     panic!("Second Point seperator in number")
                                 }
                                 point_seperator_reached = true;
+                                current_token_string.push(character);
                             } else {
                                 end_char = character;
                                 break;

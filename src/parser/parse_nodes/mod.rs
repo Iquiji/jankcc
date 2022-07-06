@@ -9,17 +9,17 @@ pub mod statements;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Identifier {
-    string: String,
+    pub(crate) string: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct NumberLike {
-    from: String,
+    pub(crate) from: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct StringLiteral {
-    value: String,
+    pub(crate) value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -13,6 +13,7 @@ pub enum CTokenType {
 }
 
 #[allow(clippy::upper_case_acronyms)]
+#[allow(non_camel_case_types)]
 #[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CKeyword {
@@ -50,16 +51,16 @@ pub enum CKeyword {
     VOID,
     VOLATILE,
     WHILE,
-    // _ALIGNAS,
-    // _ALIGNOF,
-    // _ATOMIC,
-    // _BOOL,
-    // _COMPLEX,
-    // _GENERIC,
-    // _IMAGINARY,
-    // _NORETURN,
-    // _STATIC_ASSERT,
-    // _THREAD_LOCAL,
+    ALIGNAS,
+    ALIGNOF,
+    ATOMIC,
+    BOOL,
+    COMPLEX,
+    GENERIC,
+    IMAGINARY,
+    NORETURN,
+    STATIC_ASSERT,
+    THREAD_LOCAL,
 }
 impl CKeyword {
     pub fn to_keyword(string: &str) -> Option<CKeyword> {
@@ -100,6 +101,16 @@ impl CKeyword {
             "VOID" => Some(VOID),
             "VOLATILE" => Some(VOLATILE),
             "WHILE" => Some(WHILE),
+            "_ALIGNAS" => Some(ALIGNAS),
+            "_ALIGNOF" => Some(ALIGNOF),
+            "_ATOMIC" => Some(ATOMIC),
+            "_BOOL" => Some(BOOL),
+            "_COMPLEX" => Some(COMPLEX),
+            "_GENERIC" => Some(GENERIC),
+            "_IMAGINARY" => Some(IMAGINARY),
+            "_NORETURN" => Some(NORETURN),
+            "_STATIC_ASSERT" => Some(STATIC_ASSERT),
+            "_THREAD_LOCAL" => Some(THREAD_LOCAL),
             _ => None,
         }
     }

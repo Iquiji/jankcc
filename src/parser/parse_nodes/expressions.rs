@@ -1,7 +1,7 @@
-use crate::parser::{
+use crate::{parser::{
     span::{Span, Spanned},
     types::CTypeName,
-};
+}, lexer::token_types::CKeyword};
 
 use super::{
     declarations::{InitializerList, TypeName},
@@ -620,41 +620,51 @@ impl super::super::CParser {
         match current_token.t_type {
             crate::lexer::token_types::CTokenType::Keyword(keyword) => {
                 // only GENERIC for generic Selection
-                todo!()
+                if keyword == CKeyword::GENERIC{
+                    // generic selection
+                    unimplemented!()
+                }else{
+                    // panic with unexpected keyword
+                    todo!()
+                }
             },
             crate::lexer::token_types::CTokenType::Identifier => {
-                return Spanned::boxed_new(
+                Spanned::boxed_new(
                     CExpression::Identifier(Identifier {
                         string: current_token.original,
                     }),
                     current_token.loc.clone(),
                     current_token.loc,
-                );
+                )
             },
             crate::lexer::token_types::CTokenType::Constant => {
                 // return constant
-                return Spanned::boxed_new(
+                Spanned::boxed_new(
                     CExpression::Constant(Constant::Number(NumberLike {
                         from: current_token.original,
                     })),
                     current_token.loc.clone(),
                     current_token.loc,
-                );
+                )
             },
             crate::lexer::token_types::CTokenType::StringLiteral => {
-                return Spanned::boxed_new(
+                Spanned::boxed_new(
                     CExpression::StringLiteral(StringLiteral {
                         value: current_token.original,
                     }),
                     current_token.loc.clone(),
                     current_token.loc,
-                );
+                )
             }
             crate::lexer::token_types::CTokenType::Punctuator => {
                 // only '(' allowed for paranthesised expr
-                todo!()
+                if current_token.original == "("{
+                    unimplemented!()
+                } else{
+                    // unexpected punctuator -> panic and error?!
+                    todo!()
+                }
             },
         }
-        unimplemented!()
     }
 }
