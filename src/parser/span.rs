@@ -56,3 +56,9 @@ impl Span {
         Span { start, end }
     }
 }
+
+impl<T: Clone + Debug> Spanned<T>{
+    pub(crate) fn error_unexpected_span(&mut self, found: Spanned<T>, expected: &str) {
+        unimplemented!()
+    }
+}
