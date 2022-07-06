@@ -1,3 +1,5 @@
+use crate::parser::span::{Span, Spanned};
+
 use super::{
     declarations::{InitializerList, TypeName},
     Constant, Identifier, StringLiteral,
@@ -427,9 +429,22 @@ from log or => mult
 assigment,expr,primary,generic seperatily
 
 */ 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum CExpression{
+    Assignment{
+        to_assign: Box<Spanned<Self>>,
+        operator: AssignmentOperator,
+        value: Box<Spanned<Self>>,
+    },
+    Ternary{
+        condition: Box<Spanned<Self>>,
+        if_true: Box<Spanned<Self>>,
+        tern_else: Box<Spanned<Self>>,
+    },
+}
 
 impl super::super::CParser{
-    pub(crate) fn parse_expression(&mut self,) -> Expression{
+    pub(crate) fn parse_expression(&mut self,) -> CExpression{
         unimplemented!()
     }
 }

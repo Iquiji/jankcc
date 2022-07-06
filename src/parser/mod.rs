@@ -1,5 +1,6 @@
 pub(crate) mod parse_nodes;
 pub(crate) mod types;
+pub(crate) mod span;
 
 use std::collections::HashSet;
 
