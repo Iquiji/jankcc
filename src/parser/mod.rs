@@ -1,6 +1,6 @@
 pub(crate) mod parse_nodes;
-pub(crate) mod types;
 pub(crate) mod span;
+pub(crate) mod types;
 
 use std::collections::HashSet;
 
@@ -35,47 +35,59 @@ impl CParser {
 
     list of hashsets
 */
-impl CParser{
-    pub(crate) fn is_typedef(&self,ident: &str) -> bool{
-        for table in &self.typedef_table{
-            if table.contains(ident){
+impl CParser {
+    pub(crate) fn is_typedef(&self, ident: &str) -> bool {
+        for table in &self.typedef_table {
+            if table.contains(ident) {
                 return true;
             }
         }
         false
     }
-    pub(crate) fn push_typedef_scope(&mut self){
+    pub(crate) fn push_typedef_scope(&mut self) {
         self.typedef_table.push(HashSet::new());
     }
-    pub(crate) fn pop_typedef_scope(&mut self){
+    pub(crate) fn pop_typedef_scope(&mut self) {
         self.typedef_table.pop();
     }
-    pub(crate) fn insert_typedef(&mut self,ident: &str){
+    pub(crate) fn insert_typedef(&mut self, ident: &str) {
         let last = self.typedef_table.len() - 1;
         self.typedef_table[last].insert(ident.to_string());
     }
 }
 
 /*
-    Helper functions for expecting, accepting and selecting tokens 
+    Helper functions for expecting, accepting and selecting tokens
 */
-impl CParser{
-    pub(crate) fn expect_type(&mut self,type_to_accept: CTokenType) -> CToken{
+impl CParser {
+    pub(crate) fn expect_type(&mut self, type_to_accept: CTokenType) -> CToken {
+        if self.current_token().t_type == type_to_accept {
+            self.advance_idx()
+        } else {
+            self.error_unexpected(
+                self.current_token(),
+                &format!("TokenType: {:?}", type_to_accept),
+            );
+            unreachable!();
+        }
+    }
+    pub(crate) fn expect_type_and_string(
+        &mut self,
+        type_to_accept: CTokenType,
+        string: &str,
+    ) -> CToken {
         unimplemented!()
     }
-    pub(crate) fn expect_type_and_string(&mut self,type_to_accept: CTokenType,string: &str) -> CToken{
+    pub(crate) fn expect_one_of_keywords(&mut self, keywords_to_accept: &[CKeyword]) -> CKeyword {
         unimplemented!()
     }
-    pub(crate) fn expect_one_of_keywords(&mut self,keywords_to_accept: &[CKeyword]) -> CKeyword{
-        unimplemented!()
-    }
-    pub(crate) fn current_token(&self) -> CToken{
+    pub(crate) fn current_token(&self) -> CToken {
         self.tokens[self.idx].clone()
     }
-    pub(crate) fn next_token(&self) -> CToken{
+    pub(crate) fn next_token(&self) -> CToken {
         self.tokens[self.idx + 1].clone()
     }
-    pub(crate) fn advance_idx(&mut self) -> CToken{
+    pub(crate) fn advance_idx(&mut self) -> CToken {
         let temp = self.tokens[self.idx].clone();
         self.idx += 1;
         temp
@@ -84,8 +96,11 @@ impl CParser{
 /*
     Error handling when something is expected
 */
-impl CParser{
-    pub(crate) fn error_unexpected(&mut self,found: CToken,expected: &str){
-        panic!("Line {}-{}: Expected: {}, Instead found Token: {:?}",found.loc.line,found.loc.collumn,expected,found);
+impl CParser {
+    pub(crate) fn error_unexpected(&mut self, found: CToken, expected: &str) {
+        panic!(
+            "Line {}-{}: Expected: {}, Instead found Token: {:?}",
+            found.loc.line, found.loc.collumn, expected, found
+        );
     }
 }

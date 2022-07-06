@@ -1,4 +1,4 @@
-use crate::parser::span::{Span, Spanned};
+use crate::parser::{span::{Span, Spanned}, types::CTypeName};
 
 use super::{
     declarations::{InitializerList, TypeName},
@@ -34,17 +34,17 @@ pub(crate) enum PrimaryExpression {
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct GenericSelection {
-    assignment_expression: Box<AssignmentExpression>,
-    generic_assoc_list: GenericAssociationList,
+    assignment_expression: Box<Spanned<CExpression>>,
+    generic_assoc_list: Box<Spanned<GenericAssociationList>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GenericAssociation {
     TypeName {
-        type_name: TypeName,
-        assignment_expression: Box<AssignmentExpression>,
+        type_name: CTypeName,
+        assignment_expression: Box<Spanned<CExpression>>,
     },
-    Default(AssignmentExpression),
+    Default(Box<Spanned<CExpression>>),
 }
 
 pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
@@ -395,7 +395,16 @@ pub(crate) enum Expression {
 pub(crate) struct ConstantExpression {
     internal: ConditionalExpression,
 }
-/* 
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum IncrementType {
+    Increment,
+    Decrement,
+}
+
+
+
+/*
 expression can be either:
 
 - Expression => Vec<Assignment> seperated by ,
@@ -407,7 +416,7 @@ arithmetic expression:
 - Log And
 - inclusive or
 - exclusive or
-- and 
+- and
 - equality
 - relational
 - shift
@@ -416,7 +425,7 @@ arithmetic expression:
 
 weird stuff
 - cast
-- undary
+- unary
 - postfix
 - primary
 
@@ -428,23 +437,184 @@ from log or => mult
 
 assigment,expr,primary,generic seperatily
 
-*/ 
+*/
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum CExpression{
-    Assignment{
+pub(crate) enum CExpression {
+    Assignment {
         to_assign: Box<Spanned<Self>>,
         operator: AssignmentOperator,
         value: Box<Spanned<Self>>,
     },
-    Ternary{
+    Ternary {
         condition: Box<Spanned<Self>>,
         if_true: Box<Spanned<Self>>,
         tern_else: Box<Spanned<Self>>,
     },
+    LogicalOr {
+        pieces: Vec<Box<Spanned<Self>>>,
+    },
+    LogicalAnd {
+        pieces: Vec<Box<Spanned<Self>>>,
+    },
+    InclusiveOr {
+        pieces: Vec<Box<Spanned<Self>>>,
+    },
+    ExlusiveOr {
+        pieces: Vec<Box<Spanned<Self>>>,
+    },
+    And {
+        pieces: Vec<Box<Spanned<Self>>>,
+    },
+    Equality {
+        left_piece: Box<Spanned<Self>>,
+        equality_op: EqualityOperator,
+        right_piece: Box<Spanned<Self>>,
+    },
+    Relational {
+        left_piece: Box<Spanned<Self>>,
+        equality_op: RelationalOperator,
+        right_piece: Box<Spanned<Self>>,
+    },
+    Shift {
+        value: Box<Spanned<Self>>,
+        shift_type: ShiftOperator,
+        shift_amount: Box<Spanned<Self>>,
+    },
+    Additive {
+        left_value: Box<Spanned<Self>>,
+        op: AdditiveOperator,
+        right_value: Box<Spanned<Self>>,
+    },
+    Multiplicative {
+        left_value: Box<Spanned<Self>>,
+        op: MultiplicativeOperator,
+        right_value: Box<Spanned<Self>>,
+    },
+    Cast {
+        type_name: Box<Spanned<CTypeName>>,
+        value: Box<Spanned<Self>>,
+    },
+    PrefixIncrement{
+        increment_type: IncrementType,
+        value: Box<Spanned<Self>>,
+    },
+    Unary{
+        unary_op: UnaryOperator,
+        value: Box<Spanned<Self>>,
+    },
+    SizeOf{
+        value: Box<Spanned<Self>>,
+    },
+    SizeOfType{
+        type_name: Box<Spanned<CTypeName>>,
+    },
+    AlignOfType{
+        type_name: Box<Spanned<CTypeName>>,
+    },
+    ArraySubscription{
+        array: Box<Spanned<Self>>,
+        index: Box<Spanned<Self>>,
+    },
+    FunctionCall{
+        function: Box<Spanned<Self>>,
+        arguments: Vec<Box<Spanned<Self>>>,
+    },
+    DirectMemberAccess{
+        to_access: Box<Spanned<Self>>,
+        member: Identifier,
+    },
+    IndirectMemberAccess{
+        to_access: Box<Spanned<Self>>,
+        member: Identifier,
+    },
+    PostfixIncrement{
+        increment_type: IncrementType,
+        value: Box<Spanned<Self>>,
+    },
+    TypeInitializer{
+        type_name: CTypeName,
+        // FIXME:
+        initializer_list: InitializerList,
+    },
+    Identifier(Identifier),
+    Constant(Constant),
+    StringLiteral(StringLiteral),
+    Paranthesised(Box<Spanned<Self>>),
+    GenericSelection(Box<Spanned<GenericSelection>>)
 }
 
-impl super::super::CParser{
-    pub(crate) fn parse_expression(&mut self,) -> CExpression{
+impl super::super::CParser {
+    pub(crate) fn parse_expression(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_assignment(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_cond(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_logi_or(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_logi_and(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_incl_or(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_excl_or(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_and(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_equality(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_relational(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_shift(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_add(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_mult(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+}
+/*
+arithmetic expression:
+- Log Or
+- Log And
+- inclusive or
+- exclusive or
+- and
+- equality
+- relational
+- shift
+- add
+- mult
+
+weird stuff
+- cast
+- unary
+- postfix
+- primary
+*/
+
+impl super::super::CParser {
+    pub(crate) fn parse_expr_cast(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_unary(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_postfix(&mut self) -> Box<Spanned<CExpression>> {
+        unimplemented!()
+    }
+    pub(crate) fn parse_expr_primary(&mut self) -> Box<Spanned<CExpression>> {
         unimplemented!()
     }
 }
