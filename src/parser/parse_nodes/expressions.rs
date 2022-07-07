@@ -1,11 +1,14 @@
-use crate::{parser::{
-    span::{Span, Spanned},
-    types::CTypeName,
-}, lexer::token_types::CKeyword};
+use crate::{
+    lexer::token_types::{CKeyword, CTokenType, CTokenType::*},
+    parser::{
+        span::{Span, Spanned},
+        types::CTypeName,
+    },
+};
 
 use super::{
     declarations::{InitializerList, TypeName},
-    Constant, Identifier, StringLiteral, NumberLike,
+    Constant, Identifier, NumberLike, StringLiteral,
 };
 
 /*
@@ -613,22 +616,86 @@ impl super::super::CParser {
         unimplemented!()
     }
     pub(crate) fn parse_expr_postfix(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        /*
+            primary-expression
+            postfix-expression [ expression ]
+            postfix-expression ( argument-expression-listopt )
+            postfix-expression . identifier
+            postfix-expression -> identifier
+            postfix-expression ++
+            postfix-expression --
+            ( type-name ) { initializer-list }
+            ( type-name ) { initializer-list , }
+
+            Idea:
+            - Check for ( => then do typeinit ==> check for [ or (
+            - parse primary ==> check for [ or (
+        */
+        let start = self.current_token().loc;
+        let mut end = start.clone();
+
+        let initial: Box<Spanned<CExpression>> = if self.current_token().t_type
+            == CTokenType::Punctuator
+            && self.current_token().original == "("
+            && self.check_is_start_of_type_name(&self.next_token())
+        {
+            // ( type-name ) { initializer-list }
+            todo!("type init still unimplemented");
+        } else {
+            self.parse_expr_primary()
+        };
+
+        let mut result = initial;
+
+        // check for '[' or '(' or '.' or '->' or '++' or '--' in a loop
+        while self.current_token().t_type == Punctuator {
+            let specific_punctuator = self.advance_idx().original;
+
+            match specific_punctuator.as_str() {
+                "[" => {
+                    unimplemented!()
+                }
+                "(" => {
+                    unimplemented!()
+                }
+                "." => {
+                    let ident = Identifier {
+                        string: self.expect_type(Identifier).original,
+                    };
+                    end = self.current_token().loc;
+                    result = Spanned::boxed_new(CExpression::DirectMemberAccess { to_access: result, member: ident }, start.clone(), end.clone());
+                }
+                "->" => {
+                    unimplemented!()
+                }
+                "++" | "--" => {
+                    unimplemented!()
+                }
+                unknown => panic!("unknown: {}", unknown),
+            }
+        }
+
+        result
     }
     pub(crate) fn parse_expr_primary(&mut self) -> Box<Spanned<CExpression>> {
         let current_token = self.current_token();
-        match current_token.t_type {
+        match current_token.clone().t_type {
             crate::lexer::token_types::CTokenType::Keyword(keyword) => {
                 // only GENERIC for generic Selection
-                if keyword == CKeyword::GENERIC{
+                if keyword == CKeyword::GENERIC {
                     // generic selection
                     unimplemented!()
-                }else{
+                } else {
                     // panic with unexpected keyword
-                    todo!()
+                    self.error_unexpected(
+                        current_token,
+                        "Expected only _Generic in primary Expression",
+                    );
+                    unreachable!()
                 }
-            },
+            }
             crate::lexer::token_types::CTokenType::Identifier => {
+                self.advance_idx();
                 Spanned::boxed_new(
                     CExpression::Identifier(Identifier {
                         string: current_token.original,
@@ -636,9 +703,10 @@ impl super::super::CParser {
                     current_token.loc.clone(),
                     current_token.loc,
                 )
-            },
+            }
             crate::lexer::token_types::CTokenType::Constant => {
                 // return constant
+                self.advance_idx();
                 Spanned::boxed_new(
                     CExpression::Constant(Constant::Number(NumberLike {
                         from: current_token.original,
@@ -646,8 +714,9 @@ impl super::super::CParser {
                     current_token.loc.clone(),
                     current_token.loc,
                 )
-            },
+            }
             crate::lexer::token_types::CTokenType::StringLiteral => {
+                self.advance_idx();
                 Spanned::boxed_new(
                     CExpression::StringLiteral(StringLiteral {
                         value: current_token.original,
@@ -658,13 +727,22 @@ impl super::super::CParser {
             }
             crate::lexer::token_types::CTokenType::Punctuator => {
                 // only '(' allowed for paranthesised expr
-                if current_token.original == "("{
-                    unimplemented!()
-                } else{
+                if current_token.original == "(" {
+                    let start = current_token.loc;
+                    let expr = self.parse_expression();
+                    let end = self.expect_type_and_string(CTokenType::Punctuator, ")").loc;
+
+                    Spanned::boxed_new(CExpression::Paranthesised(expr), start, end)
+                } else {
                     // unexpected punctuator -> panic and error?!
-                    todo!()
+                    self.error_unexpected(
+                        current_token,
+                        "Expected only ( in primary Expression for parenthesised Expression",
+                    );
+                    unreachable!()
                 }
             },
+            Eof => unreachable!(),
         }
     }
 }

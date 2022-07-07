@@ -87,7 +87,7 @@ impl CParser {
         unimplemented!()
     }
     pub(crate) fn current_token(&self) -> CToken {
-        self.tokens[self.idx].clone()
+        self.tokens.get(self.idx).clone()
     }
     pub(crate) fn next_token(&self) -> CToken {
         self.tokens[self.idx + 1].clone()

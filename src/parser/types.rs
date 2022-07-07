@@ -1,3 +1,5 @@
+use crate::lexer::CToken;
+
 use super::{span::Spanned, CParser};
 
 // we need to save the amount of bytes needed to represent
@@ -49,6 +51,10 @@ EZ
 */
 impl CParser {
     pub(crate) fn parse_type_name(&mut self) -> Box<Spanned<CTypeName>> {
+        unimplemented!()
+    }
+
+    pub(crate) fn check_is_start_of_type_name(&mut self, token: &CToken) -> bool {
         unimplemented!()
     }
 }

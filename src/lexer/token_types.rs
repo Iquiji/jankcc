@@ -10,6 +10,8 @@ pub enum CTokenType {
     StringLiteral,
     /// one of see helper_funcs.rs/is_punctuator
     Punctuator,
+    /// end
+    Eof,
 }
 
 #[allow(clippy::upper_case_acronyms)]
