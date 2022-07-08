@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::lexer::CToken;
 
 use super::{span::Spanned, CParser};
@@ -12,7 +14,7 @@ use super::{span::Spanned, CParser};
 (6.7.7) type-name:
     specifier-qualifier-list abstract-declarator opt
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CTypeName {}
 
 /*

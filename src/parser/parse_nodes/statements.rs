@@ -1,4 +1,4 @@
-use std::path::Iter;
+use crate::parser::span::Spanned;
 
 use super::declarations::*;
 use super::expressions::*;
@@ -13,11 +13,11 @@ use super::*;
     iteration-statement
     jump-statement
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Statement {
     Labeled(Box<LabeledStatement>),
     Compound(Box<CompoundStatement>),
-    Expression(Box<ExpressionStatement>),
+    CExpression(Box<ExpressionStatement>),
     Selection(Box<SelectionStatement>),
     Iteration(Box<IterationStatement>),
     Jump(Box<JumpStatement>),
@@ -29,13 +29,13 @@ pub(crate) enum Statement {
     case constant-expression : statement
     default : statement
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct LabeledStatement {
     ident: Identifier,
     body: Statement,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum SwitchLabeledStatement {
     Case {
         const_expr: ConstantExpression,
@@ -56,11 +56,11 @@ pub(crate) enum SwitchLabeledStatement {
     declaration
     statemen
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CompoundStatement {
     body: Vec<BlockItem>,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum BlockItem {
     Declaration(Declaration),
     Statement(Statement),
@@ -70,9 +70,9 @@ pub(crate) enum BlockItem {
 (6.8.3) expression-statement:
     expressionopt ;
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ExpressionStatement {
-    body: Option<Expression>,
+    body: Option<Box<Spanned<CExpression>>>,
 }
 
 /*
@@ -81,19 +81,19 @@ pub(crate) struct ExpressionStatement {
     if ( expression ) statement else statement
     switch ( expression ) statement
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum SelectionStatement {
     If {
-        cond: Expression,
+        cond: Box<Spanned<CExpression>>,
         body: Statement,
     },
     IfElse {
-        cond: Expression,
+        cond: Box<Spanned<CExpression>>,
         body: Statement,
         else_body: Statement,
     },
     Switch {
-        cond: Expression,
+        cond: Box<Spanned<CExpression>>,
         body: Vec<SwitchLabeledStatement>,
     },
 }
@@ -105,26 +105,26 @@ pub(crate) enum SelectionStatement {
     for ( expression opt ; expression opt ; expression opt ) statement
     for ( declaration expression opt ; expression opt ) statement
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum IterationStatement {
     While {
-        cond: Expression,
+        cond: Box<Spanned<CExpression>>,
         body: Statement,
     },
     DoWhile {
-        cond: Expression,
+        cond: Box<Spanned<CExpression>>,
         body: Statement,
     },
     For {
-        expr1: Option<Expression>,
-        expr2: Option<Expression>,
-        expr3: Option<Expression>,
+        expr1: Option<Box<Spanned<CExpression>>>,
+        expr2: Option<Box<Spanned<CExpression>>>,
+        expr3: Option<Box<Spanned<CExpression>>>,
         body: Statement,
     },
     ForDecl {
         declaration: Option<Declaration>,
-        expr2: Option<Expression>,
-        expr3: Option<Expression>,
+        expr2: Option<Box<Spanned<CExpression>>>,
+        expr3: Option<Box<Spanned<CExpression>>>,
         body: Statement,
     },
 }
@@ -136,10 +136,10 @@ pub(crate) enum IterationStatement {
     break ;
     return expression opt ;
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum JumpStatement {
     Goto(Identifier),
     Continue,
     Break,
-    Return(Option<Expression>),
+    Return(Option<Box<Spanned<CExpression>>>),
 }

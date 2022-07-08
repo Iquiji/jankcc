@@ -82,7 +82,19 @@ impl CParser {
         type_to_accept: CTokenType,
         string: &str,
     ) -> CToken {
-        unimplemented!()
+        if self.current_token().t_type == type_to_accept && self.current_token().original == string
+        {
+            self.advance_idx()
+        } else {
+            self.error_unexpected(
+                self.current_token(),
+                &format!(
+                    "TokenType: {:?} with Original String: '{}'",
+                    type_to_accept, string
+                ),
+            );
+            unreachable!();
+        }
     }
     pub(crate) fn expect_one_of_keywords(&mut self, keywords_to_accept: &[CKeyword]) -> CKeyword {
         unimplemented!()
@@ -102,7 +114,32 @@ impl CParser {
             .clone()
     }
     pub(crate) fn next_token(&self) -> CToken {
-        self.tokens[self.idx + 1].clone()
+        self.tokens
+            .get(self.idx + 1)
+            .unwrap_or(&CToken {
+                t_type: CTokenType::Eof,
+                original: String::new(),
+                loc: OriginalLocation {
+                    file: String::new(),
+                    line: 0,
+                    collumn: 0,
+                },
+            })
+            .clone()
+    }
+    pub(crate) fn prev_token(&self) -> CToken {
+        self.tokens
+            .get(self.idx - 1)
+            .unwrap_or(&CToken {
+                t_type: CTokenType::Eof,
+                original: String::new(),
+                loc: OriginalLocation {
+                    file: String::new(),
+                    line: 0,
+                    collumn: 0,
+                },
+            })
+            .clone()
     }
     pub(crate) fn advance_idx(&mut self) -> CToken {
         let temp = self.tokens[self.idx].clone();

@@ -4,6 +4,9 @@ use crate::lexer::CTokenType::*;
 use crate::lexer::Lexer;
 use crate::lexer::OriginalLocation;
 
+#[cfg(test)]
+use pretty_assertions::assert_eq;
+
 #[test]
 fn test_lexer_simple() {
     let input = r#"
@@ -249,6 +252,46 @@ int main() {
             loc: OriginalLocation {
                 file: "".to_string(),
                 line: 8,
+                collumn: 1,
+            },
+        },
+    ];
+
+    assert_eq!(
+        Lexer::new().string_to_token_arr(input.to_string()),
+        expected_output
+    );
+}
+#[test]
+fn test_lexer_extended_punctuators() {
+    let input = r#"--++->"#;
+
+    // TODO fix collumn number in lexer
+    let expected_output = vec![
+        CToken {
+            t_type: Punctuator,
+            original: "--".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 1,
+            },
+        },
+        CToken {
+            t_type: Punctuator,
+            original: "++".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 1,
+            },
+        },
+        CToken {
+            t_type: Punctuator,
+            original: "->".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
                 collumn: 1,
             },
         },

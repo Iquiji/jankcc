@@ -1,15 +1,11 @@
 use crate::{
     lexer::token_types::{CKeyword, CTokenType, CTokenType::*},
-    parser::{
-        span::{Span, Spanned},
-        types::CTypeName,
-    },
+    parser::{span::Spanned, types::CTypeName, CParser},
 };
 
-use super::{
-    declarations::{InitializerList, TypeName},
-    Constant, Identifier, NumberLike, StringLiteral,
-};
+use super::{declarations::InitializerList, Constant, Identifier, NumberLike, StringLiteral};
+
+use serde::{Deserialize, Serialize};
 
 /*
 (6.5.1) primary-expression:
@@ -19,14 +15,6 @@ use super::{
     ( expression )
     generic-selection
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum PrimaryExpression {
-    Identifier(Identifier),
-    Constant(Constant),
-    StringLiteral(StringLiteral),
-    Expression(Expression),
-    GenericSelecetion(GenericSelection),
-}
 
 /*
 (6.5.1.1) generic-selection:
@@ -38,13 +26,13 @@ pub(crate) enum PrimaryExpression {
     type-name : assignment-expression
     default : assignment-expression
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct GenericSelection {
     assignment_expression: Box<Spanned<CExpression>>,
     generic_assoc_list: Box<Spanned<GenericAssociationList>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum GenericAssociation {
     TypeName {
         type_name: CTypeName,
@@ -67,44 +55,42 @@ pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
     ( type-name ) { initializer-list }
     ( type-name ) { initializer-list , }
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum PostfixExpression {
-    PrimaryExpression(PrimaryExpression),
-    ArraySubscription {
-        on: Box<Self>,
-        index: Expression,
-    },
-    FunctionCall {
-        on: Box<Self>,
-        args: Option<ArgumentExpressionList>,
-    },
-    MemberAccess {
-        on: Box<Self>,
-        member: Identifier,
-    },
-    DereferencedMemberAccess {
-        on: Box<Self>,
-        member: Identifier,
-    },
-    IncrementSelf {
-        on: Box<Self>,
-    },
-    DecrementSelf {
-        on: Box<Self>,
-    },
-    /// Compound literals
-    TypeInitializer {
-        type_to_init: TypeName,
-        initializer_list: InitializerList,
-    },
-}
 
 /*
 (6.5.2) argument-expression-list:
     assignment-expression
     argument-expression-list , assignment-expression
 */
-pub(crate) type ArgumentExpressionList = Vec<AssignmentExpression>;
+pub(crate) type ArgumentExpressionList = Vec<Box<Spanned<CExpression>>>;
+impl CParser {
+    fn parse_argument_expression_list(&mut self) -> ArgumentExpressionList {
+        println!(
+            "current: {:?},next: {:?}",
+            self.current_token(),
+            self.next_token()
+        );
+
+        let mut args = vec![];
+
+        if self.current_token().t_type == Punctuator && self.current_token().original == ")" {
+            return args;
+        }
+
+        args.push(self.parse_expr_assignment());
+
+        while self.current_token().t_type == Punctuator && self.current_token().original == "," {
+            self.advance_idx();
+
+            if self.current_token().t_type == Punctuator && self.current_token().original == ")" {
+                return args;
+            }
+
+            args.push(self.parse_expr_assignment());
+        }
+
+        args
+    }
+}
 
 /*
 (6.5.3) unary-expression:
@@ -116,36 +102,13 @@ pub(crate) type ArgumentExpressionList = Vec<AssignmentExpression>;
     sizeof ( type-name )
     _Alignof ( type-name )
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum UnaryExpression {
-    PostfixExpression(PostfixExpression),
-    PrefixIncrementSelf {
-        on: Box<Self>,
-    },
-    PrefixDecrementSelf {
-        on: Box<Self>,
-    },
-    UnaryArithmetic {
-        operator: UnaryOperator,
-        on: Box<CastExpression>,
-    },
-    SizeOf {
-        on: Box<Self>,
-    },
-    SizeOfType {
-        type_name: TypeName,
-    },
-    AlignOfType {
-        type_name: TypeName,
-    },
-}
 
 /*
 (6.5.3) unary-operator: one of
     & * + - ~ !
 */
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum UnaryOperator {
     AND,
     POINTER,
@@ -161,15 +124,6 @@ pub(crate) enum UnaryOperator {
     unary-expression
     ( type-name ) cast-expression
 */
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum CastExpression {
-    UnaryExpression(UnaryExpression),
-    Cast {
-        type_name: TypeName,
-        expresion: Box<Self>,
-    },
-}
 
 /*
 (6.5.5) multiplicative-expression:
@@ -214,62 +168,25 @@ pub(crate) enum CastExpression {
     logical-OR-expression
     logical-OR-expression ? expression : conditional-expression
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum MultiplicativeExpression {
-    CastExpression(CastExpression),
-    Expression {
-        on: Box<Self>,
-        operation: MultiplicativeOperator,
-        operand: CastExpression,
-    },
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MultiplicativeOperator {
     Mult,
     Div,
     Mod,
 }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum AdditiveExpression {
-    MultiplicativeExpression(MultiplicativeExpression),
-    Expression {
-        on: Box<Self>,
-        operation: AdditiveOperator,
-        operand: MultiplicativeExpression,
-    },
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum AdditiveOperator {
     Plus,
     Minus,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum ShiftExpression {
-    AdditiveExpression(AdditiveExpression),
-    Shift {
-        on: Box<Self>,
-        operation: ShiftOperator,
-        operand: AdditiveExpression,
-    },
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum ShiftOperator {
     Left,
     Right,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum RelationalExpression {
-    ShiftExpression(ShiftExpression),
-    Relational {
-        on: Box<Self>,
-        operation: RelationalOperator,
-        operand: ShiftExpression,
-    },
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum RelationalOperator {
     Lesser,
     Greater,
@@ -277,74 +194,10 @@ pub(crate) enum RelationalOperator {
     GreaterEqual,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum EqualityExpression {
-    RelationalExpression(RelationalExpression),
-    EqualityCheck {
-        on: Box<Self>,
-        operation: EqualityOperator,
-        operand: RelationalExpression,
-    },
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum EqualityOperator {
     Equal,
     NotEqual,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum ANDExpression {
-    EqualityExpression(EqualityExpression),
-    ANDExpression {
-        on: Box<Self>,
-        operand: EqualityExpression,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum ExclusiveOrExpression {
-    ANDExpression(ANDExpression),
-    ExclusiveOrExpression {
-        on: Box<Self>,
-        operand: ANDExpression,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum InclusiveOrExpression {
-    ExclusiveOrExpression(ExclusiveOrExpression),
-    InclusiveOrExpression {
-        on: Box<Self>,
-        operand: ExclusiveOrExpression,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum LogicalANDExpression {
-    InclusiveOrExpression(InclusiveOrExpression),
-    LogicalANDExpression {
-        on: Box<Self>,
-        operand: InclusiveOrExpression,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum LogicalORExpression {
-    LogicalANDExpression(LogicalANDExpression),
-    LogicalORExpression {
-        on: Box<Self>,
-        operand: LogicalANDExpression,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum ConditionalExpression {
-    LogicalORExpression(LogicalORExpression),
-    Ternary {
-        on: LogicalORExpression,
-        if_true: Expression,
-        operand: Box<ConditionalExpression>,
-    },
 }
 
 /*
@@ -354,17 +207,7 @@ pub(crate) enum ConditionalExpression {
 (6.5.16) assignment-operator: one of
     = *= /= %= += -= <<= >>= &= ^= |=
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum AssignmentExpression {
-    ConditionalExpression(ConditionalExpression),
-    Assignment {
-        unary: UnaryExpression,
-        operator: AssignmentOperator,
-        value: Box<AssignmentExpression>,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum AssignmentOperator {
     Assign,
     AssignMult,
@@ -384,25 +227,17 @@ pub(crate) enum AssignmentOperator {
     assignment-expression
     expression , assignment-expression
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Expression {
-    AssignmentExpression(Box<AssignmentExpression>),
-    Chain {
-        on: Box<Self>,
-        expr: Box<AssignmentExpression>,
-    },
-}
 
 /*
 (6.6) constant-expression:
     conditional-expression
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ConstantExpression {
-    internal: ConditionalExpression,
+    internal: Box<Spanned<CExpression>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum IncrementType {
     Increment,
     Decrement,
@@ -442,7 +277,7 @@ from log or => mult
 assigment,expr,primary,generic seperatily
 
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CExpression {
     Assignment {
         to_assign: Box<Spanned<Self>>,
@@ -610,16 +445,37 @@ weird stuff
 
 impl super::super::CParser {
     pub(crate) fn parse_expr_cast(&mut self) -> Box<Spanned<CExpression>> {
+        /*
+        (6.5.4) cast-expression:
+            unary-expression
+            ( type-name ) cast-expression
+        */
+        // we need to check for type name here as well
         unimplemented!()
     }
     pub(crate) fn parse_expr_unary(&mut self) -> Box<Spanned<CExpression>> {
+        /*
+        (6.5.3) unary-expression:
+            postfix-expression
+            ++ unary-expression
+            -- unary-expression
+            unary-operator cast-expression
+            sizeof unary-expression
+            sizeof ( type-name )
+            _Alignof ( type-name )
+        */
+
+        /*
+        (6.5.3) unary-operator: one of
+            & * + - ~ !
+        */
         unimplemented!()
     }
     pub(crate) fn parse_expr_postfix(&mut self) -> Box<Spanned<CExpression>> {
         /*
             primary-expression
             postfix-expression [ expression ]
-            postfix-expression ( argument-expression-listopt )
+            postfix-expression ( argument-expression-list opt ) // comma seperated list of assignment expression, only here
             postfix-expression . identifier
             postfix-expression -> identifier
             postfix-expression ++
@@ -653,16 +509,34 @@ impl super::super::CParser {
 
             match specific_punctuator.as_str() {
                 "[" => {
-                    unimplemented!()
+                    let index = self.parse_expression();
+                    end = self.expect_type_and_string(Punctuator, "]").loc;
+                    result = Spanned::boxed_new(
+                        CExpression::ArraySubscription {
+                            array: result,
+                            index,
+                        },
+                        start.clone(),
+                        end.clone(),
+                    );
                 }
                 "(" => {
-                    unimplemented!()
+                    let args = self.parse_argument_expression_list();
+                    end = self.expect_type_and_string(Punctuator, ")").loc;
+                    result = Spanned::boxed_new(
+                        CExpression::FunctionCall {
+                            function: result,
+                            arguments: args,
+                        },
+                        start.clone(),
+                        end.clone(),
+                    );
                 }
                 "." => {
                     let ident = Identifier {
-                        string: self.expect_type(Identifier).original,
+                        identifier: self.expect_type(Identifier).original,
                     };
-                    end = self.current_token().loc;
+                    end = self.prev_token().loc;
                     result = Spanned::boxed_new(
                         CExpression::DirectMemberAccess {
                             to_access: result,
@@ -673,10 +547,34 @@ impl super::super::CParser {
                     );
                 }
                 "->" => {
-                    unimplemented!()
+                    let ident = Identifier {
+                        identifier: self.expect_type(Identifier).original,
+                    };
+                    end = self.prev_token().loc;
+                    result = Spanned::boxed_new(
+                        CExpression::IndirectMemberAccess {
+                            to_access: result,
+                            member: ident,
+                        },
+                        start.clone(),
+                        end.clone(),
+                    );
                 }
                 "++" | "--" => {
-                    unimplemented!()
+                    end = self.prev_token().loc;
+                    result = Spanned::boxed_new(
+                        CExpression::PostfixIncrement {
+                            increment_type: if self.prev_token().original == "++" {
+                                IncrementType::Increment
+                            } else {
+                                IncrementType::Decrement
+                            },
+                            value: result,
+                        },
+                        start,
+                        end,
+                    );
+                    break;
                 }
                 unknown => panic!("unknown: {}", unknown),
             }
@@ -691,7 +589,7 @@ impl super::super::CParser {
                 // only GENERIC for generic Selection
                 if keyword == CKeyword::GENERIC {
                     // generic selection
-                    unimplemented!()
+                    todo!()
                 } else {
                     // panic with unexpected keyword
                     self.error_unexpected(
@@ -705,7 +603,7 @@ impl super::super::CParser {
                 self.advance_idx();
                 Spanned::boxed_new(
                     CExpression::Identifier(Identifier {
-                        string: current_token.original,
+                        identifier: current_token.original,
                     }),
                     current_token.loc.clone(),
                     current_token.loc,

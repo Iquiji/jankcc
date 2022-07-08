@@ -3,14 +3,19 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use serde::{Deserialize, Serialize};
+
 use crate::lexer::OriginalLocation;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub(crate) struct Spanned<T>
 where
     T: Clone + Debug,
 {
     pub(crate) inner: T,
+    #[serde(skip_serializing)]
+    #[serde(default)]
     span: Span,
 }
 impl<T: Clone + Debug> Deref for Spanned<T> {
@@ -46,7 +51,7 @@ impl<T: Clone + Debug> Spanned<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Span {
     start: OriginalLocation,
     end: OriginalLocation,
@@ -60,5 +65,28 @@ impl Span {
 impl<T: Clone + Debug> Spanned<T> {
     pub(crate) fn error_unexpected_span(&mut self, found: Spanned<T>, expected: &str) {
         unimplemented!()
+    }
+}
+
+impl Default for Span {
+    fn default() -> Self {
+        Self {
+            start: OriginalLocation {
+                file: String::new(),
+                line: 0,
+                collumn: 0,
+            },
+            end: OriginalLocation {
+                file: String::new(),
+                line: 0,
+                collumn: 0,
+            },
+        }
+    }
+}
+
+impl<T: Clone + Debug + std::cmp::PartialEq> PartialEq for Spanned<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
     }
 }

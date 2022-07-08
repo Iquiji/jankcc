@@ -7,6 +7,7 @@ mod tests;
 use std::{fmt, fs::read_to_string};
 
 use log::{error, trace};
+use serde::{Deserialize, Serialize};
 use token_types::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +32,7 @@ impl fmt::Display for CToken {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OriginalLocation {
     pub file: String,
     pub line: usize,
@@ -67,7 +68,7 @@ impl Lexer {
                 let mut current_token_string = String::new();
 
                 // main loop where we check for Tokens
-                let mut char_line_iter = line.chars().into_iter().peekable().fuse();
+                let mut char_line_iter = line.chars().into_iter().peekable();
 
                 while let Some(character) = char_line_iter.next() {
                     if current_token_string == " " {
@@ -91,6 +92,14 @@ impl Lexer {
                                 error!("ellipsis hack exception! seek help!");
                             }
                         } else if helper_funcs::is_punctuator(&punctuator_temp) {
+                            if char_line_iter.peek().is_none() {
+                                buf.push(CToken {
+                                    t_type: CTokenType::Punctuator,
+                                    original: punctuator_temp.clone(),
+                                    loc: self.current_loc.clone(),
+                                });
+                                current_token_string = String::new();
+                            }
                             // we continue till longest punctuator
                             for character in char_line_iter.by_ref() {
                                 punctuator_temp.push(character);

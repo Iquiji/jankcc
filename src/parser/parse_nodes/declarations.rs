@@ -1,3 +1,7 @@
+use serde::{Deserialize, Serialize};
+
+use crate::parser::span::Spanned;
+
 use super::{expressions::*, Identifier, StringLiteral};
 
 /*
@@ -17,7 +21,7 @@ use super::{expressions::*, Identifier, StringLiteral};
     declarator
     declarator = initializer
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Declaration {
     Normal {
         declaration_specifiers: DeclarationSpecifiers,
@@ -26,7 +30,7 @@ pub(crate) enum Declaration {
     StaticAssertDeclaration(StaticAssertDeclaration),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum DeclarationSpecifiers {
     StorageClassSpecifier(StorageClassSpecifier, Option<Box<DeclarationSpecifiers>>),
     TypeSpecifier(TypeSpecifier, Option<Box<DeclarationSpecifiers>>),
@@ -35,7 +39,7 @@ pub(crate) enum DeclarationSpecifiers {
     AlignmentSpecifier(AlignmentSpecifier, Option<Box<DeclarationSpecifiers>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum InitDeclarator {
     Normal(Declarator),
     Initialized(Declarator, Initializer),
@@ -101,7 +105,7 @@ pub(crate) type InitDeclaratorList = Vec<InitDeclarator>;
     _Atomic ( type-name )
 */
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum StorageClassSpecifier {
     TYPEDEF,
     EXTERN,
@@ -112,7 +116,7 @@ pub(crate) enum StorageClassSpecifier {
 }
 
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum TypeSpecifier {
     VOID,
     CHAR,
@@ -131,7 +135,7 @@ pub(crate) enum TypeSpecifier {
     TypedefName(TypedefName),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum StructOrUnionSpecifier {
     Declare {
         identifier: Option<Identifier>,
@@ -140,7 +144,7 @@ pub(crate) enum StructOrUnionSpecifier {
     Identifier(Identifier),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum StructOrUnion {
     Struct,
     Union,
@@ -148,7 +152,7 @@ pub(crate) enum StructOrUnion {
 
 pub(crate) type StructDeclarationList = Vec<StructDeclaration>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum StructDeclaration {
     Normal {
         specifier_qualifier_list: SpecifierQualifierList,
@@ -159,7 +163,7 @@ pub(crate) enum StructDeclaration {
 
 pub(crate) type StructDeclaratorList = Vec<StructDeclarator>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum SpecifierQualifier {
     TypeSpecifier(TypeSpecifier),
     TypeQualifier(TypeQualifier),
@@ -167,7 +171,7 @@ pub(crate) enum SpecifierQualifier {
 
 pub(crate) type SpecifierQualifierList = Vec<SpecifierQualifier>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum StructDeclarator {
     Normal(Declarator),
     ConstExpr {
@@ -176,7 +180,7 @@ pub(crate) enum StructDeclarator {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum EnumSpecifier {
     List {
         identifier: Option<Identifier>,
@@ -187,7 +191,7 @@ pub(crate) enum EnumSpecifier {
 
 pub(crate) type EnumeratorList = Vec<Enumerator>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Enumerator {
     Const(EnumerationConstant),
     ConstEquals {
@@ -205,7 +209,7 @@ pub(crate) type EnumerationConstant = Identifier;
     volatile
     _Atomic
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum TypeQualifier {
     Const,
     Restrict,
@@ -218,7 +222,7 @@ pub(crate) enum TypeQualifier {
     inline
     _Noreturn
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum FunctionSpecifier {
     Inline,
     Noreturn,
@@ -229,7 +233,7 @@ pub(crate) enum FunctionSpecifier {
     _Alignas ( type-name )
     _Alignas ( constant-expression )
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum AlignmentSpecifier {
     AsType(TypeName),
     AsConstExpr(ConstantExpression),
@@ -266,26 +270,26 @@ pub(crate) enum AlignmentSpecifier {
     identifier
     identifier-list , identifier
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Declarator {
     pointer: Option<Pointer>,
     direct: Box<DirectDeclarator>,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum DirectDeclarator {
     Identifier(Identifier),
     Declarator(Declarator),
     IndexedNormal {
         qualifier: Option<TypeQualifierList>,
-        assignment: Option<AssignmentExpression>,
+        assignment: Option<Box<Spanned<CExpression>>>,
     },
     IndexedStatic {
         qualifier: Option<TypeQualifierList>,
-        assignment: AssignmentExpression,
+        assignment: Box<Spanned<CExpression>>,
     },
     IndexedStaticType2 {
         qualifier: TypeQualifierList,
-        assignment: AssignmentExpression,
+        assignment: Box<Spanned<CExpression>>,
     },
     IndexedStar {
         qualifier: Option<TypeQualifierList>,
@@ -294,7 +298,7 @@ pub(crate) enum DirectDeclarator {
     CalledType2(Option<IdentifierList>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Pointer {
     qualifier_list: TypeQualifierList,
     opt_next: Box<Pointer>,
@@ -302,7 +306,7 @@ pub(crate) struct Pointer {
 
 pub(crate) type TypeQualifierList = Vec<TypeQualifier>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ParameterTypeList {
     parameter_list: ParameterList,
     /// flag for has elipsis
@@ -312,7 +316,7 @@ pub(crate) struct ParameterTypeList {
 pub(crate) type ParameterList = Vec<ParameterDeclaration>;
 pub(crate) type IdentifierList = Vec<Identifier>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum ParameterDeclaration {
     Normal {
         specifier: DeclarationSpecifiers,
@@ -341,13 +345,13 @@ pub(crate) enum ParameterDeclaration {
     direct-abstract-declaratoropt [ * ]
     direct-abstract-declaratoropt ( parameter-type-list opt )
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TypeName {
     specifiers: SpecifierQualifierList,
     abstract_declarator: Option<Box<AbstractDeclarator>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum AbstractDeclarator {
     Pointer(Pointer),
     Direct {
@@ -356,23 +360,23 @@ pub(crate) enum AbstractDeclarator {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum DirectAbstractDeclarator {
     Abstract(Box<AbstractDeclarator>),
     IndexedNormal {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: Option<TypeQualifierList>,
-        assignment: Option<AssignmentExpression>,
+        assignment: Option<Box<Spanned<CExpression>>>,
     },
     IndexedStatic {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: Option<TypeQualifierList>,
-        assignment: AssignmentExpression,
+        assignment: Box<Spanned<CExpression>>,
     },
     IndexedStaticType2 {
         chain: Option<Box<DirectAbstractDeclarator>>,
         qualifier: TypeQualifierList,
-        assignment: AssignmentExpression,
+        assignment: Box<Spanned<CExpression>>,
     },
     IndexedStar {
         chain: Option<Box<DirectAbstractDeclarator>>,
@@ -407,25 +411,25 @@ pub(crate) type TypedefName = Identifier;
     [ constant-expression ]
     . identifier
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Initializer {
-    AssignmentExpression(AssignmentExpression),
+    AssignmentExpression(Box<Spanned<CExpression>>),
     InitializerList(InitializerList),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct InitializerListItem {
     designation: Option<Designation>,
     initializer: Initializer,
 }
 pub(crate) type InitializerList = Vec<InitializerListItem>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Designation {
     designator_list: DesignatorList,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Designator {
     Indexed(ConstantExpression),
     Pointed(Identifier),
@@ -437,7 +441,7 @@ pub(crate) type DesignatorList = Vec<Designator>;
 (6.7.10) static_assert-declaration:
     _Static_assert ( constant-expression , string-literal ) ;
 */
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct StaticAssertDeclaration {
     expression: ConstantExpression,
     string_literal: StringLiteral,
