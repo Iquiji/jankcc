@@ -1,12 +1,5 @@
-use super::{
-    parse_nodes::{expressions::CExpression, Constant, NumberLike},
-    CParser,
-};
-use crate::{
-    lexer::Lexer,
-    parser::{parse_nodes::Identifier, span::Spanned},
-};
-use crate::{lexer::OriginalLocation, parser::tests::CExpression::DirectMemberAccess};
+use super::{parse_nodes::expressions::CExpression, CParser};
+use crate::{lexer::Lexer, parser::span::Spanned};
 
 #[cfg(test)]
 use pretty_assertions::assert_eq;
@@ -40,7 +33,7 @@ Constant:
     Number:
         666.010101";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_primary);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
 }
 
 #[test]
@@ -68,7 +61,7 @@ DirectMemberAccess:
                     identifier: may_struct
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_postfix);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
 }
 
 #[test]
@@ -99,7 +92,7 @@ PostfixIncrement:
                                             identifier: may_struct
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_postfix);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
 }
 
 #[test]
@@ -121,5 +114,110 @@ PostfixIncrement:
             arguments: []
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_postfix);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+}
+
+#[test]
+fn simple_mult() {
+    let expr = r#"func()++ * --!x"#;
+
+    let expected_result = "
+Multiplicative:
+    left_value:
+      PostfixIncrement:
+        increment_type: Increment
+        value:
+          FunctionCall:
+            function:
+              Identifier:
+                identifier: func
+            arguments: []
+    op: Mult
+    right_value:
+      PrefixIncrement:
+        increment_type: Decrement
+        value:
+          Unary:
+            unary_op: BOOLEANINVERT
+            value:
+              Identifier:
+                identifier: x
+    ";
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+}
+
+#[test]
+fn simple_add() {
+    let expr = r#"42 + func()++ * --!x - -var"#;
+
+    let expected_result = "
+Additive:
+    left_value:
+      Additive:
+        left_value:
+          Constant:
+            Number: 42
+        op: Plus
+        right_value:
+          Multiplicative:
+            left_value:
+              PostfixIncrement:
+                increment_type: Increment
+                value:
+                  FunctionCall:
+                    function:
+                      Identifier:
+                        identifier: func
+                    arguments: []
+            op: Mult
+            right_value:
+              PrefixIncrement:
+                increment_type: Decrement
+                value:
+                  Unary:
+                    unary_op: BOOLEANINVERT
+                    value:
+                      Identifier:
+                        identifier: x
+    op: Minus
+    right_value:
+      Unary:
+        unary_op: NEGATIVE
+        value:
+          Identifier:
+            identifier: var
+    ";
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+}
+
+#[test]
+fn simple_relational_equality() {
+    let expr = r#"a<b == c<d"#;
+
+    let expected_result = "
+Equality:
+    left_piece:
+      Relational:
+        left_piece:
+          Identifier:
+            identifier: a
+        equality_op: Lesser
+        right_piece:
+          Identifier:
+            identifier: b
+    equality_op: Equal
+    right_piece:
+      Relational:
+        left_piece:
+          Identifier:
+            identifier: c
+        equality_op: Lesser
+        right_piece:
+          Identifier:
+            identifier: d
+    ";
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
 }

@@ -110,9 +110,9 @@ impl CParser {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum UnaryOperator {
-    AND,
-    POINTER,
-    POSITIVE,
+    REF,
+    DEREF,
+    VALUE,
     NEGATIVE,
     BITWISEINVERT,
     /// negation operator ! is 0 if the value of its operand compares unequal to 0, 1 if the value of its operand compares equal to 0
@@ -405,22 +405,166 @@ impl super::super::CParser {
         unimplemented!()
     }
     pub(crate) fn parse_expr_and(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_equality();
+
+        if self.current_token().original == "&" {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "&" {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_equality());
+            }
+
+            result = Spanned::boxed_new(
+                CExpression::And { pieces: result_vec },
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_equality(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        let possible_extensions = ["==", "!="];
+        let op_matcher = |op: &str| match op {
+            "==" => EqualityOperator::Equal,
+            "!=" => EqualityOperator::NotEqual,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_relational();
+
+        while possible_extensions.contains(&self.current_token().original.as_str()) {
+            result = Spanned::boxed_new(
+                CExpression::Equality {
+                    left_piece: result,
+                    equality_op: op_matcher(&self.advance_idx().original),
+                    right_piece: self.parse_expr_relational(),
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
+        }
+
+        result
     }
     pub(crate) fn parse_expr_relational(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        let possible_extensions = ["<", ">", "<=", ">="];
+        let op_matcher = |op: &str| match op {
+            "<" => RelationalOperator::Lesser,
+            ">" => RelationalOperator::Greater,
+            "<=" => RelationalOperator::LesserEqual,
+            ">=" => RelationalOperator::GreaterEqual,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_shift();
+
+        while possible_extensions.contains(&self.current_token().original.as_str()) {
+            result = Spanned::boxed_new(
+                CExpression::Relational {
+                    left_piece: result,
+                    equality_op: op_matcher(&self.advance_idx().original),
+                    right_piece: self.parse_expr_shift(),
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
+        }
+
+        result
     }
     pub(crate) fn parse_expr_shift(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        let possible_extensions = ["<<", ">>"];
+        let op_matcher = |op: &str| match op {
+            "<<" => ShiftOperator::Left,
+            ">>" => ShiftOperator::Right,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_add();
+
+        while possible_extensions.contains(&self.current_token().original.as_str()) {
+            result = Spanned::boxed_new(
+                CExpression::Shift {
+                    value: result,
+                    shift_type: op_matcher(&self.advance_idx().original),
+                    shift_amount: self.parse_expr_add(),
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
+        }
+
+        result
     }
     pub(crate) fn parse_expr_add(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        let possible_extensions = ["+", "-"];
+        let op_matcher = |op: &str| match op {
+            "+" => AdditiveOperator::Plus,
+            "-" => AdditiveOperator::Minus,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_mult();
+
+        while possible_extensions.contains(&self.current_token().original.as_str()) {
+            result = Spanned::boxed_new(
+                CExpression::Additive {
+                    left_value: result,
+                    op: op_matcher(&self.advance_idx().original),
+                    right_value: self.parse_expr_mult(),
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
+        }
+
+        result
     }
     pub(crate) fn parse_expr_mult(&mut self) -> Box<Spanned<CExpression>> {
-        unimplemented!()
+        /*
+        (6.5.5) multiplicative-expression:
+            cast-expression
+            multiplicative-expression * cast-expression
+            multiplicative-expression / cast-expression
+            multiplicative-expression % cast-expression
+        */
+        let possible_extensions = ["*", "/", "%"];
+        let op_matcher = |op: &str| match op {
+            "*" => MultiplicativeOperator::Mult,
+            "/" => MultiplicativeOperator::Div,
+            "%" => MultiplicativeOperator::Mod,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_cast();
+
+        while possible_extensions.contains(&self.current_token().original.as_str()) {
+            result = Spanned::boxed_new(
+                CExpression::Multiplicative {
+                    left_value: result,
+                    op: op_matcher(&self.advance_idx().original),
+                    right_value: self.parse_expr_cast(),
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
+        }
+
+        result
     }
 }
 /*
@@ -451,7 +595,15 @@ impl super::super::CParser {
             ( type-name ) cast-expression
         */
         // we need to check for type name here as well
-        unimplemented!()
+        if self.current_token().t_type == CTokenType::Punctuator
+            && self.current_token().original == "("
+            && self.check_is_start_of_type_name(&self.next_token())
+        {
+            // ( type-name ) { initializer-list }
+            todo!("type cast parsing still unimplemented");
+        } else {
+            self.parse_expr_unary()
+        }
     }
     pub(crate) fn parse_expr_unary(&mut self) -> Box<Spanned<CExpression>> {
         /*
@@ -469,7 +621,52 @@ impl super::super::CParser {
         (6.5.3) unary-operator: one of
             & * + - ~ !
         */
-        unimplemented!()
+        let start = self.current_token().loc;
+        let current_token = self.current_token();
+
+        if current_token.original == "++" || current_token.original == "--" {
+            // ++ unary-expression
+            self.advance_idx();
+            return Spanned::boxed_new(
+                CExpression::PrefixIncrement {
+                    value: self.parse_expr_unary(),
+                    increment_type: if self.prev_token().original == "++" {
+                        IncrementType::Increment
+                    } else {
+                        IncrementType::Decrement
+                    },
+                },
+                start,
+                self.prev_token().loc,
+            );
+        }
+        if ["&", "*", "+", "-", "~", "!"].contains(&current_token.original.as_str()) {
+            let op = match self.advance_idx().original.as_str() {
+                "&" => UnaryOperator::REF,
+                "*" => UnaryOperator::DEREF,
+                "+" => UnaryOperator::VALUE,
+                "-" => UnaryOperator::NEGATIVE,
+                "~" => UnaryOperator::BITWISEINVERT,
+                "!" => UnaryOperator::BOOLEANINVERT,
+                _ => unreachable!(),
+            };
+            return Spanned::boxed_new(
+                CExpression::Unary {
+                    value: self.parse_expr_unary(),
+                    unary_op: op,
+                },
+                start,
+                self.prev_token().loc,
+            );
+        }
+        if current_token.t_type == Keyword(CKeyword::SIZEOF) {
+            todo!("sizeof still unimplemented!");
+        }
+        if current_token.t_type == Keyword(CKeyword::ALIGNOF) {
+            todo!("_Alignof still unimplemented!");
+        }
+
+        self.parse_expr_postfix()
     }
     pub(crate) fn parse_expr_postfix(&mut self) -> Box<Spanned<CExpression>> {
         /*
@@ -576,7 +773,10 @@ impl super::super::CParser {
                     );
                     break;
                 }
-                unknown => panic!("unknown: {}", unknown),
+                _unknown => {
+                    self.idx -= 1;
+                    break;
+                }
             }
         }
 
