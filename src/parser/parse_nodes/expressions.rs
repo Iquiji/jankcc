@@ -663,7 +663,14 @@ impl super::super::CParser {
                         string: self.expect_type(Identifier).original,
                     };
                     end = self.current_token().loc;
-                    result = Spanned::boxed_new(CExpression::DirectMemberAccess { to_access: result, member: ident }, start.clone(), end.clone());
+                    result = Spanned::boxed_new(
+                        CExpression::DirectMemberAccess {
+                            to_access: result,
+                            member: ident,
+                        },
+                        start.clone(),
+                        end.clone(),
+                    );
                 }
                 "->" => {
                     unimplemented!()
@@ -741,7 +748,7 @@ impl super::super::CParser {
                     );
                     unreachable!()
                 }
-            },
+            }
             Eof => unreachable!(),
         }
     }

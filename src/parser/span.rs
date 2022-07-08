@@ -10,7 +10,7 @@ pub(crate) struct Spanned<T>
 where
     T: Clone + Debug,
 {
-    inner: T,
+    pub(crate) inner: T,
     span: Span,
 }
 impl<T: Clone + Debug> Deref for Spanned<T> {

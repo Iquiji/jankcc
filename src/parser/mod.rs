@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::fmt::Debug;
 
 use crate::lexer::token_types::CKeyword;
+use crate::lexer::OriginalLocation;
 use crate::lexer::{token_types::CTokenType, CToken};
 
 use self::parse_nodes::declarations::{Declaration, InitDeclaratorList, StorageClassSpecifier};
@@ -87,7 +88,18 @@ impl CParser {
         unimplemented!()
     }
     pub(crate) fn current_token(&self) -> CToken {
-        self.tokens.get(self.idx).clone()
+        self.tokens
+            .get(self.idx)
+            .unwrap_or(&CToken {
+                t_type: CTokenType::Eof,
+                original: String::new(),
+                loc: OriginalLocation {
+                    file: String::new(),
+                    line: 0,
+                    collumn: 0,
+                },
+            })
+            .clone()
     }
     pub(crate) fn next_token(&self) -> CToken {
         self.tokens[self.idx + 1].clone()
