@@ -221,3 +221,35 @@ Equality:
 
     expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
 }
+
+#[test]
+fn and_expr() {
+    let expr = r#"a<b & 5 == b & u()"#;
+
+    let expected_result = r#"
+And:
+    - Relational:
+        left_piece:
+          Identifier:
+            identifier: a
+        equality_op: Lesser
+        right_piece:
+          Identifier:
+            identifier: b
+    - Equality:
+        left_piece:
+          Constant:
+            Number: "5"
+        equality_op: Equal
+        right_piece:
+          Identifier:
+            identifier: b
+    - FunctionCall:
+        function:
+          Identifier:
+            identifier: u
+        arguments: []
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+}

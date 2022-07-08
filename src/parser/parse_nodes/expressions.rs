@@ -289,21 +289,11 @@ pub(crate) enum CExpression {
         if_true: Spanned<Self>,
         tern_else: Spanned<Self>,
     },
-    LogicalOr {
-        pieces: Vec<Spanned<Self>>,
-    },
-    LogicalAnd {
-        pieces: Vec<Spanned<Self>>,
-    },
-    InclusiveOr {
-        pieces: Vec<Spanned<Self>>,
-    },
-    ExlusiveOr {
-        pieces: Vec<Spanned<Self>>,
-    },
-    And {
-        pieces: Vec<Spanned<Self>>,
-    },
+    LogicalOr(Vec<Spanned<Self>>),
+    LogicalAnd(Vec<Spanned<Self>>),
+    InclusiveOr(Vec<Spanned<Self>>),
+    ExlusiveOr(Vec<Spanned<Self>>),
+    And(Vec<Spanned<Self>>),
     Equality {
         left_piece: Spanned<Self>,
         equality_op: EqualityOperator,
@@ -417,11 +407,7 @@ impl super::super::CParser {
                 result_vec.push(self.parse_expr_equality());
             }
 
-            result = Spanned::new(
-                CExpression::And { pieces: result_vec },
-                start,
-                self.prev_token().loc,
-            );
+            result = Spanned::new(CExpression::And(result_vec), start, self.prev_token().loc);
         }
 
         result
