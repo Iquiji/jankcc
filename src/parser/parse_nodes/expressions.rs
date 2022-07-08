@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct GenericSelection {
-    assignment_expression: Box<Spanned<CExpression>>,
+    assignment_expression: Spanned<CExpression>,
     generic_assoc_list: Box<Spanned<GenericAssociationList>>,
 }
 
@@ -36,9 +36,9 @@ pub(crate) struct GenericSelection {
 pub(crate) enum GenericAssociation {
     TypeName {
         type_name: CTypeName,
-        assignment_expression: Box<Spanned<CExpression>>,
+        assignment_expression: Spanned<CExpression>,
     },
-    Default(Box<Spanned<CExpression>>),
+    Default(Spanned<CExpression>),
 }
 
 pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
@@ -61,7 +61,7 @@ pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
     assignment-expression
     argument-expression-list , assignment-expression
 */
-pub(crate) type ArgumentExpressionList = Vec<Box<Spanned<CExpression>>>;
+pub(crate) type ArgumentExpressionList = Vec<Spanned<CExpression>>;
 impl CParser {
     fn parse_argument_expression_list(&mut self) -> ArgumentExpressionList {
         println!(
@@ -234,7 +234,7 @@ pub(crate) enum AssignmentOperator {
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ConstantExpression {
-    internal: Box<Spanned<CExpression>>,
+    internal: Spanned<CExpression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -280,69 +280,69 @@ assigment,expr,primary,generic seperatily
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CExpression {
     Assignment {
-        to_assign: Box<Spanned<Self>>,
+        to_assign: Spanned<Self>,
         operator: AssignmentOperator,
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     Ternary {
-        condition: Box<Spanned<Self>>,
-        if_true: Box<Spanned<Self>>,
-        tern_else: Box<Spanned<Self>>,
+        condition: Spanned<Self>,
+        if_true: Spanned<Self>,
+        tern_else: Spanned<Self>,
     },
     LogicalOr {
-        pieces: Vec<Box<Spanned<Self>>>,
+        pieces: Vec<Spanned<Self>>,
     },
     LogicalAnd {
-        pieces: Vec<Box<Spanned<Self>>>,
+        pieces: Vec<Spanned<Self>>,
     },
     InclusiveOr {
-        pieces: Vec<Box<Spanned<Self>>>,
+        pieces: Vec<Spanned<Self>>,
     },
     ExlusiveOr {
-        pieces: Vec<Box<Spanned<Self>>>,
+        pieces: Vec<Spanned<Self>>,
     },
     And {
-        pieces: Vec<Box<Spanned<Self>>>,
+        pieces: Vec<Spanned<Self>>,
     },
     Equality {
-        left_piece: Box<Spanned<Self>>,
+        left_piece: Spanned<Self>,
         equality_op: EqualityOperator,
-        right_piece: Box<Spanned<Self>>,
+        right_piece: Spanned<Self>,
     },
     Relational {
-        left_piece: Box<Spanned<Self>>,
+        left_piece: Spanned<Self>,
         equality_op: RelationalOperator,
-        right_piece: Box<Spanned<Self>>,
+        right_piece: Spanned<Self>,
     },
     Shift {
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
         shift_type: ShiftOperator,
-        shift_amount: Box<Spanned<Self>>,
+        shift_amount: Spanned<Self>,
     },
     Additive {
-        left_value: Box<Spanned<Self>>,
+        left_value: Spanned<Self>,
         op: AdditiveOperator,
-        right_value: Box<Spanned<Self>>,
+        right_value: Spanned<Self>,
     },
     Multiplicative {
-        left_value: Box<Spanned<Self>>,
+        left_value: Spanned<Self>,
         op: MultiplicativeOperator,
-        right_value: Box<Spanned<Self>>,
+        right_value: Spanned<Self>,
     },
     Cast {
         type_name: Box<Spanned<CTypeName>>,
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     PrefixIncrement {
         increment_type: IncrementType,
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     Unary {
         unary_op: UnaryOperator,
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     SizeOf {
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     SizeOfType {
         type_name: Box<Spanned<CTypeName>>,
@@ -351,24 +351,24 @@ pub(crate) enum CExpression {
         type_name: Box<Spanned<CTypeName>>,
     },
     ArraySubscription {
-        array: Box<Spanned<Self>>,
-        index: Box<Spanned<Self>>,
+        array: Spanned<Self>,
+        index: Spanned<Self>,
     },
     FunctionCall {
-        function: Box<Spanned<Self>>,
-        arguments: Vec<Box<Spanned<Self>>>,
+        function: Spanned<Self>,
+        arguments: Vec<Spanned<Self>>,
     },
     DirectMemberAccess {
-        to_access: Box<Spanned<Self>>,
+        to_access: Spanned<Self>,
         member: Identifier,
     },
     IndirectMemberAccess {
-        to_access: Box<Spanned<Self>>,
+        to_access: Spanned<Self>,
         member: Identifier,
     },
     PostfixIncrement {
         increment_type: IncrementType,
-        value: Box<Spanned<Self>>,
+        value: Spanned<Self>,
     },
     TypeInitializer {
         type_name: CTypeName,
@@ -378,33 +378,33 @@ pub(crate) enum CExpression {
     Identifier(Identifier),
     Constant(Constant),
     StringLiteral(StringLiteral),
-    Paranthesised(Box<Spanned<Self>>),
+    Paranthesised(Spanned<Self>),
     GenericSelection(Box<Spanned<GenericSelection>>),
 }
 
 impl super::super::CParser {
-    pub(crate) fn parse_expression(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expression(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_assignment(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_assignment(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_cond(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_cond(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_logi_or(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_logi_or(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_logi_and(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_logi_and(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_incl_or(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_incl_or(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_excl_or(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_excl_or(&mut self) -> Spanned<CExpression> {
         unimplemented!()
     }
-    pub(crate) fn parse_expr_and(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_and(&mut self) -> Spanned<CExpression> {
         let start = self.current_token().loc;
 
         let mut result = self.parse_expr_equality();
@@ -417,7 +417,7 @@ impl super::super::CParser {
                 result_vec.push(self.parse_expr_equality());
             }
 
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::And { pieces: result_vec },
                 start,
                 self.prev_token().loc,
@@ -426,7 +426,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_equality(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_equality(&mut self) -> Spanned<CExpression> {
         let possible_extensions = ["==", "!="];
         let op_matcher = |op: &str| match op {
             "==" => EqualityOperator::Equal,
@@ -439,7 +439,7 @@ impl super::super::CParser {
         let mut result = self.parse_expr_relational();
 
         while possible_extensions.contains(&self.current_token().original.as_str()) {
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::Equality {
                     left_piece: result,
                     equality_op: op_matcher(&self.advance_idx().original),
@@ -452,7 +452,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_relational(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_relational(&mut self) -> Spanned<CExpression> {
         let possible_extensions = ["<", ">", "<=", ">="];
         let op_matcher = |op: &str| match op {
             "<" => RelationalOperator::Lesser,
@@ -467,7 +467,7 @@ impl super::super::CParser {
         let mut result = self.parse_expr_shift();
 
         while possible_extensions.contains(&self.current_token().original.as_str()) {
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::Relational {
                     left_piece: result,
                     equality_op: op_matcher(&self.advance_idx().original),
@@ -480,7 +480,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_shift(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_shift(&mut self) -> Spanned<CExpression> {
         let possible_extensions = ["<<", ">>"];
         let op_matcher = |op: &str| match op {
             "<<" => ShiftOperator::Left,
@@ -493,7 +493,7 @@ impl super::super::CParser {
         let mut result = self.parse_expr_add();
 
         while possible_extensions.contains(&self.current_token().original.as_str()) {
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::Shift {
                     value: result,
                     shift_type: op_matcher(&self.advance_idx().original),
@@ -506,7 +506,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_add(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_add(&mut self) -> Spanned<CExpression> {
         let possible_extensions = ["+", "-"];
         let op_matcher = |op: &str| match op {
             "+" => AdditiveOperator::Plus,
@@ -519,7 +519,7 @@ impl super::super::CParser {
         let mut result = self.parse_expr_mult();
 
         while possible_extensions.contains(&self.current_token().original.as_str()) {
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::Additive {
                     left_value: result,
                     op: op_matcher(&self.advance_idx().original),
@@ -532,7 +532,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_mult(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_mult(&mut self) -> Spanned<CExpression> {
         /*
         (6.5.5) multiplicative-expression:
             cast-expression
@@ -553,7 +553,7 @@ impl super::super::CParser {
         let mut result = self.parse_expr_cast();
 
         while possible_extensions.contains(&self.current_token().original.as_str()) {
-            result = Spanned::boxed_new(
+            result = Spanned::new(
                 CExpression::Multiplicative {
                     left_value: result,
                     op: op_matcher(&self.advance_idx().original),
@@ -588,7 +588,7 @@ weird stuff
 */
 
 impl super::super::CParser {
-    pub(crate) fn parse_expr_cast(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_cast(&mut self) -> Spanned<CExpression> {
         /*
         (6.5.4) cast-expression:
             unary-expression
@@ -605,7 +605,7 @@ impl super::super::CParser {
             self.parse_expr_unary()
         }
     }
-    pub(crate) fn parse_expr_unary(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_unary(&mut self) -> Spanned<CExpression> {
         /*
         (6.5.3) unary-expression:
             postfix-expression
@@ -627,7 +627,7 @@ impl super::super::CParser {
         if current_token.original == "++" || current_token.original == "--" {
             // ++ unary-expression
             self.advance_idx();
-            return Spanned::boxed_new(
+            return Spanned::new(
                 CExpression::PrefixIncrement {
                     value: self.parse_expr_unary(),
                     increment_type: if self.prev_token().original == "++" {
@@ -650,7 +650,7 @@ impl super::super::CParser {
                 "!" => UnaryOperator::BOOLEANINVERT,
                 _ => unreachable!(),
             };
-            return Spanned::boxed_new(
+            return Spanned::new(
                 CExpression::Unary {
                     value: self.parse_expr_unary(),
                     unary_op: op,
@@ -668,7 +668,7 @@ impl super::super::CParser {
 
         self.parse_expr_postfix()
     }
-    pub(crate) fn parse_expr_postfix(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_postfix(&mut self) -> Spanned<CExpression> {
         /*
             primary-expression
             postfix-expression [ expression ]
@@ -687,8 +687,7 @@ impl super::super::CParser {
         let start = self.current_token().loc;
         let mut end = start.clone();
 
-        let initial: Box<Spanned<CExpression>> = if self.current_token().t_type
-            == CTokenType::Punctuator
+        let initial: Spanned<CExpression> = if self.current_token().t_type == CTokenType::Punctuator
             && self.current_token().original == "("
             && self.check_is_start_of_type_name(&self.next_token())
         {
@@ -708,7 +707,7 @@ impl super::super::CParser {
                 "[" => {
                     let index = self.parse_expression();
                     end = self.expect_type_and_string(Punctuator, "]").loc;
-                    result = Spanned::boxed_new(
+                    result = Spanned::new(
                         CExpression::ArraySubscription {
                             array: result,
                             index,
@@ -720,7 +719,7 @@ impl super::super::CParser {
                 "(" => {
                     let args = self.parse_argument_expression_list();
                     end = self.expect_type_and_string(Punctuator, ")").loc;
-                    result = Spanned::boxed_new(
+                    result = Spanned::new(
                         CExpression::FunctionCall {
                             function: result,
                             arguments: args,
@@ -734,7 +733,7 @@ impl super::super::CParser {
                         identifier: self.expect_type(Identifier).original,
                     };
                     end = self.prev_token().loc;
-                    result = Spanned::boxed_new(
+                    result = Spanned::new(
                         CExpression::DirectMemberAccess {
                             to_access: result,
                             member: ident,
@@ -748,7 +747,7 @@ impl super::super::CParser {
                         identifier: self.expect_type(Identifier).original,
                     };
                     end = self.prev_token().loc;
-                    result = Spanned::boxed_new(
+                    result = Spanned::new(
                         CExpression::IndirectMemberAccess {
                             to_access: result,
                             member: ident,
@@ -759,7 +758,7 @@ impl super::super::CParser {
                 }
                 "++" | "--" => {
                     end = self.prev_token().loc;
-                    result = Spanned::boxed_new(
+                    result = Spanned::new(
                         CExpression::PostfixIncrement {
                             increment_type: if self.prev_token().original == "++" {
                                 IncrementType::Increment
@@ -782,7 +781,7 @@ impl super::super::CParser {
 
         result
     }
-    pub(crate) fn parse_expr_primary(&mut self) -> Box<Spanned<CExpression>> {
+    pub(crate) fn parse_expr_primary(&mut self) -> Spanned<CExpression> {
         let current_token = self.current_token();
         match current_token.clone().t_type {
             crate::lexer::token_types::CTokenType::Keyword(keyword) => {
@@ -801,7 +800,7 @@ impl super::super::CParser {
             }
             crate::lexer::token_types::CTokenType::Identifier => {
                 self.advance_idx();
-                Spanned::boxed_new(
+                Spanned::new(
                     CExpression::Identifier(Identifier {
                         identifier: current_token.original,
                     }),
@@ -812,7 +811,7 @@ impl super::super::CParser {
             crate::lexer::token_types::CTokenType::Constant => {
                 // return constant
                 self.advance_idx();
-                Spanned::boxed_new(
+                Spanned::new(
                     CExpression::Constant(Constant::Number(NumberLike {
                         from: current_token.original,
                     })),
@@ -822,7 +821,7 @@ impl super::super::CParser {
             }
             crate::lexer::token_types::CTokenType::StringLiteral => {
                 self.advance_idx();
-                Spanned::boxed_new(
+                Spanned::new(
                     CExpression::StringLiteral(StringLiteral {
                         value: current_token.original,
                     }),
@@ -837,7 +836,7 @@ impl super::super::CParser {
                     let expr = self.parse_expression();
                     let end = self.expect_type_and_string(CTokenType::Punctuator, ")").loc;
 
-                    Spanned::boxed_new(CExpression::Paranthesised(expr), start, end)
+                    Spanned::new(CExpression::Paranthesised(expr), start, end)
                 } else {
                     // unexpected punctuator -> panic and error?!
                     self.error_unexpected(

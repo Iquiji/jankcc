@@ -13,7 +13,7 @@ pub(crate) struct Spanned<T>
 where
     T: Clone + Debug,
 {
-    pub(crate) inner: T,
+    pub(crate) inner: Box<T>,
     #[serde(skip_serializing)]
     #[serde(default)]
     span: Span,
@@ -35,19 +35,9 @@ impl<T: Clone + Debug> DerefMut for Spanned<T> {
 impl<T: Clone + Debug> Spanned<T> {
     pub(crate) fn new(value: T, start: OriginalLocation, end: OriginalLocation) -> Spanned<T> {
         Self {
-            inner: value,
+            inner: Box::new(value),
             span: Span::new(start, end),
         }
-    }
-    pub(crate) fn boxed_new(
-        value: T,
-        start: OriginalLocation,
-        end: OriginalLocation,
-    ) -> Box<Spanned<T>> {
-        Box::new(Self {
-            inner: value,
-            span: Span::new(start, end),
-        })
     }
 }
 

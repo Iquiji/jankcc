@@ -13,7 +13,7 @@ fn run_lexer_with_return_that_init_parser(code: &str) -> CParser {
 fn expresion_test_helper(
     c_expression: &str,
     expected_yaml: &str,
-    expr_func: &dyn Fn(&mut CParser) -> Box<Spanned<CExpression>>,
+    expr_func: &dyn Fn(&mut CParser) -> Spanned<CExpression>,
 ) {
     let mut simple_parser = run_lexer_with_return_that_init_parser(c_expression);
     let expected_result = serde_yaml::from_str(expected_yaml).unwrap();
