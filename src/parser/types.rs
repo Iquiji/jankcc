@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::lexer::CToken;
 
-use super::{span::Spanned, CParser};
+use super::{parse_nodes::Identifier, span::Spanned, CParser};
 
 // we need to save the amount of bytes needed to represent
 // different sized char,int,unsigned int
@@ -87,6 +87,7 @@ Derived Types make Category:
   - Array
   - Function
   - Pointer
+Structured Types:
 */
 
 /*
@@ -180,3 +181,51 @@ as each other. All pointers to union types shall have the same representation an
 alignment requirements as each other. Pointers to other types need not have the same
 representation or alignment requirements.
 */
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CTypeSpecifierTypes {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CBasicTypes {
+    Void,
+    Char,
+    SignedChar,
+    UnsignedChar,
+    Short,
+    UnShort,
+    Int,
+    UnInt,
+    Long,
+    UnLong,
+    LongLong,
+    UnLongLong,
+    Float,
+    Double,
+    LongDouble,
+    Bool,
+    FloatComplex,
+    DoubleComplex,
+    LongDoubleComplex,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CStructType {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CUnionType {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CEnumType {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CTypeType {
+    Basic(CBasicTypes),
+    Struct(CStructType),
+    Union(CUnionType),
+    Enum(CEnumType),
+    Typedefed(Identifier),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CType {}
+// make Ctypetype with pointer array and func footprint recursive?!
