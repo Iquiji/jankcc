@@ -991,7 +991,7 @@ impl super::super::CParser {
                 // only GENERIC for generic Selection
                 if keyword == CKeyword::GENERIC {
                     // generic selection
-                    todo!()
+                    todo!("Generic Selection Expression Still unsuported!")
                 } else {
                     // panic with unexpected keyword
                     self.error_unexpected(

@@ -1,4 +1,4 @@
-use log::{trace, warn};
+use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::lexer::CToken;
@@ -77,6 +77,17 @@ impl CParser {
         }
     }
 }
+/*
+Basic Types:
+  - Char
+  - Unsigned Int
+  - Signed Int
+  - Floats
+Derived Types make Category:
+  - Array
+  - Function
+  - Pointer
+*/
 
 /*
 Types are partitioned into object types (types that describe objects) and function types (types that describe functions).
@@ -133,5 +144,39 @@ follows:
     — An atomic type describes the type designated by the construct _Atomic ( type-
         name ). (Atomic types are a conditional feature that implementations need not
         support; see 6.10.8.3.)
-        These methods of constructing derived types can be applied recursively.
+These methods of constructing derived types can be applied recursively.
+
+Arithmetic types and pointer types are collectively called scalar types.
+Array and structure types are collectively called aggregate types.
+
+An array type of unknown size is an incomplete type. It is completed, for an identifier of
+that type, by specifying the size in a later declaration (with internal or external linkage).
+A structure or union type of unknown content (as described in 6.7.2.3) is an incomplete type.
+It is completed, for all declarations of that type, by declaring the same structure or
+union tag with its defining content later in the same scope
+
+A type has known constant size if the type is not incomplete and is not a variable length array type.
+
+Array, function, and pointer types are collectively called derived declarator types. A
+declarator type derivation from a type T is the construction of a derived declarator type
+from T by the application of an array-type, a function-type, or a pointer-type derivation to T .
+
+A type is characterized by its type category, which is either the outermost derivation of a
+derived type (as noted above in the construction of derived types), or the type itself if the
+type consists of no derived types
+
+Any type so far mentioned is an unqualified type. Each unqualified type has several
+qualified versions of its type,47) corresponding to the combinations of one, two, or all
+three of the const, volatile, and restrict qualifiers. The qualified or unqualified
+versions of a type are distinct types that belong to the same type category and have the
+same representation and alignment requirements. A derived type is not qualified by the
+qualifiers (if any) of the type from which it is derived
+
+A pointer to void shall have the same representation and alignment requirements as a
+pointer to a character type. Similarly, pointers to qualified or unqualified versions of
+compatible types shall have the same representation and alignment requirements. All
+pointers to structure types shall have the same representation and alignment requirements
+as each other. All pointers to union types shall have the same representation and
+alignment requirements as each other. Pointers to other types need not have the same
+representation or alignment requirements.
 */
