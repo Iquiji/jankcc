@@ -337,3 +337,55 @@ Assignment:
 
     expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
+
+#[test]
+fn unified_expression_test_multi_assign() {
+    let expr = r#"ideas[8+(offset/64)] = war = --b + a/ 8"#;
+
+    let expected_result = r#"
+Assignment:
+  to_assign:
+    ArraySubscription:
+      array:
+        Identifier:
+          identifier: ideas
+      index:
+        Additive:
+          left_value:
+            Constant:
+              Number: "8"
+          op: Plus
+          right_value:
+            Paranthesised:
+              Multiplicative:
+                left_value:
+                  Identifier:
+                    identifier: offset
+                op: Div
+                right_value:
+                  Constant:
+                    Number: "64"
+  operator: Assign
+  value:
+    Assignment:
+      to_assign:
+        Identifier:
+          identifier: war
+      operator: Assign
+      value:
+        Multiplicative:
+          left_value:
+            Paranthesised:
+              PrefixIncrement:
+                increment_type: Decrement
+                value:
+                  Identifier:
+                    identifier: b+a
+          op: Div
+          right_value:
+            Constant:
+              Number: "8"
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
