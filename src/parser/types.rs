@@ -1,3 +1,4 @@
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::lexer::CToken;
@@ -57,6 +58,7 @@ impl CParser {
     }
 
     pub(crate) fn check_is_start_of_type_name(&mut self, token: &CToken) -> bool {
-        unimplemented!()
+        warn!("check_is_start_of_type_name not implemented yet!!! only returns false");
+        false
     }
 }

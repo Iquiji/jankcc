@@ -279,6 +279,7 @@ assigment,expr,primary,generic seperatily
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CExpression {
+    Expression(Vec<Spanned<Self>>),
     Assignment {
         to_assign: Spanned<Self>,
         operator: AssignmentOperator,
@@ -374,25 +375,232 @@ pub(crate) enum CExpression {
 
 impl super::super::CParser {
     pub(crate) fn parse_expression(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_assignment();
+
+        if self.current_token().original == "," {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "," {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_assignment());
+            }
+
+            result = Spanned::new(
+                CExpression::Expression(result_vec),
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_assignment(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        /*
+        assignment-expression:
+            conditional-expression
+            unary-expression assignment-operator assignment-expression
+
+        assignment-operator: one of
+            = *= /= %= += -= <<= >>= &= ^= |=
+        */
+        /*
+        Idea:
+            Parse Cond Expression;
+            then if is of type unary-expr or lower:
+                check for assignment operator
+            else:
+                return conditional_expression
+        */
+        let possible_extensions = [
+            "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|=",
+        ];
+        let op_matcher = |op: &str| match op {
+            "=" => AssignmentOperator::Assign,
+            "*=" => AssignmentOperator::AssignMult,
+            "/=" => AssignmentOperator::AssignDiv,
+            "%=" => AssignmentOperator::AssignMod,
+            "+=" => AssignmentOperator::AssignPlus,
+            "-=" => AssignmentOperator::AssignMinus,
+            "<<=" => AssignmentOperator::AssignShiftLeft,
+            ">>=" => AssignmentOperator::AssignShiftRight,
+            "&=" => AssignmentOperator::AssignAnd,
+            "^=" => AssignmentOperator::AssignXor,
+            "|=" => AssignmentOperator::AssignOr,
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+        let mut result = self.parse_expr_cond();
+
+        use CExpression::*;
+
+        if matches!(
+            &*result,
+            Unary {
+                unary_op: _,
+                value: _,
+            } | SizeOf { value: _ }
+                | SizeOfType { type_name: _ }
+                | AlignOfType { type_name: _ }
+                | ArraySubscription { array: _, index: _ }
+                | FunctionCall {
+                    function: _,
+                    arguments: _,
+                }
+                | DirectMemberAccess {
+                    to_access: _,
+                    member: _,
+                }
+                | IndirectMemberAccess {
+                    to_access: _,
+                    member: _,
+                }
+                | PostfixIncrement {
+                    increment_type: _,
+                    value: _,
+                }
+                | TypeInitializer {
+                    type_name: _,
+                    // FIXME:
+                    initializer_list: _,
+                }
+                | Identifier(_)
+                | Constant(_)
+                | StringLiteral(_)
+                | Paranthesised(_)
+                | GenericSelection(_)
+        ) && possible_extensions.contains(&self.current_token().original.as_str())
+        {
+            result = Spanned::new(
+                CExpression::Assignment {
+                    to_assign: result,
+                    operator: op_matcher(&self.advance_idx().original),
+                    value: self.parse_expr_assignment(),
+                },
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_cond(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        /*
+        conditional-expression:
+            logical-OR-expression
+            logical-OR-expression ? expression : conditional-expression
+        */
+        let start = self.current_token().loc;
+        let mut result = self.parse_expr_logi_or();
+
+        if self.current_token().t_type == Punctuator && self.current_token().original == "?" {
+            self.advance_idx();
+            let if_true = self.parse_expression();
+            self.expect_type_and_string(Punctuator, ":");
+            let tern_else = self.parse_expr_cond();
+            let end = self.prev_token().loc;
+            result = Spanned::new(
+                CExpression::Ternary {
+                    condition: result,
+                    if_true,
+                    tern_else,
+                },
+                start,
+                end,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_logi_or(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_logi_and();
+
+        if self.current_token().original == "||" {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "||" {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_logi_and());
+            }
+
+            result = Spanned::new(
+                CExpression::LogicalAnd(result_vec),
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_logi_and(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_incl_or();
+
+        if self.current_token().original == "&&" {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "&&" {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_incl_or());
+            }
+
+            result = Spanned::new(
+                CExpression::LogicalAnd(result_vec),
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_incl_or(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_excl_or();
+
+        if self.current_token().original == "|" {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "|" {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_excl_or());
+            }
+
+            result = Spanned::new(
+                CExpression::InclusiveOr(result_vec),
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_excl_or(&mut self) -> Spanned<CExpression> {
-        unimplemented!()
+        let start = self.current_token().loc;
+
+        let mut result = self.parse_expr_and();
+
+        if self.current_token().original == "^" {
+            let mut result_vec = vec![result];
+
+            while self.current_token().original == "^" {
+                self.advance_idx();
+                result_vec.push(self.parse_expr_and());
+            }
+
+            result = Spanned::new(
+                CExpression::ExlusiveOr(result_vec),
+                start,
+                self.prev_token().loc,
+            );
+        }
+
+        result
     }
     pub(crate) fn parse_expr_and(&mut self) -> Spanned<CExpression> {
         let start = self.current_token().loc;
@@ -818,7 +1026,7 @@ impl super::super::CParser {
             crate::lexer::token_types::CTokenType::Punctuator => {
                 // only '(' allowed for paranthesised expr
                 if current_token.original == "(" {
-                    let start = current_token.loc;
+                    let start = self.advance_idx().loc;
                     let expr = self.parse_expression();
                     let end = self.expect_type_and_string(CTokenType::Punctuator, ")").loc;
 

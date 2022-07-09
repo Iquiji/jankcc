@@ -33,7 +33,7 @@ Constant:
     Number:
         666.010101";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -61,7 +61,7 @@ DirectMemberAccess:
                     identifier: may_struct
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -92,7 +92,7 @@ PostfixIncrement:
                                             identifier: may_struct
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -114,7 +114,7 @@ PostfixIncrement:
             arguments: []
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -144,7 +144,7 @@ Multiplicative:
                 identifier: x
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -189,7 +189,7 @@ Additive:
             identifier: var
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -219,7 +219,7 @@ Equality:
             identifier: d
     ";
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
 #[test]
@@ -251,5 +251,89 @@ And:
         arguments: []
 "#;
 
-    expresion_test_helper(expr, expected_result, &CParser::parse_expr_and);
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+#[test]
+fn simple_assign_expr() {
+    let expr = r#"me.inner->age += 1"#;
+
+    let expected_result = r#"
+Assignment:
+  to_assign:
+    IndirectMemberAccess:
+      to_access:
+        DirectMemberAccess:
+          to_access:
+            Identifier:
+              identifier: me
+          member:
+            identifier: inner
+      member:
+        identifier: age
+  operator: AssignPlus
+  value:
+    Constant:
+      Number: "1"
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+#[test]
+fn unified_expression_test_simple() {
+    let expr = r#"ideas[8+(offset/64)] += function((42*1.005) % modulator,7,beta)"#;
+
+    let expected_result = r#"
+Assignment:
+  to_assign:
+    ArraySubscription:
+      array:
+        Identifier:
+          identifier: ideas
+      index:
+        Additive:
+          left_value:
+            Constant:
+              Number: "8"
+          op: Plus
+          right_value:
+            Paranthesised:
+              Multiplicative:
+                left_value:
+                  Identifier:
+                    identifier: offset
+                op: Div
+                right_value:
+                  Constant:
+                    Number: "64"
+  operator: AssignPlus
+  value:
+    FunctionCall:
+      function:
+        Identifier:
+          identifier: function
+      arguments:
+        - Multiplicative:
+            left_value:
+              Paranthesised:
+                Multiplicative:
+                  left_value:
+                    Constant:
+                      Number: "42"
+                  op: Mult
+                  right_value:
+                    Constant:
+                      Number: "1.005"
+            op: Mod
+            right_value:
+              Identifier:
+                identifier: modulator
+        - Constant:
+            Number: "7"
+        - Identifier:
+            identifier: beta
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
