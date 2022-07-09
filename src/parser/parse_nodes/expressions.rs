@@ -5,6 +5,7 @@ use crate::{
 
 use super::{declarations::InitializerList, Constant, Identifier, NumberLike, StringLiteral};
 
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 /*
@@ -235,6 +236,14 @@ pub(crate) enum AssignmentOperator {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ConstantExpression {
     internal: Spanned<CExpression>,
+}
+impl CParser {
+    fn parse_constant_expr(&mut self) -> ConstantExpression {
+        warn!("constant expr unstable");
+        ConstantExpression {
+            internal: self.parse_expr_cond(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
