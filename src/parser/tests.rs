@@ -389,3 +389,15 @@ Assignment:
 
     expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
+
+#[test]
+#[ignore = "not yet :)"]
+fn unified_expression_test_not_unary() {
+    let expr = r#"a + b = c"#;
+    expresion_test_helper(
+        expr,
+        "Constant:
+    Number: 8",
+        &CParser::parse_expression,
+    );
+}
