@@ -6,9 +6,10 @@ mod tests;
 
 use std::{fmt, fs::read_to_string};
 
-use log::{error, trace};
+use log::{error, trace, Log};
 use serde::{Deserialize, Serialize};
 use token_types::*;
+use logos::{Logos,Lexer as LogosLexer};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CToken {
@@ -65,199 +66,34 @@ impl Lexer {
                     panic!();
                 }
             } else {
-                let mut current_token_string = String::new();
+                let lex = LogosToken::lexer(line);
 
-                // main loop where we check for Tokens
-                let mut char_line_iter = line.chars().into_iter().peekable();
-
-                while let Some(character) = char_line_iter.next() {
-                    if current_token_string == " " {
-                        current_token_string = String::new();
-                    }
-                    // current_token_string = current_token_string.trim_start().to_string();
-                    if helper_funcs::is_punctuator(&current_token_string) {
-                        // punctuator
-                        let mut punctuator_temp = current_token_string.clone();
-                        punctuator_temp.push(character);
-                        if punctuator_temp == ".." {
-                            if char_line_iter.next() == Some('.') {
-                                buf.push(CToken {
-                                    t_type: CTokenType::Punctuator,
-                                    original: "...".to_string(),
-                                    loc: self.current_loc.clone(),
-                                });
-                                current_token_string = String::new();
-                                continue;
-                            } else {
-                                error!("ellipsis hack exception! seek help!");
-                            }
-                        } else if helper_funcs::is_punctuator(&punctuator_temp) {
-                            if char_line_iter.peek().is_none() {
-                                buf.push(CToken {
-                                    t_type: CTokenType::Punctuator,
-                                    original: punctuator_temp.clone(),
-                                    loc: self.current_loc.clone(),
-                                });
-                                current_token_string = String::new();
-                            }
-                            // we continue till longest punctuator
-                            for character in char_line_iter.by_ref() {
-                                punctuator_temp.push(character);
-                                if !helper_funcs::is_punctuator(&punctuator_temp) {
-                                    // we do this until it isnt a punctioator anymore in which case we push the last char outside
-                                    trace!("current punctuator temp: {:?}", punctuator_temp);
-                                    punctuator_temp.remove(punctuator_temp.len() - 1);
-                                    buf.push(CToken {
-                                        t_type: CTokenType::Punctuator,
-                                        original: punctuator_temp.clone(),
-                                        loc: self.current_loc.clone(),
-                                    });
-                                    current_token_string = String::new();
-                                    current_token_string.push(character);
-                                    break;
-                                }
-                            }
-
+                for toki in lex{
+                    let mut token = match toki{
+                        LogosToken::Error => {
+                            error!("Error in logos!: {:?}",toki);
                             continue;
-                        } else {
-                            // we just push this one and continue on
-                            buf.push(CToken {
-                                t_type: CTokenType::Punctuator,
-                                original: current_token_string.clone(),
-                                loc: self.current_loc.clone(),
-                            });
-                            current_token_string = String::new();
-                        }
-                    }
-                    if character.is_whitespace() {
-                        // it is a whitespace so we do nothing but maybe error if current token string is nonempty
-                        if !current_token_string.is_empty() {
-                            error!(
-                                "!current_token_string.is_empty(): {:?}",
-                                current_token_string
-                            );
-                        }
-                    } else if helper_funcs::is_nondigit(character) {
-                        // identifier
-                        let mut end_char = '`';
-                        current_token_string.push(character);
-                        for character in char_line_iter.by_ref() {
-                            // as long as we have digit or nondigit
-                            if helper_funcs::is_nondigit(character)
-                                || helper_funcs::is_digit(character)
-                            {
-                                current_token_string.push(character);
-                            } else {
-                                end_char = character;
-                                break;
-                            }
-                        }
-                        if let Some(keyword) = CKeyword::to_keyword(&current_token_string) {
-                            buf.push(CToken {
-                                t_type: CTokenType::Keyword(keyword),
-                                original: current_token_string.clone(),
-                                loc: self.current_loc.clone(),
-                            });
-                        } else {
-                            buf.push(CToken {
-                                t_type: CTokenType::Identifier,
-                                original: current_token_string.clone(),
-                                loc: self.current_loc.clone(),
-                            });
-                        }
-                        current_token_string = String::new();
-                        if end_char != '`' {
-                            current_token_string.push(end_char);
-                        }
-                    } else if helper_funcs::is_digit(character) {
-                        // number
-                        current_token_string.push(character);
-                        let mut end_char = '`';
-                        let mut point_seperator_reached = false;
-                        for character in char_line_iter.by_ref() {
-                            // as long as we have digit or nondigit
-                            if helper_funcs::is_digit(character) {
-                                current_token_string.push(character);
-                            } else if character == '.' {
-                                if point_seperator_reached {
-                                    panic!("Second Point seperator in number")
-                                }
-                                point_seperator_reached = true;
-                                current_token_string.push(character);
-                            } else {
-                                end_char = character;
-                                break;
-                            }
-                        }
-                        buf.push(CToken {
-                            t_type: CTokenType::Constant,
-                            original: current_token_string.clone(),
-                            loc: self.current_loc.clone(),
-                        });
-                        current_token_string = String::new();
-                        if end_char != '`' {
-                            current_token_string.push(end_char);
-                        }
-                    } else {
-                        self.current_loc.collumn += 1;
-                        current_token_string.push(character);
-                    }
-                    // if !current_token_string.is_empty() {
-                    //     buf.push(CToken {
-                    //         t_type: CTokenType::Identifier,
-                    //         original: current_token_string.clone(),
-                    //         loc: self.current_loc.clone(),
-                    //     });
-                    // }
-                    if current_token_string.clone().ends_with('\"') {
-                        current_token_string.remove(current_token_string.len() - 1);
-                        // warn!(
-                        //     "string-start: {:?} - {:?}",
-                        //     char_line_iter, self.current_loc
-                        // );
-                        // char_line_iter.next();
-                        for character_next in char_line_iter.by_ref() {
-                            // error!("string: !{}!'{}'", character_next, current_token_string);
+                        },
+                        LogosToken::String(toki) => {
+                            toki
+                        },
+                        LogosToken::Identifier(toki) => {
+                            toki
+                        },
+                        LogosToken::Number(toki) => {
+                            toki
+                        },
+                        LogosToken::Punctuator(toki) => {
+                            toki
+                        },
+                        LogosToken::Keyword(toki) => {
+                            toki
+                        },
+                    };
+                    token.loc.line = self.current_loc.line;
+                    token.loc.file = self.current_loc.file.clone();
 
-                            // as long as we have are still in a string:
-                            if character_next == '"' {
-                                if current_token_string.ends_with('\\') {
-                                    current_token_string.remove(current_token_string.len() - 1);
-                                    current_token_string.push('"');
-                                    continue;
-                                } else {
-                                    break;
-                                }
-                            } else {
-                                current_token_string.push(character_next);
-                            }
-                        }
-                        buf.push(CToken {
-                            t_type: CTokenType::StringLiteral,
-                            original: current_token_string
-                                .clone()
-                                .trim_start_matches('"')
-                                .trim_end_matches('"')
-                                .to_string(),
-                            loc: self.current_loc.clone(),
-                        });
-                        trace!(
-                            "string-end!: '{}' - {:?}-{:?}",
-                            current_token_string,
-                            self.current_loc.line,
-                            self.current_loc.collumn
-                        );
-                        current_token_string = String::new();
-                    }
-                }
-                if helper_funcs::is_punctuator(&current_token_string) {
-                    // punctuator
-                    buf.push(CToken {
-                        t_type: CTokenType::Punctuator,
-                        original: current_token_string.clone(),
-                        loc: self.current_loc.clone(),
-                    });
-                    // current_token_string = String::new();
+                    buf.push(token);
                 }
             }
             self.current_loc.line += 1;
@@ -288,5 +124,119 @@ impl Lexer {
         self.current_loc.file = file_resync.to_string();
 
         Ok(())
+    }
+}
+
+
+#[derive(Logos, Debug, PartialEq)]
+enum LogosToken {
+    #[regex(r"[ \t\n\f]+", logos::skip)]
+    #[error]
+    Error,
+
+    // Callbacks can use closure syntax, or refer
+    // to a function defined elsewhere.
+    //
+    // Each pattern can have it's own callback.
+   
+    #[regex("(0[xX])[a-fA-F0-9]+(((u|U)(l|L|ll|LL)?)|((l|L|ll|LL)(u|U)?))", number)]
+    #[regex("[1-9][0-9]*(((u|U)(l|L|ll|LL)?)|((l|L|ll|LL)(u|U)?))", number)]
+    #[regex(r#""0"[0-7]*(((u|U)(l|L|ll|LL)?)|((l|L|ll|LL)(u|U)?))"#, number)]
+    #[regex(r#"[0-9]*"."[0-9]+(f|F|l|L)?"#, number)]
+    Number(CToken),
+
+    #[regex(r#"/"(?:[^"\\]|\\.)*"/"#, string)]
+    String(CToken),
+
+    
+
+    #[regex(r#"/\[ | \] | \( | \) | \. | -> | ++ | -- | & | * | + | \- | ~ | ! | / | % | << | >> | < | > | <= | >= | == | !=/"#, punct,priority=8,)]
+    #[regex(r#"/\^| \| | \&\& | \\|\\| | \\? | : | ; | ... | = | *=| \\/= | %=| +=| \-=| <<=| >>=| \&= | \^= | \\|= | , | \#| \#\#/"#, punct,priority=10,)]
+    Punctuator(CToken),
+
+    #[regex(r#"( auto
+     | break
+     | case
+     | char
+     | const
+     | continue
+     | default
+     | do
+     | double
+     | else
+     | enum
+     | extern
+     | float
+     | for
+     | goto
+     | if
+     | inline
+     | int
+     | long
+     | register
+     | restrict
+     | return
+     | short
+     | signed
+     | sizeof
+     | static
+     | struct
+     | switch
+     | typedef
+     | union
+     | unsigned
+     | void
+     | volatile
+     | while
+     | _Alignas
+     | _Alignof
+     | _Atomic
+     | _Bool
+     | _Complex
+     | _Generic
+     | _Imaginary
+     | _Noreturn
+     | _Static_assert
+     | _Thread_local )"#, keyword)]
+    Keyword(CToken),
+
+    #[regex(r#"[_a-zA-Z][_a-zA-Z0-9]*"#, ident)]
+    Identifier(CToken),
+}
+
+
+fn number(lex: &mut LogosLexer<LogosToken>) -> CToken {
+    CToken{
+        t_type: CTokenType::Constant,
+        original: lex.slice().to_string(),
+        loc: OriginalLocation { file: "".to_string(), line: 0, collumn: lex.span().start },
+    }
+}
+fn string(lex: &mut LogosLexer<LogosToken>) -> CToken {
+    CToken{
+        t_type: CTokenType::StringLiteral,
+        original: lex.slice().to_string(),
+        loc: OriginalLocation { file: "".to_string(), line: 0, collumn: lex.span().start },
+    }
+}
+fn keyword(lex: &mut LogosLexer<LogosToken>) -> CToken {
+    CToken{
+        t_type: CTokenType::Keyword(CKeyword::to_keyword(lex.slice()).unwrap()),
+        original: lex.slice().to_string(),
+        loc: OriginalLocation { file: "".to_string(), line: 0, collumn: lex.span().start },
+    }
+}
+fn ident(lex: &mut LogosLexer<LogosToken>) -> CToken {
+    CToken{
+        t_type: CTokenType::Identifier,
+        original: lex.slice().to_string(),
+        loc: OriginalLocation { file: "".to_string(), line: 0, collumn: lex.span().start },
+    }
+}
+fn punct(lex: &mut LogosLexer<LogosToken>) -> CToken {
+    CToken{
+        t_type: CTokenType::Punctuator,
+        original: lex.slice().to_string(),
+        loc: OriginalLocation { file: "".to_string(), line: 0, collumn: lex.span().start },
     }
 }
