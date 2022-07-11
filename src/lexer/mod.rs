@@ -101,8 +101,8 @@ impl Lexer {
                                 current_token_string = String::new();
                             }
                             // we continue till longest punctuator
-                            for character in char_line_iter.by_ref() {
-                                punctuator_temp.push(character);
+                            while let Some(character) = char_line_iter.peek() {
+                                punctuator_temp.push(*character);
                                 if !helper_funcs::is_punctuator(&punctuator_temp) {
                                     // we do this until it isnt a punctioator anymore in which case we push the last char outside
                                     trace!("current punctuator temp: {:?}", punctuator_temp);
@@ -113,8 +113,10 @@ impl Lexer {
                                         loc: self.current_loc.clone(),
                                     });
                                     current_token_string = String::new();
-                                    current_token_string.push(character);
+                                    // current_token_string.push(*character);
                                     break;
+                                }else{
+                                    char_line_iter.next();
                                 }
                             }
 

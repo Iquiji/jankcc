@@ -340,7 +340,7 @@ Assignment:
 
 #[test]
 fn unified_expression_test_multi_assign() {
-    let expr = r#"ideas[8+(offset/64)] = war = --b + a/ 8"#;
+    let expr = r#"ideas[8+(offset/64)] = war = --b + a / 8"#;
 
     let expected_result = r#"
 Assignment:
@@ -373,18 +373,23 @@ Assignment:
           identifier: war
       operator: Assign
       value:
-        Multiplicative:
+        Additive:
           left_value:
-            Paranthesised:
-              PrefixIncrement:
-                increment_type: Decrement
-                value:
-                  Identifier:
-                    identifier: b+a
-          op: Div
+            PrefixIncrement:
+              increment_type: Decrement
+              value:
+                Identifier:
+                  identifier: b
+          op: Plus
           right_value:
-            Constant:
-              Number: "8"
+            Multiplicative:
+              left_value:
+                Identifier:
+                  identifier: a
+              op: Div
+              right_value:
+                Constant:
+                  Number: "8"
 "#;
 
     expresion_test_helper(expr, expected_result, &CParser::parse_expression);

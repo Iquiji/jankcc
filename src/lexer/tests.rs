@@ -283,7 +283,7 @@ fn test_lexer_extended_punctuators() {
             loc: OriginalLocation {
                 file: "".to_string(),
                 line: 0,
-                collumn: 1,
+                collumn: 2,
             },
         },
         CToken {
@@ -292,7 +292,125 @@ fn test_lexer_extended_punctuators() {
             loc: OriginalLocation {
                 file: "".to_string(),
                 line: 0,
+                collumn: 3,
+            },
+        },
+    ];
+
+    assert_eq!(
+        Lexer::new().string_to_token_arr(input.to_string()),
+        expected_output
+    );
+}
+
+#[test]
+fn b_plus_a() {
+    let input = r#"b+a b + a"#;
+
+    // TODO fix collumn number in lexer
+    let expected_output = vec![
+        CToken {
+            t_type: Identifier,
+            original: "b".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 0,
+            },
+        },
+        CToken {
+            t_type: Punctuator,
+            original: "+".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 0,
+            },
+        },
+        CToken {
+            t_type: Identifier,
+            original: "a".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 0,
+            },
+        },
+        CToken {
+            t_type: Identifier,
+            original: "b".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 0,
+            },
+        },
+        CToken {
+            t_type: Punctuator,
+            original: "+".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
                 collumn: 1,
+            },
+        },
+        CToken {
+            t_type: Identifier,
+            original: "a".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 1,
+            },
+        },
+    ];
+
+    assert_eq!(
+        Lexer::new().string_to_token_arr(input.to_string()),
+        expected_output
+    );
+}
+
+#[test]
+fn b_plus_a_ext() {
+    let input = r#"--b + a"#;
+
+    // TODO fix collumn number in lexer
+    let expected_output = vec![
+        CToken {
+            t_type: Punctuator,
+            original: "--".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 1,
+            },
+        },
+        CToken {
+            t_type: Identifier,
+            original: "b".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 1,
+            },
+        },
+        CToken {
+            t_type: Punctuator,
+            original: "+".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 2,
+            },
+        },
+        CToken {
+            t_type: Identifier,
+            original: "a".to_string(),
+            loc: OriginalLocation {
+                file: "".to_string(),
+                line: 0,
+                collumn: 2,
             },
         },
     ];
