@@ -18,9 +18,13 @@
   - [ ] #if
   - [ ] ...
 - [x] Lexer
+  - [ ] Allow Hex Numbers & Co.
   - [ ] Sensible Error Generation
 - [ ] Parser
-  - [ ] Sensible Error Generation
+  - [x] Expresions
+  - [ ] Type Names
+  - [ ] Declarations
+  - [ ] Statements
   - [ ] Error Continuation
   - [ ] Full Parse for subset? of C11 Standard
 - [ ] Type Checking on AST
