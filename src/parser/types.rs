@@ -1,9 +1,10 @@
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use crate::lexer::CToken;
+use crate::lexer::{token_types::CKeyword, CToken};
 
 use super::{parse_nodes::Identifier, span::Spanned, CParser};
+use crate::parser::CTokenType::*;
 
 // we need to save the amount of bytes needed to represent
 // different sized char,int,unsigned int
@@ -194,14 +195,47 @@ impl CParser {
     }
 }
 
-impl CParser{
-    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> CType{
+impl CParser {
+    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> CType {
+        let qualifer_possible = [
+            CKeyword::CONST,
+            CKeyword::RESTRICT,
+            CKeyword::VOLATILE,
+            CKeyword::ATOMIC,
+        ];
+        let basic_specifiers_possible = [
+            CKeyword::VOID,
+        ];
+
+        let mut qualifiers = CTypeQualifiers {
+            const_q: false,
+            restrict_q: false,
+            volatile_q: false,
+            atomic_q: false,
+        };
+        let specifier: CTypeSpecifier;
+        if self.current_token().t_type == Identifier {
+            specifier = CTypeSpecifier::Typedefed(super::Identifier {
+                identifier: self.current_token().original,
+            });
+        } else if let Keyword(keyword) = self.current_token().t_type {
+            // one of CTypeSpecifier or qualifer! can be intermixed
+        } else {
+            self.error_unexpected(
+                self.current_token(),
+                "expected type name or type keyword in specifier-qualifier-list",
+            );
+            unreachable!();
+        }
         unimplemented!()
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CTypeSpecifierTypes {}
+pub(crate) struct CTypeBasic {
+    qualifiers: CTypeQualifiers,
+    specifier: CTypeSpecifier,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CBasicTypes {
@@ -236,7 +270,7 @@ pub(crate) struct CUnionType {}
 pub(crate) struct CEnumType {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CTypeType {
+pub(crate) enum CTypeSpecifier {
     Basic(CBasicTypes),
     Struct(CStructType),
     Union(CUnionType),
