@@ -181,6 +181,24 @@ as each other. All pointers to union types shall have the same representation an
 alignment requirements as each other. Pointers to other types need not have the same
 representation or alignment requirements.
 */
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CTypeQualifiers {
+    const_q: bool,
+    restrict_q: bool,
+    volatile_q: bool,
+    atomic_q: bool,
+}
+impl CParser {
+    pub(crate) fn parse_type_qualifiers(&mut self) -> CTypeQualifiers {
+        unimplemented!()
+    }
+}
+
+impl CParser{
+    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> CType{
+        unimplemented!()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CTypeSpecifierTypes {}
@@ -229,7 +247,6 @@ pub(crate) enum CTypeType {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CType {}
 // make Ctypetype with pointer array and func footprint recursive?!
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CPointerType {}

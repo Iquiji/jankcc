@@ -115,7 +115,7 @@ impl Lexer {
                                     current_token_string = String::new();
                                     // current_token_string.push(*character);
                                     break;
-                                }else{
+                                } else {
                                     char_line_iter.next();
                                 }
                             }
