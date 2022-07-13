@@ -54,8 +54,15 @@ EZ
     typedef-name                    => check for is_typedef
 */
 impl CParser {
-    pub(crate) fn parse_type_name(&mut self) -> Box<Spanned<CTypeName>> {
-        unimplemented!("type name parsing still is thought about and not implemented yet 🥶")
+    pub(crate) fn parse_type_name(&mut self) -> Spanned<CType> {
+        let start = self.current_token().loc;
+
+        // TODO: abstract declarator
+
+
+        Spanned::new(CType{
+            inner: CDerivedType::Basic(self.parse_specifier_qualifier_list()),
+        },start,self.prev_token().loc)
     }
 
     pub(crate) fn check_is_start_of_type_name(&mut self, token: &CToken) -> bool {
@@ -274,13 +281,56 @@ pub(crate) struct CTypeQualifiers {
     atomic_q: bool,
 }
 impl CParser {
-    pub(crate) fn parse_type_qualifiers(&mut self) -> CTypeQualifiers {
-        unimplemented!()
+    pub(crate) fn parse_type_qualifiers(&mut self) -> Spanned<CTypeQualifiers> {
+        let qualifier_possible = [
+            CKeyword::CONST,
+            CKeyword::RESTRICT,
+            CKeyword::VOLATILE,
+            CKeyword::ATOMIC,
+        ];
+        let qualifier_matcher = |key: &CKeyword, quals: &mut CTypeQualifiers| match key {
+            CKeyword::CONST => {
+                quals.const_q = true;
+            }
+            CKeyword::RESTRICT => {
+                quals.restrict_q = true;
+            }
+            CKeyword::VOLATILE => {
+                quals.volatile_q = true;
+            }
+            CKeyword::ATOMIC => {
+                quals.atomic_q = true;
+            }
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut qualifiers = CTypeQualifiers {
+            const_q: false,
+            restrict_q: false,
+            volatile_q: false,
+            atomic_q: false,
+        };
+
+        // get beginning qualifiers
+        while let Keyword(keyword) = self.current_token().t_type {
+            if qualifier_possible.contains(&keyword) {
+                self.advance_idx();
+                qualifier_matcher(&keyword, &mut qualifiers);
+            } else {
+                break;
+            }
+        }
+
+        let end = self.prev_token().loc;
+
+        Spanned::new(qualifiers,start,end)
     }
 }
 
 impl CParser {
-    pub(crate) fn parse_ctypename(&mut self) -> Spanned<CType> {
+    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> Spanned<CTypeBasic> {
         let start = self.current_token().loc;
 
         let qualifier_possible = [
@@ -395,15 +445,13 @@ impl CParser {
             );
             unreachable!();
         }
-        // TODO: abstract declarator
+
         let end = self.prev_token().loc;
 
         Spanned::new(
-            CType {
-                inner: CDerivedType::Basic(CTypeBasic {
-                    qualifiers,
-                    specifier,
-                }),
+            CTypeBasic {
+                qualifiers,
+                specifier,
             },
             start,
             end,
@@ -464,7 +512,6 @@ pub(crate) struct CType {
     inner: CDerivedType,
     // more here later
 }
-// make Ctypetype with pointer array and func footprint recursive?!
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CPointerType {}
@@ -478,8 +525,8 @@ pub(crate) struct CFunctionType {}
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CDerivedType {
     // todo do Spanned everywhere here as well:
-    Basic(CTypeBasic),
-    Pointer(CPointerType),
-    Array(CArrayType),
-    Function(CFunctionType),
+    Basic(Spanned<CTypeBasic>),
+    Pointer(Spanned<CPointerType>),
+    Array(Spanned<CArrayType>),
+    Function(Spanned<CFunctionType>),
 }

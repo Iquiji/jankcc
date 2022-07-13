@@ -28,6 +28,7 @@
   - [ ] Error Continuation
   - [ ] Full Parse for subset? of C11 Standard
 - [ ] Type Checking on AST
+- [ ] Constant Expression Runner
 - [ ] Conversion to SSA
 - [ ] SSA optimisier
 - [ ] Register Allocator

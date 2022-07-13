@@ -80,7 +80,7 @@ pub(crate) type InitDeclaratorList = Vec<InitDeclarator>;
     struct-declaration
     struct-declaration-list struct-declaration
 (6.7.2.1) struct-declaration:
-    specifier-qualifier-list struct-declarator-listopt ;
+    specifier-qualifier-list struct-declarator-list opt ;
     static_assert-declaration
 (6.7.2.1) specifier-qualifier-list:
     type-specifier specifier-qualifier-listopt
@@ -241,7 +241,7 @@ pub(crate) enum AlignmentSpecifier {
 
 /*
 (6.7.6) declarator:
-    pointer opt direct-declarato
+    pointer opt direct-declarator
 (6.7.6) direct-declarator:
     identifier
     ( declarator )
@@ -446,3 +446,28 @@ pub(crate) struct StaticAssertDeclaration {
     expression: ConstantExpression,
     string_literal: StringLiteral,
 }
+
+/*
+
+Struct:
+list of declarations,
+each declaration:
+- specifier-qualifier-list struct-declarator-list?
+struct-declarator-list: list of:
+- declarator
+or
+- declarator opt : constant-expression
+declarator:
+- pointer opt direct-declarator
+
+
+Struct:
+Vec<Decl>
+Decl:
+- specifier-qualifier-list
+ - List of:
+  -Normal
+   or
+  -Initialized
+
+*/

@@ -5,7 +5,7 @@ use crate::parser::{
 fn type_name_test_helper(c_expression: &str, expected_yaml: &str) {
     let mut simple_parser = run_lexer_with_return_that_init_parser(c_expression);
 
-    let got_result = simple_parser.parse_ctypename();
+    let got_result = simple_parser.parse_type_name();
     println!("{}", serde_yaml::to_string(&got_result).unwrap());
 
     let expected_result = serde_yaml::from_str(expected_yaml).unwrap();
