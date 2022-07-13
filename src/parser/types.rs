@@ -182,6 +182,43 @@ as each other. All pointers to union types shall have the same representation an
 alignment requirements as each other. Pointers to other types need not have the same
 representation or alignment requirements.
 */
+/// checks equality disregarding order, 
+/// checks length
+fn basic_ctype_alias_checker(cmp:&[CKeyword]) -> Option<CBasicTypes>{
+    use CKeyword::*;
+    if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[VOID], cmp){
+        Some(CBasicTypes::Void)
+    } else {
+        None
+    }
+
+}
+fn is_semi_equal_keywords(base:&[CKeyword],cmp: &[CKeyword] ) -> bool{
+    if base.len() != cmp.len(){
+        return false;
+    }
+
+    for key in base{
+        if !cmp.contains(key){
+            return false;
+        }
+    }
+
+    true
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CTypeQualifiers {
     const_q: bool,
@@ -196,15 +233,45 @@ impl CParser {
 }
 
 impl CParser {
-    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> CType {
-        let qualifer_possible = [
+    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> Spanned<CType> {
+        let start = self.current_token().loc;
+
+        let qualifier_possible = [
             CKeyword::CONST,
             CKeyword::RESTRICT,
             CKeyword::VOLATILE,
             CKeyword::ATOMIC,
         ];
+        let qualifier_matcher = |key: &CKeyword,quals: &mut CTypeQualifiers|{
+            match key{
+                CKeyword::CONST => {
+                    quals.const_q = true;
+                },
+                CKeyword::RESTRICT => {
+                    quals.restrict_q = true;
+                },
+                CKeyword::VOLATILE => {
+                    quals.volatile_q = true;
+                },
+                CKeyword::ATOMIC => {
+                    quals.atomic_q = true;
+                },
+                _ => unreachable!(),
+            }
+        };
+
         let basic_specifiers_possible = [
             CKeyword::VOID,
+            CKeyword::CHAR,
+            CKeyword::SHORT,
+            CKeyword::INT,
+            CKeyword::LONG,
+            CKeyword::FLOAT,
+            CKeyword::DOUBLE,
+            CKeyword::SIGNED,
+            CKeyword::UNSIGNED,
+            CKeyword::BOOL,
+            CKeyword::COMPLEX,
         ];
 
         let mut qualifiers = CTypeQualifiers {
@@ -213,13 +280,44 @@ impl CParser {
             volatile_q: false,
             atomic_q: false,
         };
+
+        // get beginning qualifiers
+        while let Keyword(keyword) = self.current_token().t_type{
+            if qualifier_possible.contains(&keyword){
+                self.advance_idx();
+                qualifier_matcher(&keyword,&mut qualifiers);
+            }else{
+                break;
+            }
+        }
+
         let specifier: CTypeSpecifier;
         if self.current_token().t_type == Identifier {
+            // type_defed mode
             specifier = CTypeSpecifier::Typedefed(super::Identifier {
-                identifier: self.current_token().original,
+                identifier: self.advance_idx().original,
             });
-        } else if let Keyword(keyword) = self.current_token().t_type {
+        } else if let Keyword(keyword) = self.advance_idx().t_type {
             // one of CTypeSpecifier or qualifer! can be intermixed
+            if basic_specifiers_possible.contains(&keyword){
+                // basic mode
+                let mut type_keyword_list: Vec<CKeyword> = vec![];
+                type_keyword_list.push(keyword.clone());
+                // add further:
+            }else if keyword == CKeyword::ATOMIC{
+                // Atomic Type specifier mode
+                todo!("still need to impl atomic specifier in type name")
+            } else if keyword == CKeyword::ENUM{
+                // Enum mode
+                todo!("still need to impl enum specifier in type name")
+            } else if keyword == CKeyword::STRUCT ||  keyword == CKeyword::UNION{
+                // struct or union mode
+                todo!("still need to impl struct or union specifier in type name")
+            } else {
+                // unexpected keyword in specifier qualifier list
+                self.error_unexpected(self.prev_token(), "expected valid type name specifier in specifier-qualifier-list");
+                unreachable!()
+            }
         } else {
             self.error_unexpected(
                 self.current_token(),
@@ -290,3 +388,12 @@ pub(crate) struct CArrayType {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CFunctionType {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CDerivedType {
+    // todo do Spanned everywhere here as well:
+    None(CTypeBasic),
+    Pointer(CPointerType),
+    Array(CArrayType),
+    Function(CFunctionType),
+}
