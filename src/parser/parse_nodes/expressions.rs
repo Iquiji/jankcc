@@ -1,6 +1,6 @@
 use crate::{
     lexer::token_types::{CKeyword, CTokenType, CTokenType::*},
-    parser::{span::Spanned, types::CTypeName, CParser},
+    parser::{span::Spanned, types::{CTypeName, CType}, CParser},
 };
 
 use super::{declarations::InitializerList, Constant, Identifier, NumberLike, StringLiteral};
@@ -330,7 +330,7 @@ pub(crate) enum CExpression {
         right_value: Spanned<Self>,
     },
     Cast {
-        type_name: Box<Spanned<CTypeName>>,
+        type_name: Box<Spanned<CType>>,
         value: Spanned<Self>,
     },
     PrefixIncrement {
@@ -345,10 +345,10 @@ pub(crate) enum CExpression {
         value: Spanned<Self>,
     },
     SizeOfType {
-        type_name: Box<Spanned<CTypeName>>,
+        type_name: Spanned<CType>,
     },
     AlignOfType {
-        type_name: Box<Spanned<CTypeName>>,
+        type_name: Spanned<CType>,
     },
     ArraySubscription {
         array: Spanned<Self>,
@@ -371,7 +371,7 @@ pub(crate) enum CExpression {
         value: Spanned<Self>,
     },
     TypeInitializer {
-        type_name: CTypeName,
+        type_name: Spanned<CType>,
         // FIXME:
         initializer_list: InitializerList,
     },
@@ -802,7 +802,7 @@ impl super::super::CParser {
             && self.current_token().original == "("
             && self.check_is_start_of_type_name(&self.next_token())
         {
-            // ( type-name ) { initializer-list }
+            // ( type-name ) cast-expression
             todo!("type cast parsing still unimplemented");
         } else {
             self.parse_expr_unary()

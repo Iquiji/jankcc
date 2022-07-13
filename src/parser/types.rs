@@ -182,36 +182,83 @@ as each other. All pointers to union types shall have the same representation an
 alignment requirements as each other. Pointers to other types need not have the same
 representation or alignment requirements.
 */
-/// checks equality disregarding order, 
+/// checks equality disregarding order,
 /// checks length
-fn basic_ctype_alias_checker(cmp:&[CKeyword]) -> Option<CBasicTypes>{
+fn basic_ctype_alias_checker(cmp: &[CKeyword]) -> Option<CBasicTypes> {
     use CKeyword::*;
-    if is_semi_equal_keywords(&[VOID], cmp){
+    if is_semi_equal_keywords(&[VOID], cmp) {
         Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
-    } else if is_semi_equal_keywords(&[VOID], cmp){
-        Some(CBasicTypes::Void)
+    } else if is_semi_equal_keywords(&[CHAR], cmp) {
+        Some(CBasicTypes::Char)
+    } else if is_semi_equal_keywords(&[SIGNED, CHAR], cmp) {
+        Some(CBasicTypes::SignedChar)
+    } else if is_semi_equal_keywords(&[UNSIGNED, CHAR], cmp) {
+        Some(CBasicTypes::UnsignedChar)
+    } else if is_semi_equal_keywords(&[SHORT], cmp)
+        || is_semi_equal_keywords(&[SIGNED, SHORT], cmp)
+        || is_semi_equal_keywords(&[SHORT, INT], cmp)
+        || is_semi_equal_keywords(&[SIGNED, SHORT, INT], cmp)
+    {
+        Some(CBasicTypes::Short)
+    } else if is_semi_equal_keywords(&[UNSIGNED, SHORT], cmp)
+        || is_semi_equal_keywords(&[UNSIGNED, SHORT, INT], cmp)
+    {
+        Some(CBasicTypes::UnShort)
+    } else if is_semi_equal_keywords(&[INT], cmp)
+        || is_semi_equal_keywords(&[SIGNED], cmp)
+        || is_semi_equal_keywords(&[SIGNED, INT], cmp)
+    {
+        Some(CBasicTypes::Int)
+    } else if is_semi_equal_keywords(&[UNSIGNED], cmp)
+        || is_semi_equal_keywords(&[UNSIGNED, INT], cmp)
+    {
+        Some(CBasicTypes::UnInt)
+    } else if is_semi_equal_keywords(&[LONG], cmp)
+        || is_semi_equal_keywords(&[SIGNED, LONG], cmp)
+        || is_semi_equal_keywords(&[LONG, INT], cmp)
+        || is_semi_equal_keywords(&[SIGNED, LONG, INT], cmp)
+    {
+        Some(CBasicTypes::Long)
+    } else if is_semi_equal_keywords(&[UNSIGNED, LONG], cmp)
+        || is_semi_equal_keywords(&[UNSIGNED, LONG, INT], cmp)
+    {
+        Some(CBasicTypes::UnLong)
+    } else if is_semi_equal_keywords(&[LONG, LONG], cmp)
+        || is_semi_equal_keywords(&[SIGNED, LONG, LONG], cmp)
+        || is_semi_equal_keywords(&[LONG, LONG, INT], cmp)
+        || is_semi_equal_keywords(&[SIGNED, LONG, LONG, INT], cmp)
+    {
+        Some(CBasicTypes::LongLong)
+    } else if is_semi_equal_keywords(&[UNSIGNED, LONG, LONG], cmp)
+        || is_semi_equal_keywords(&[UNSIGNED, LONG, LONG, INT], cmp)
+    {
+        Some(CBasicTypes::UnLongLong)
+    } else if is_semi_equal_keywords(&[FLOAT], cmp) {
+        Some(CBasicTypes::Float)
+    } else if is_semi_equal_keywords(&[DOUBLE], cmp) {
+        Some(CBasicTypes::Double)
+    } else if is_semi_equal_keywords(&[LONG, DOUBLE], cmp) {
+        Some(CBasicTypes::LongDouble)
+    } else if is_semi_equal_keywords(&[BOOL], cmp) {
+        Some(CBasicTypes::Bool)
+    } else if is_semi_equal_keywords(&[FLOAT, COMPLEX], cmp) {
+        Some(CBasicTypes::FloatComplex)
+    } else if is_semi_equal_keywords(&[DOUBLE, COMPLEX], cmp) {
+        Some(CBasicTypes::DoubleComplex)
+    } else if is_semi_equal_keywords(&[LONG, DOUBLE, COMPLEX], cmp) {
+        Some(CBasicTypes::LongDoubleComplex)
     } else {
         None
     }
-
 }
-fn is_semi_equal_keywords(base:&[CKeyword],cmp: &[CKeyword] ) -> bool{
-    if base.len() != cmp.len(){
+
+fn is_semi_equal_keywords(base: &[CKeyword], cmp: &[CKeyword]) -> bool {
+    if base.len() > cmp.len() {
         return false;
     }
 
-    for key in base{
-        if !cmp.contains(key){
+    for key in base {
+        if !cmp.contains(key) {
             return false;
         }
     }
@@ -233,7 +280,7 @@ impl CParser {
 }
 
 impl CParser {
-    pub(crate) fn parse_specifier_qualifier_list(&mut self) -> Spanned<CType> {
+    pub(crate) fn parse_ctypename(&mut self) -> Spanned<CType> {
         let start = self.current_token().loc;
 
         let qualifier_possible = [
@@ -242,22 +289,20 @@ impl CParser {
             CKeyword::VOLATILE,
             CKeyword::ATOMIC,
         ];
-        let qualifier_matcher = |key: &CKeyword,quals: &mut CTypeQualifiers|{
-            match key{
-                CKeyword::CONST => {
-                    quals.const_q = true;
-                },
-                CKeyword::RESTRICT => {
-                    quals.restrict_q = true;
-                },
-                CKeyword::VOLATILE => {
-                    quals.volatile_q = true;
-                },
-                CKeyword::ATOMIC => {
-                    quals.atomic_q = true;
-                },
-                _ => unreachable!(),
+        let qualifier_matcher = |key: &CKeyword, quals: &mut CTypeQualifiers| match key {
+            CKeyword::CONST => {
+                quals.const_q = true;
             }
+            CKeyword::RESTRICT => {
+                quals.restrict_q = true;
+            }
+            CKeyword::VOLATILE => {
+                quals.volatile_q = true;
+            }
+            CKeyword::ATOMIC => {
+                quals.atomic_q = true;
+            }
+            _ => unreachable!(),
         };
 
         let basic_specifiers_possible = [
@@ -282,11 +327,11 @@ impl CParser {
         };
 
         // get beginning qualifiers
-        while let Keyword(keyword) = self.current_token().t_type{
-            if qualifier_possible.contains(&keyword){
+        while let Keyword(keyword) = self.current_token().t_type {
+            if qualifier_possible.contains(&keyword) {
                 self.advance_idx();
-                qualifier_matcher(&keyword,&mut qualifiers);
-            }else{
+                qualifier_matcher(&keyword, &mut qualifiers);
+            } else {
                 break;
             }
         }
@@ -299,23 +344,48 @@ impl CParser {
             });
         } else if let Keyword(keyword) = self.advance_idx().t_type {
             // one of CTypeSpecifier or qualifer! can be intermixed
-            if basic_specifiers_possible.contains(&keyword){
-                // basic mode
-                let mut type_keyword_list: Vec<CKeyword> = vec![];
-                type_keyword_list.push(keyword.clone());
+            if basic_specifiers_possible.contains(&keyword) {
+                // basic type mode
+                let mut type_keyword_list: Vec<CKeyword> = vec![keyword];
                 // add further:
-            }else if keyword == CKeyword::ATOMIC{
+                while let Keyword(keyword) = self.current_token().t_type {
+                    if qualifier_possible.contains(&keyword) {
+                        self.advance_idx();
+                        qualifier_matcher(&keyword, &mut qualifiers);
+                    } else if basic_specifiers_possible.contains(&keyword) {
+                        self.advance_idx();
+                        type_keyword_list.push(keyword.clone());
+                    } else {
+                        self.error_unexpected(
+                            self.current_token(),
+                            "expected basic specifier keyword",
+                        );
+                        unreachable!()
+                    }
+                }
+                if let Some(basic_specifier) = basic_ctype_alias_checker(&type_keyword_list) {
+                    specifier = CTypeSpecifier::Basic(basic_specifier);
+                } else {
+                    self.error_unexpected(self.prev_token(), "Invalid basic type specifier!");
+                    unreachable!()
+                }
+            } else if keyword == CKeyword::ATOMIC {
                 // Atomic Type specifier mode
                 todo!("still need to impl atomic specifier in type name")
-            } else if keyword == CKeyword::ENUM{
+            } else if keyword == CKeyword::ENUM {
                 // Enum mode
+                // needs to be exported to declaration?
                 todo!("still need to impl enum specifier in type name")
-            } else if keyword == CKeyword::STRUCT ||  keyword == CKeyword::UNION{
+            } else if keyword == CKeyword::STRUCT || keyword == CKeyword::UNION {
                 // struct or union mode
+                // needs to be exported to declaration?
                 todo!("still need to impl struct or union specifier in type name")
             } else {
                 // unexpected keyword in specifier qualifier list
-                self.error_unexpected(self.prev_token(), "expected valid type name specifier in specifier-qualifier-list");
+                self.error_unexpected(
+                    self.prev_token(),
+                    "expected valid type name specifier in specifier-qualifier-list",
+                );
                 unreachable!()
             }
         } else {
@@ -325,7 +395,19 @@ impl CParser {
             );
             unreachable!();
         }
-        unimplemented!()
+        // TODO: abstract declarator
+        let end = self.prev_token().loc;
+
+        Spanned::new(
+            CType {
+                inner: CDerivedType::Basic(CTypeBasic {
+                    qualifiers,
+                    specifier,
+                }),
+            },
+            start,
+            end,
+        )
     }
 }
 
@@ -377,7 +459,11 @@ pub(crate) enum CTypeSpecifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CType {}
+pub(crate) struct CType {
+    #[serde(flatten)]
+    inner: CDerivedType,
+    // more here later
+}
 // make Ctypetype with pointer array and func footprint recursive?!
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -392,7 +478,7 @@ pub(crate) struct CFunctionType {}
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CDerivedType {
     // todo do Spanned everywhere here as well:
-    None(CTypeBasic),
+    Basic(CTypeBasic),
     Pointer(CPointerType),
     Array(CArrayType),
     Function(CFunctionType),
