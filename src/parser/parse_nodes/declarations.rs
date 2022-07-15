@@ -471,3 +471,13 @@ Decl:
   -Initialized
 
 */
+
+
+/*
+Declarator:
+
+Based or not Based <- Ground Element
+Chain of derived types up to None
+Based-Type?
+
+*/
