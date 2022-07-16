@@ -6,15 +6,14 @@ pub(crate) mod types;
 mod tests;
 
 use std::collections::HashSet;
-use std::fmt::Debug;
 
 use crate::lexer::token_types::CKeyword;
 use crate::lexer::OriginalLocation;
 use crate::lexer::{token_types::CTokenType, CToken};
 
-use self::parse_nodes::declarations::{Declaration, InitDeclaratorList, StorageClassSpecifier};
-use self::parse_nodes::{ExternalDeclaration, Identifier, TranslationUnit};
-use self::span::Spanned;
+// use self::parse_nodes::declarations::{Declaration, InitDeclaratorList, StorageClassSpecifier};
+use self::parse_nodes::{Identifier, TranslationUnit};
+// use self::span::Spanned;
 
 pub struct CParser {
     tokens: Vec<CToken>,

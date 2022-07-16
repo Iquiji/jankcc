@@ -17,7 +17,11 @@ use crate::parser::CTokenType::*;
     specifier-qualifier-list abstract-declarator opt
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CTypeName {}
+pub(crate) struct CTypeName {
+    // need here Basic and then the new derived declarator in declarations.rs
+
+    // this needs to be returned by parse_type_name
+}
 
 /*
 List of either type-specifier or type-qualifier
