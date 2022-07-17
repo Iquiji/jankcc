@@ -62,7 +62,6 @@ pub(crate) struct CompoundStatement {
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum BlockItem {
-    Declaration(Declaration),
     Statement(Statement),
 }
 
@@ -122,7 +121,6 @@ pub(crate) enum IterationStatement {
         body: Statement,
     },
     ForDecl {
-        declaration: Option<Declaration>,
         expr2: Option<Box<Spanned<CExpression>>>,
         expr3: Option<Box<Spanned<CExpression>>>,
         body: Statement,

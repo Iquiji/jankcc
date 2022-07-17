@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::lexer::{token_types::CKeyword, CToken};
 
-use super::{parse_nodes::Identifier, span::Spanned, CParser};
+use super::{
+    parse_nodes::{declarations::DerivedDeclarator, Identifier},
+    span::Spanned,
+    CParser,
+};
 use crate::parser::CTokenType::*;
 
 // we need to save the amount of bytes needed to represent
@@ -21,6 +25,8 @@ pub(crate) struct CTypeName {
     // need here Basic and then the new derived declarator in declarations.rs
 
     // this needs to be returned by parse_type_name
+    base: Spanned<CTypeBasic>,
+    declarator: Spanned<DerivedDeclarator>,
 }
 
 /*
@@ -58,15 +64,23 @@ EZ
     typedef-name                    => check for is_typedef
 */
 impl CParser {
-    pub(crate) fn parse_type_name(&mut self) -> Spanned<CType> {
+    pub(crate) fn parse_type_name(&mut self) -> Spanned<CTypeName> {
         let start = self.current_token().loc;
 
         // TODO: abstract declarator
 
-
-        Spanned::new(CType{
-            inner: CDerivedType::Basic(self.parse_specifier_qualifier_list()),
-        },start,self.prev_token().loc)
+        Spanned::new(
+            CTypeName {
+                base: self.parse_specifier_qualifier_list(),
+                declarator: Spanned::new(
+                    self.parse_abstract_declarator(),
+                    start.clone(),
+                    self.prev_token().loc,
+                ),
+            },
+            start,
+            self.prev_token().loc,
+        )
     }
 
     pub(crate) fn check_is_start_of_type_name(&mut self, token: &CToken) -> bool {
@@ -329,7 +343,7 @@ impl CParser {
 
         let end = self.prev_token().loc;
 
-        Spanned::new(qualifiers,start,end)
+        Spanned::new(qualifiers, start, end)
     }
 }
 
@@ -493,15 +507,6 @@ pub(crate) enum CBasicTypes {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CStructType {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CUnionType {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CEnumType {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CTypeSpecifier {
     Basic(CBasicTypes),
     Struct(CStructType),
@@ -511,26 +516,12 @@ pub(crate) enum CTypeSpecifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CType {
-    #[serde(flatten)]
-    inner: CDerivedType,
-    // more here later
+pub(crate) struct CStructType {
+    ident: Option<Identifier>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CPointerType {}
+pub(crate) struct CUnionType {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CArrayType {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CFunctionType {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CDerivedType {
-    // todo do Spanned everywhere here as well:
-    Basic(Spanned<CTypeBasic>),
-    Pointer(Spanned<CPointerType>),
-    Array(Spanned<CArrayType>),
-    Function(Spanned<CFunctionType>),
-}
+pub(crate) struct CEnumType {}

@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use self::{
-    declarations::{Declaration, DeclarationSpecifiers, Declarator},
-    statements::CompoundStatement,
-};
+use self::{declarations::DeclarationSpecifiers, statements::CompoundStatement};
 
 pub mod declarations;
 pub mod expressions;
@@ -49,14 +46,11 @@ pub(crate) type TranslationUnit = Vec<ExternalDeclaration>;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum ExternalDeclaration {
     FunctionDefinition(Box<FunctionDefinition>),
-    Declaration(Box<Declaration>),
+    Declaration(),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct FunctionDefinition {
     specifiers: Box<DeclarationSpecifiers>,
-    declarator: Box<Declarator>,
-    declaration_list: Option<Box<DeclarationList>>,
     body: Box<CompoundStatement>,
 }
-pub(crate) type DeclarationList = Vec<Declaration>;

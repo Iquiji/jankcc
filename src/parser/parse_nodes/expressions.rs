@@ -1,11 +1,11 @@
 use crate::{
     lexer::token_types::{CKeyword, CTokenType, CTokenType::*},
-    parser::{span::Spanned, types::{CTypeName, CType}, CParser},
+    parser::{span::Spanned, types::CTypeName, CParser},
 };
 
 use super::{declarations::InitializerList, Constant, Identifier, NumberLike, StringLiteral};
 
-use log::warn;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 
 /*
@@ -238,8 +238,8 @@ pub(crate) struct ConstantExpression {
     internal: Spanned<CExpression>,
 }
 impl CParser {
-    fn parse_constant_expr(&mut self) -> ConstantExpression {
-        warn!("constant expr unstable");
+    pub(crate) fn parse_constant_expr(&mut self) -> ConstantExpression {
+        info!("constant expr unstable");
         ConstantExpression {
             internal: self.parse_expr_cond(),
         }
@@ -330,7 +330,7 @@ pub(crate) enum CExpression {
         right_value: Spanned<Self>,
     },
     Cast {
-        type_name: Box<Spanned<CType>>,
+        type_name: Box<Spanned<CTypeName>>,
         value: Spanned<Self>,
     },
     PrefixIncrement {
@@ -345,10 +345,10 @@ pub(crate) enum CExpression {
         value: Spanned<Self>,
     },
     SizeOfType {
-        type_name: Spanned<CType>,
+        type_name: Spanned<CTypeName>,
     },
     AlignOfType {
-        type_name: Spanned<CType>,
+        type_name: Spanned<CTypeName>,
     },
     ArraySubscription {
         array: Spanned<Self>,
@@ -371,7 +371,7 @@ pub(crate) enum CExpression {
         value: Spanned<Self>,
     },
     TypeInitializer {
-        type_name: Spanned<CType>,
+        type_name: Spanned<CTypeName>,
         // FIXME:
         initializer_list: InitializerList,
     },
