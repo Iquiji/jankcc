@@ -5,7 +5,7 @@ use crate::{
     lexer::{token_types::CKeyword, OriginalLocation},
     parser::{
         span::{Span, Spanned},
-        types::{CTypeName, CTypeQualifiers, CTypeSpecifier},
+        types::{CTypeName, CTypeQualifiers, CTypeSpecifier, CStructType, CEnumType},
         CParser,
     },
 };
@@ -102,6 +102,22 @@ pub(crate) enum CAlignmentSpecifier {
     ToExpression(ConstantExpression),
 }
 
+impl CParser{
+    pub(crate) fn parse_declaration_specifiers(&mut self) -> DeclarationSpecifiers{
+        /*
+        storage-class-specifier => typedef,extern,static,_Thread_local,auto,register
+        type-specifier => known
+        type-qualifer => known
+        function-specifier => inline,_Noreturn
+        alignment-specifier => _Alignas ( .. )
+        */
+
+
+        unimplemented!()
+    }
+}
+
+
 /*
 Declarator:
 
@@ -110,6 +126,41 @@ Chain of derived types up to None
 Based-Type?
 
 */
+fn traverse_derived_replace_base(input: DerivedDeclarator,replacement: DerivedDeclarator) -> DerivedDeclarator{
+    match input{
+        DerivedDeclarator::Base => replacement,
+        DerivedDeclarator::Pointer { qualifiers, to } => {
+            DerivedDeclarator::Pointer{
+                qualifiers,
+                to: Box::new(traverse_derived_replace_base(*to, replacement)),
+            }
+        },
+        // DerivedDeclarator::Binded(bound) => {
+        //     DerivedDeclarator::Binded(Box::new(traverse_derived_replace_base(*bound,replacement)))
+        // },
+        DerivedDeclarator::Array { qualifiers, is_static, size_expr, vla, to } =>{
+            DerivedDeclarator::Array {
+                qualifiers,
+                is_static,
+                size_expr,
+                vla,
+                to: Box::new(traverse_derived_replace_base(*to, replacement)),
+            }
+        },
+        DerivedDeclarator::FunctionType { parameter_type_list, to } =>{
+            DerivedDeclarator::FunctionType {
+                parameter_type_list,
+                to: Box::new(traverse_derived_replace_base(*to, replacement)),
+            }
+        },
+        DerivedDeclarator::FunctionIdentified { identifier_list, to } =>{
+            DerivedDeclarator::FunctionIdentified {
+                identifier_list,
+                to: Box::new(traverse_derived_replace_base(*to, replacement)),
+            }
+        },
+    }
+}
 
 /*
 Declarator is universal just different versioning for
@@ -124,7 +175,7 @@ pub(crate) enum DerivedDeclarator {
         qualifiers: Spanned<CTypeQualifiers>,
         to: Box<Self>,
     },
-    Binded(Box<Self>),
+    // Binded(Box<Self>),
     Array {
         qualifiers: Spanned<CTypeQualifiers>,
         is_static: bool,
@@ -163,6 +214,7 @@ impl CParser {
 
     pub(crate) fn parse_abstract_declarator(&mut self) -> DerivedDeclarator {
         let mut base = self.parse_pointer(DerivedDeclarator::Base);
+        let mut new_head = DerivedDeclarator::Base;
 
         // discern between ( abstract_declarator ) and ( parameter_type_list )
         // following '(' is '(' or '[' or '*'
@@ -178,7 +230,7 @@ impl CParser {
 
             // TODO: this gets to outermost because reasons
 
-            base = DerivedDeclarator::Binded(Box::new(self.parse_abstract_declarator()));
+            new_head = self.parse_abstract_declarator();
 
             self.expect_type_and_string(CTokenType::Punctuator, ")");
         }
@@ -264,7 +316,7 @@ impl CParser {
             }
         }
 
-        base
+        traverse_derived_replace_base(new_head, base)
     }
 }
 
@@ -272,6 +324,14 @@ impl CParser {
 pub(crate) struct ParameterTypeList {
     parameter_list: Vec<Spanned<ParameterDeclaration>>,
     ellipsis: bool,
+}
+
+impl CParser{
+    pub(crate) fn parse_parameter_type_list(&mut self) -> Spanned<ParameterTypeList>{
+        let mut result = ParameterTypeList{ parameter_list: vec![], ellipsis: false };
+
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -302,3 +362,15 @@ pub(crate) enum Designator {
 }
 
 pub(crate) type InitializerList = Vec<(Vec<Designator>, Spanned<Initializer>)>;
+
+
+
+impl CParser{
+    // Stubs for later
+    pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructType>{
+        unimplemented!()
+    }
+    pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType>{
+        unimplemented!()
+    }
+} 

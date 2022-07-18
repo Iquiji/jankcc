@@ -162,8 +162,26 @@ base:
       volatile_q: false
       atomic_q: false
     specifier:
-      Basic: Short
-declarator: Base";
+      Basic: Int
+declarator:
+    Pointer:
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      to:
+        Array:
+          qualifiers:
+            const_q: false
+            restrict_q: false
+            volatile_q: false
+            atomic_q: false
+          is_static: false
+          size_expr: ~
+          vla: true
+          to: Base
+  ";
 
     type_name_test_helper(expr, expected_result);
 }
@@ -180,8 +198,21 @@ base:
       volatile_q: false
       atomic_q: false
     specifier:
-      Basic: Short
-declarator: Base";
+      Basic: Int
+declarator:
+    FunctionType:
+      parameter_type_list:
+        parameter_list: []
+        ellipsis: false
+      to:
+        Pointer:
+          qualifiers:
+            const_q: false
+            restrict_q: false
+            volatile_q: false
+            atomic_q: false
+          to: Base
+  ";
 
     type_name_test_helper(expr, expected_result);
 }
