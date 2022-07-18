@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use log::trace;
 use serde::{Deserialize, Serialize};
 
@@ -293,11 +295,25 @@ fn is_semi_equal_keywords(base: &[CKeyword], cmp: &[CKeyword]) -> bool {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CTypeQualifiers {
-    const_q: bool,
-    restrict_q: bool,
-    volatile_q: bool,
-    atomic_q: bool,
+    pub(crate) const_q: bool,
+    pub(crate) restrict_q: bool,
+    pub(crate) volatile_q: bool,
+    pub(crate) atomic_q: bool,
 }
+
+impl Add for CTypeQualifiers {
+    type Output = CTypeQualifiers;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        CTypeQualifiers {
+            const_q: self.const_q || rhs.const_q,
+            restrict_q: self.restrict_q || rhs.restrict_q,
+            volatile_q: self.volatile_q || rhs.volatile_q,
+            atomic_q: self.atomic_q || rhs.atomic_q,
+        }
+    }
+}
+
 impl CParser {
     pub(crate) fn parse_type_qualifiers(&mut self) -> Spanned<CTypeQualifiers> {
         let qualifier_possible = [
@@ -479,8 +495,8 @@ impl CParser {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CTypeBasic {
-    qualifiers: CTypeQualifiers,
-    specifier: CTypeSpecifier,
+    pub(crate) qualifiers: CTypeQualifiers,
+    pub(crate) specifier: CTypeSpecifier,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

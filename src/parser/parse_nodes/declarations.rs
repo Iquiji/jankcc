@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use log::{error, warn};
 use serde::{Deserialize, Serialize};
 
@@ -5,7 +7,10 @@ use crate::{
     lexer::{token_types::CKeyword, OriginalLocation},
     parser::{
         span::{Span, Spanned},
-        types::{CTypeName, CTypeQualifiers, CTypeSpecifier, CStructType, CEnumType},
+        types::{
+            CBasicTypes, CEnumType, CStructType, CTypeBasic, CTypeName, CTypeQualifiers,
+            CTypeSpecifier,
+        },
         CParser,
     },
 };
@@ -77,7 +82,7 @@ pub(crate) struct DeclarationSpecifiers {
     qualifiers: CTypeQualifiers,
     specifiers: CTypeSpecifier,
     function: CFunctionSpecifier,
-    alignment: Option<CAlignmentSpecifier>,
+    alignment: Option<Spanned<CAlignmentSpecifier>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -87,7 +92,22 @@ pub(crate) struct CStorageClass {
     static_c: bool,
     thread_local_c: bool,
     auto_c: bool,
-    register: bool,
+    register_c: bool,
+}
+
+impl Add for CStorageClass {
+    type Output = CStorageClass;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        CStorageClass {
+            typedef_c: self.typedef_c || rhs.typedef_c,
+            extern_c: self.extern_c || rhs.extern_c,
+            static_c: self.static_c || rhs.static_c,
+            thread_local_c: self.thread_local_c || rhs.thread_local_c,
+            auto_c: self.auto_c || rhs.auto_c,
+            register_c: self.register_c || rhs.register_c,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -96,14 +116,148 @@ pub(crate) struct CFunctionSpecifier {
     no_return: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CAlignmentSpecifier {
-    ToType(CTypeName),
-    ToExpression(ConstantExpression),
+impl Add for CFunctionSpecifier {
+    type Output = CFunctionSpecifier;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        CFunctionSpecifier {
+            inline: self.inline || rhs.inline,
+            no_return: self.no_return || rhs.no_return,
+        }
+    }
 }
 
-impl CParser{
-    pub(crate) fn parse_declaration_specifiers(&mut self) -> DeclarationSpecifiers{
+impl CParser {
+    pub(crate) fn parse_c_function_specifier(&mut self) -> Spanned<CFunctionSpecifier> {
+        let qualifier_possible = [CKeyword::INLINE, CKeyword::NORETURN];
+        let matcher = |key: &CKeyword, quals: &mut CFunctionSpecifier| match key {
+            CKeyword::INLINE => {
+                quals.inline = true;
+            }
+            CKeyword::NORETURN => {
+                quals.no_return = true;
+            }
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut storage_class = CFunctionSpecifier {
+            inline: false,
+            no_return: false,
+        };
+
+        // get beginning storage_class
+        use crate::parser::CTokenType::Keyword;
+        while let Keyword(keyword) = self.current_token().t_type {
+            if qualifier_possible.contains(&keyword) {
+                self.advance_idx();
+                matcher(&keyword, &mut storage_class);
+            } else {
+                break;
+            }
+        }
+
+        let end = self.prev_token().loc;
+
+        Spanned::new(storage_class, start, end)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CAlignmentSpecifier {
+    ToType(Spanned<CTypeName>),
+    ToExpression(ConstantExpression),
+}
+impl CParser {
+    pub(crate) fn parse_maybe_alignment_specifier(
+        &mut self,
+    ) -> Option<Spanned<CAlignmentSpecifier>> {
+        let start = self.current_token().loc;
+
+        if self.current_token().t_type == CTokenType::Keyword(CKeyword::ALIGNAS) {
+            self.advance_idx();
+            self.expect_type_and_string(CTokenType::Punctuator, "(");
+
+            if self.check_is_start_of_type_name(&self.current_token()) {
+                Some(Spanned::new(
+                    CAlignmentSpecifier::ToType(self.parse_type_name()),
+                    start,
+                    self.expect_type_and_string(CTokenType::Punctuator, ")").loc,
+                ))
+            } else {
+                Some(Spanned::new(
+                    CAlignmentSpecifier::ToExpression(self.parse_constant_expr()),
+                    start,
+                    self.expect_type_and_string(CTokenType::Punctuator, ")").loc,
+                ))
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl CParser {
+    pub(crate) fn parse_storage_class(&mut self) -> Spanned<CStorageClass> {
+        let qualifier_possible = [
+            CKeyword::TYPEDEF,
+            CKeyword::EXTERN,
+            CKeyword::STATIC,
+            CKeyword::THREAD_LOCAL,
+            CKeyword::AUTO,
+            CKeyword::REGISTER,
+        ];
+        let matcher = |key: &CKeyword, quals: &mut CStorageClass| match key {
+            CKeyword::TYPEDEF => {
+                quals.typedef_c = true;
+            }
+            CKeyword::EXTERN => {
+                quals.extern_c = true;
+            }
+            CKeyword::STATIC => {
+                quals.static_c = true;
+            }
+            CKeyword::THREAD_LOCAL => {
+                quals.thread_local_c = true;
+            }
+            CKeyword::AUTO => {
+                quals.auto_c = true;
+            }
+            CKeyword::REGISTER => {
+                quals.register_c = true;
+            }
+            _ => unreachable!(),
+        };
+
+        let start = self.current_token().loc;
+
+        let mut storage_class = CStorageClass {
+            typedef_c: false,
+            extern_c: false,
+            static_c: false,
+            thread_local_c: false,
+            auto_c: false,
+            register_c: false,
+        };
+
+        // get beginning storage_class
+        use crate::parser::CTokenType::Keyword;
+        while let Keyword(keyword) = self.current_token().t_type {
+            if qualifier_possible.contains(&keyword) {
+                self.advance_idx();
+                matcher(&keyword, &mut storage_class);
+            } else {
+                break;
+            }
+        }
+
+        let end = self.prev_token().loc;
+
+        Spanned::new(storage_class, start, end)
+    }
+
+    pub(crate) fn parse_declaration_specifiers(&mut self) -> DeclarationSpecifiers {
         /*
         storage-class-specifier => typedef,extern,static,_Thread_local,auto,register
         type-specifier => known
@@ -111,12 +265,53 @@ impl CParser{
         function-specifier => inline,_Noreturn
         alignment-specifier => _Alignas ( .. )
         */
+        let mut decl_spec = DeclarationSpecifiers {
+            storage: CStorageClass {
+                typedef_c: false,
+                extern_c: false,
+                static_c: false,
+                thread_local_c: false,
+                auto_c: false,
+                register_c: false,
+            },
+            qualifiers: CTypeQualifiers {
+                const_q: false,
+                restrict_q: false,
+                volatile_q: false,
+                atomic_q: false,
+            },
+            specifiers: CTypeSpecifier::Basic(CBasicTypes::Int),
+            function: CFunctionSpecifier {
+                inline: false,
+                no_return: false,
+            },
+            alignment: None,
+        };
+        decl_spec.storage = decl_spec.storage + *self.parse_storage_class().inner;
+        decl_spec.qualifiers = decl_spec.qualifiers + *self.parse_type_qualifiers().inner;
+        decl_spec.function = decl_spec.function + *self.parse_c_function_specifier().inner;
+        decl_spec.alignment = self.parse_maybe_alignment_specifier();
+
+        let temp = *self.parse_specifier_qualifier_list().inner;
+        decl_spec.qualifiers = decl_spec.qualifiers + temp.qualifiers;
+        decl_spec.specifiers = temp.specifier;
+
+        loop{
+            let old_decl_spec = decl_spec.clone();
+
+            decl_spec.storage = decl_spec.storage + *self.parse_storage_class().inner;
+            decl_spec.qualifiers = decl_spec.qualifiers + *self.parse_type_qualifiers().inner;
+            decl_spec.function = decl_spec.function + *self.parse_c_function_specifier().inner;
+            decl_spec.alignment = self.parse_maybe_alignment_specifier();
+            if old_decl_spec == decl_spec{
+                break;
+            }
+        }
 
 
-        unimplemented!()
+        decl_spec
     }
 }
-
 
 /*
 Declarator:
@@ -126,38 +321,45 @@ Chain of derived types up to None
 Based-Type?
 
 */
-fn traverse_derived_replace_base(input: DerivedDeclarator,replacement: DerivedDeclarator) -> DerivedDeclarator{
-    match input{
+fn traverse_derived_replace_base(
+    input: DerivedDeclarator,
+    replacement: DerivedDeclarator,
+) -> DerivedDeclarator {
+    match input {
         DerivedDeclarator::Base => replacement,
-        DerivedDeclarator::Pointer { qualifiers, to } => {
-            DerivedDeclarator::Pointer{
-                qualifiers,
-                to: Box::new(traverse_derived_replace_base(*to, replacement)),
-            }
+        DerivedDeclarator::Pointer { qualifiers, to } => DerivedDeclarator::Pointer {
+            qualifiers,
+            to: Box::new(traverse_derived_replace_base(*to, replacement)),
         },
         // DerivedDeclarator::Binded(bound) => {
         //     DerivedDeclarator::Binded(Box::new(traverse_derived_replace_base(*bound,replacement)))
         // },
-        DerivedDeclarator::Array { qualifiers, is_static, size_expr, vla, to } =>{
-            DerivedDeclarator::Array {
-                qualifiers,
-                is_static,
-                size_expr,
-                vla,
-                to: Box::new(traverse_derived_replace_base(*to, replacement)),
-            }
+        DerivedDeclarator::Array {
+            qualifiers,
+            is_static,
+            size_expr,
+            vla,
+            to,
+        } => DerivedDeclarator::Array {
+            qualifiers,
+            is_static,
+            size_expr,
+            vla,
+            to: Box::new(traverse_derived_replace_base(*to, replacement)),
         },
-        DerivedDeclarator::FunctionType { parameter_type_list, to } =>{
-            DerivedDeclarator::FunctionType {
-                parameter_type_list,
-                to: Box::new(traverse_derived_replace_base(*to, replacement)),
-            }
+        DerivedDeclarator::FunctionType {
+            parameter_type_list,
+            to,
+        } => DerivedDeclarator::FunctionType {
+            parameter_type_list,
+            to: Box::new(traverse_derived_replace_base(*to, replacement)),
         },
-        DerivedDeclarator::FunctionIdentified { identifier_list, to } =>{
-            DerivedDeclarator::FunctionIdentified {
-                identifier_list,
-                to: Box::new(traverse_derived_replace_base(*to, replacement)),
-            }
+        DerivedDeclarator::FunctionIdentified {
+            identifier_list,
+            to,
+        } => DerivedDeclarator::FunctionIdentified {
+            identifier_list,
+            to: Box::new(traverse_derived_replace_base(*to, replacement)),
         },
     }
 }
@@ -262,10 +464,10 @@ impl CParser {
                 // array
                 self.advance_idx();
 
-                //VLA 
+                //VLA
                 if self.current_token().t_type == CTokenType::Punctuator
                     && self.current_token().original == "*"
-                {                        
+                {
                     base = DerivedDeclarator::Array {
                         qualifiers: self.parse_type_qualifiers(),
                         is_static: false,
@@ -276,20 +478,20 @@ impl CParser {
 
                     self.advance_idx();
                     self.expect_type_and_string(CTokenType::Punctuator, "]");
-                 
+
                     continue;
                 }
 
                 let mut static_flag = false;
 
-                if self.current_token().t_type == CTokenType::Keyword(CKeyword::STATIC){
+                if self.current_token().t_type == CTokenType::Keyword(CKeyword::STATIC) {
                     static_flag = true;
                     self.advance_idx();
                 }
 
                 let qualifiers = self.parse_type_qualifiers();
 
-                if self.current_token().t_type == CTokenType::Keyword(CKeyword::STATIC){
+                if self.current_token().t_type == CTokenType::Keyword(CKeyword::STATIC) {
                     static_flag = true;
                     self.advance_idx();
                 }
@@ -326,9 +528,12 @@ pub(crate) struct ParameterTypeList {
     ellipsis: bool,
 }
 
-impl CParser{
-    pub(crate) fn parse_parameter_type_list(&mut self) -> Spanned<ParameterTypeList>{
-        let mut result = ParameterTypeList{ parameter_list: vec![], ellipsis: false };
+impl CParser {
+    pub(crate) fn parse_parameter_type_list(&mut self) -> Spanned<ParameterTypeList> {
+        let mut result = ParameterTypeList {
+            parameter_list: vec![],
+            ellipsis: false,
+        };
 
         unimplemented!()
     }
@@ -349,6 +554,16 @@ pub(crate) enum ParameterDeclaration {
     },
 }
 
+impl CParser{
+    pub(crate) fn parse_parameter_decl(&mut self) -> Spanned<ParameterDeclaration>{
+        let start = self.current_token().loc;
+        let decl = self.parse_declaration_specifiers();
+        
+
+        unimplemented!()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Initializer {
     Single(Spanned<CExpression>),
@@ -363,14 +578,12 @@ pub(crate) enum Designator {
 
 pub(crate) type InitializerList = Vec<(Vec<Designator>, Spanned<Initializer>)>;
 
-
-
-impl CParser{
+impl CParser {
     // Stubs for later
-    pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructType>{
+    pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructType> {
         unimplemented!()
     }
-    pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType>{
+    pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
         unimplemented!()
     }
-} 
+}
