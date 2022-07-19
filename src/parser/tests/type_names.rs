@@ -229,8 +229,41 @@ base:
       volatile_q: false
       atomic_q: false
     specifier:
-      Basic: Short
-declarator: Base";
+      Basic: Int
+declarator:
+    Pointer:
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      to:
+        FunctionType:
+          parameter_type_list:
+            parameter_list:
+              - AbstractDeclarator:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Void
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  abstract_declarator: ~
+            ellipsis: false
+          to: Base";
 
     type_name_test_helper(expr, expected_result);
 }
@@ -247,8 +280,51 @@ base:
       volatile_q: false
       atomic_q: false
     specifier:
-      Basic: Short
-declarator: Base";
+      Basic: Int
+declarator:
+    Array:
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      is_static: false
+      size_expr: ~
+      vla: false
+      to:
+        Pointer:
+          qualifiers:
+            const_q: true
+            restrict_q: false
+            volatile_q: false
+            atomic_q: false
+          to:
+            FunctionType:
+              parameter_type_list:
+                parameter_list:
+                  - AbstractDeclarator:
+                      specifiers:
+                        storage:
+                          typedef_c: false
+                          extern_c: false
+                          static_c: false
+                          thread_local_c: false
+                          auto_c: false
+                          register_c: false
+                        qualifiers:
+                          const_q: false
+                          restrict_q: false
+                          volatile_q: false
+                          atomic_q: false
+                        specifiers:
+                          Basic: UnInt
+                        function:
+                          inline: false
+                          no_return: false
+                        alignment: ~
+                      abstract_declarator: ~
+                ellipsis: true
+              to: Base";
 
     type_name_test_helper(expr, expected_result);
 }

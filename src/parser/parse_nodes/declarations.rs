@@ -296,18 +296,17 @@ impl CParser {
         decl_spec.qualifiers = decl_spec.qualifiers + temp.qualifiers;
         decl_spec.specifiers = temp.specifier;
 
-        loop{
+        loop {
             let old_decl_spec = decl_spec.clone();
 
             decl_spec.storage = decl_spec.storage + *self.parse_storage_class().inner;
             decl_spec.qualifiers = decl_spec.qualifiers + *self.parse_type_qualifiers().inner;
             decl_spec.function = decl_spec.function + *self.parse_c_function_specifier().inner;
             decl_spec.alignment = self.parse_maybe_alignment_specifier();
-            if old_decl_spec == decl_spec{
+            if old_decl_spec == decl_spec {
                 break;
             }
         }
-
 
         decl_spec
     }
@@ -445,7 +444,10 @@ impl CParser {
                     && self.current_token().original == ")")
                 {
                     //there is a parameter type list
-                    todo!("Parameter Type List")
+                    base = DerivedDeclarator::FunctionType {
+                        parameter_type_list: self.parse_parameter_type_list(),
+                        to: Box::new(base),
+                    };
                 } else {
                     base = DerivedDeclarator::FunctionType {
                         parameter_type_list: Spanned::new(
@@ -530,12 +532,29 @@ pub(crate) struct ParameterTypeList {
 
 impl CParser {
     pub(crate) fn parse_parameter_type_list(&mut self) -> Spanned<ParameterTypeList> {
+        let start = self.current_token().loc;
         let mut result = ParameterTypeList {
             parameter_list: vec![],
             ellipsis: false,
         };
+        result.parameter_list.push(self.parse_parameter_decl());
 
-        unimplemented!()
+        while self.current_token().t_type == CTokenType::Punctuator {
+            if self.current_token().original == ")" {
+                return Spanned::new(result, start, self.prev_token().loc);
+            }
+            if self.current_token().original == "," {
+                self.advance_idx();
+                if self.current_token().t_type == CTokenType::Punctuator
+                    && self.current_token().original == "..."
+                {
+                    result.ellipsis = true;
+                    return Spanned::new(result, start, self.advance_idx().loc);
+                }
+                result.parameter_list.push(self.parse_parameter_decl());
+            }
+        }
+        unreachable!()
     }
 }
 
@@ -550,17 +569,51 @@ pub(crate) enum ParameterDeclaration {
     },
     AbstractDeclarator {
         specifiers: DeclarationSpecifiers,
-        abstract_declarator: Option<Spanned<DerivedDeclarator>>,
+        abstract_declarator: Option<DerivedDeclarator>,
     },
 }
 
-impl CParser{
-    pub(crate) fn parse_parameter_decl(&mut self) -> Spanned<ParameterDeclaration>{
+impl CParser {
+    pub(crate) fn parse_parameter_decl(&mut self) -> Spanned<ParameterDeclaration> {
         let start = self.current_token().loc;
         let decl = self.parse_declaration_specifiers();
-        
 
-        unimplemented!()
+        if self.is_start_of_normal_declarator() {
+            todo!("normal declarator");
+        } else {
+            let mut abstract_decl = None;
+            if !(self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == ")"
+                || self.current_token().original == ",")
+            {
+                abstract_decl = Some(self.parse_abstract_declarator());
+            }
+            Spanned::new(
+                ParameterDeclaration::AbstractDeclarator {
+                    specifiers: decl,
+                    abstract_declarator: abstract_decl,
+                },
+                start,
+                self.prev_token().loc,
+            )
+        }
+    }
+    /// 1 if start of declarator, 0 if start of abstract declarator
+    pub(crate) fn is_start_of_normal_declarator(&mut self) -> bool {
+        if self.current_token().t_type == CTokenType::Identifier {
+            return !self.check_is_start_of_type_name(&self.current_token());
+        }
+
+        if self.current_token().t_type == CTokenType::Punctuator
+            && ["(", "*"].contains(&self.current_token().original.as_str())
+        {
+            self.advance_idx();
+            let temp = self.is_start_of_normal_declarator();
+            self.idx -= 1;
+            return temp;
+        }
+
+        false
     }
 }
 

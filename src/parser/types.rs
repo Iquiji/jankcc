@@ -213,6 +213,11 @@ representation or alignment requirements.
 /// checks length
 fn basic_ctype_alias_checker(cmp: &[CKeyword]) -> Option<CBasicTypes> {
     use CKeyword::*;
+
+    let mut cmp = cmp.to_vec();
+    cmp.dedup_by(|a, b| a == b);
+    let cmp = &cmp;
+
     if is_semi_equal_keywords(&[VOID], cmp) {
         Some(CBasicTypes::Void)
     } else if is_semi_equal_keywords(&[CHAR], cmp) {
@@ -280,7 +285,7 @@ fn basic_ctype_alias_checker(cmp: &[CKeyword]) -> Option<CBasicTypes> {
 }
 
 fn is_semi_equal_keywords(base: &[CKeyword], cmp: &[CKeyword]) -> bool {
-    if base.len() > cmp.len() {
+    if base.len() != cmp.len() {
         return false;
     }
 
