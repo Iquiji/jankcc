@@ -522,6 +522,9 @@ impl CParser {
 
         traverse_derived_replace_base(new_head, base)
     }
+    pub(crate) fn parse_declarator(&mut self) -> DerivedDeclarator{
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
