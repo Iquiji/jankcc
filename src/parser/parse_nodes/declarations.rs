@@ -522,9 +522,6 @@ impl CParser {
 
         traverse_derived_replace_base(new_head, base)
     }
-    pub(crate) fn parse_declarator(&mut self) -> DerivedDeclarator{
-        unimplemented!()
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -568,7 +565,7 @@ pub(crate) enum ParameterDeclaration {
     // declaration-specifiers abstract-declarator?
     Declarator {
         specifiers: DeclarationSpecifiers,
-        declarator: Spanned<DerivedDeclarator>,
+        declarator: Spanned<Declarator>,
     },
     AbstractDeclarator {
         specifiers: DeclarationSpecifiers,
@@ -640,6 +637,20 @@ impl CParser {
         unimplemented!()
     }
     pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
+        unimplemented!()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct Declarator{
+    // TODO:
+    // Derived Declararator + Identifier Base
+    base: Identifier,
+    derive: Spanned<DerivedDeclarator>,
+}
+
+impl CParser{
+    pub(crate) fn parse_declarator() -> Spanned<Declarator>{
         unimplemented!()
     }
 }
