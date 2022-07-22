@@ -130,7 +130,7 @@ impl CParser {
     }
     pub(crate) fn prev_token(&self) -> CToken {
         self.tokens
-            .get(self.idx - 1)
+            .get(self.idx.saturating_sub(1))
             .unwrap_or(&CToken {
                 t_type: CTokenType::Eof,
                 original: String::new(),
