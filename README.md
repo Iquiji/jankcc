@@ -22,11 +22,11 @@
   - [ ] Sensible Error Generation
 - [ ] Parser
   - [x] Expresions
-  - [ ] Type Names
-  - [ ] Declarations
+  - [x] Type Names
+  - [ ] Declarations -> 90%
   - [ ] Statements
-  - [ ] Error Continuation
   - [ ] Full Parse for subset? of C11 Standard
+  - [ ] Error Continuation
 - [ ] Type Checking on AST
 - [ ] Constant Expression Runner
 - [ ] Conversion to SSA
@@ -43,5 +43,5 @@
 
 
 #### Parser:
- - Handwritten Recursive Descent Parser
+ - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
  - Still in Progress

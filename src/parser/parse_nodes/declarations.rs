@@ -641,6 +641,7 @@ pub(crate) type InitializerList = Vec<(Vec<Designator>, Spanned<Initializer>)>;
 impl CParser {
     // Stubs for later
     pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructOrUnionType> {
+        let start = self.current_token().loc;
         unimplemented!()
     }
     pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
