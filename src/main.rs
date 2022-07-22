@@ -86,7 +86,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
         // file.write_all(preprocessed_file.as_bytes())?;
     } else if opt.gcc_preprocessor {
-        // TODO!
         preprocessed_file = String::from_utf8(
             Command::new("gcc")
                 .args(&["-E", &in_file_path])

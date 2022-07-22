@@ -472,7 +472,6 @@ impl super::super::CParser {
                 }
                 | TypeInitializer {
                     type_name: _,
-                    // FIXME:
                     initializer_list: _,
                 }
                 | Identifier(_)

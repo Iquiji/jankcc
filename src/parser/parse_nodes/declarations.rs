@@ -8,7 +8,7 @@ use crate::{
     parser::{
         span::{Span, Spanned},
         types::{
-            CBasicTypes, CEnumType, CStructType, CTypeBasic, CTypeName, CTypeQualifiers,
+            CBasicTypes, CEnumType, CStructOrUnionType, CTypeName, CTypeQualifiers,
             CTypeSpecifier,
         },
         CParser,
@@ -430,7 +430,7 @@ impl CParser {
             }
             self.advance_idx();
 
-            // TODO: this gets to outermost because reasons
+            // Done: this gets to outermost because reasons
 
             new_head = self.parse_abstract_declarator();
 
@@ -561,7 +561,6 @@ impl CParser {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum ParameterDeclaration {
-    // TODO:\
     // declaration-specifiers declarator
     // declaration-specifiers abstract-declarator?
     Declarator {
@@ -633,7 +632,7 @@ pub(crate) enum Initializer {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Designator {
-    Array(Spanned<ConstantExpression>),
+    Array(ConstantExpression),
     Member(Identifier),
 }
 
@@ -641,7 +640,7 @@ pub(crate) type InitializerList = Vec<(Vec<Designator>, Spanned<Initializer>)>;
 
 impl CParser {
     // Stubs for later
-    pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructType> {
+    pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructOrUnionType> {
         unimplemented!()
     }
     pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
@@ -651,7 +650,6 @@ impl CParser {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Declarator {
-    // TODO:
     // Derived Declararator + Identifier Base
     base: Identifier,
     derive: DerivedDeclarator,
@@ -678,7 +676,7 @@ impl CParser {
             }
             self.advance_idx();
 
-            // TODO: this gets to outermost because reasons
+            // Done: this gets to outermost because reasons
 
             let temp = self.parse_declarator();
 
@@ -869,11 +867,84 @@ impl CParser {
         if self.current_token().t_type == CTokenType::Punctuator
             && self.current_token().original == "{"
         {
-            // compound assignment 
-            unimplemented!()
+            // compound assignment
+            self.advance_idx();
+
+            // { initializer-list }
+            // { initializer-list , }
+
+            // Vec<(designation-opt initializer)>
+            let mut initializer_list = vec![];
+
+            // first
+            let mut designation = vec![];
+            if self.current_token().t_type == CTokenType::Punctuator
+                && (self.current_token().original == "[" || self.current_token().original == ".")
+            {
+                designation = self.parse_designator_list();
+                self.expect_type_and_string(CTokenType::Punctuator, "=");
+            }
+            let init = self.parse_initializer();
+
+            initializer_list.push((designation, init));
+
+            while self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == ","
+            {
+                self.advance_idx();
+                if self.current_token().t_type == CTokenType::Punctuator
+                    && self.current_token().original == "}"
+                {
+                    break;
+                }
+
+                let mut designation = vec![];
+                if self.current_token().t_type == CTokenType::Punctuator
+                    && (self.current_token().original == "["
+                        || self.current_token().original == ".")
+                {
+                    designation = self.parse_designator_list();
+                    self.expect_type_and_string(CTokenType::Punctuator, "=");
+                }
+                let init = self.parse_initializer();
+
+                initializer_list.push((designation, init));
+            }
+
+            self.expect_type_and_string(CTokenType::Punctuator, "}");
+
+            Spanned::new(
+                Initializer::Compound(initializer_list),
+                start,
+                self.prev_token().loc,
+            )
         } else {
             // single assignment expression
-            Spanned::new(Initializer::Single(self.parse_expr_assignment()), start, self.prev_token().loc)
+            Spanned::new(
+                Initializer::Single(self.parse_expr_assignment()),
+                start,
+                self.prev_token().loc,
+            )
         }
+    }
+    pub(crate) fn parse_designator_list(&mut self) -> Vec<Designator> {
+        let mut result_vec = vec![];
+
+        while self.current_token().t_type == CTokenType::Punctuator
+            && (self.current_token().original == "[" || self.current_token().original == ".")
+        {
+            if self.current_token().original == "[" {
+                self.advance_idx();
+                result_vec.push(Designator::Array(self.parse_constant_expr()));
+                self.expect_type_and_string(CTokenType::Punctuator, "]");
+            } else {
+                self.advance_idx();
+                result_vec.push(Designator::Member(Identifier {
+                    identifier: self.expect_type(CTokenType::Identifier).original,
+                }));
+            }
+        }
+
+        result_vec
     }
 }

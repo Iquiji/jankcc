@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::lexer::{token_types::CKeyword, CToken};
 
 use super::{
-    parse_nodes::{declarations::DerivedDeclarator, Identifier},
+    parse_nodes::{declarations::{DerivedDeclarator, StaticAssertDeclaration, Declarator}, Identifier, expressions::ConstantExpression},
     span::Spanned,
     CParser,
 };
@@ -68,8 +68,6 @@ EZ
 impl CParser {
     pub(crate) fn parse_type_name(&mut self) -> Spanned<CTypeName> {
         let start = self.current_token().loc;
-
-        // TODO: abstract declarator
 
         Spanned::new(
             CTypeName {
@@ -468,7 +466,8 @@ impl CParser {
             } else if keyword == CKeyword::STRUCT || keyword == CKeyword::UNION {
                 // struct or union mode
                 // needs to be exported to declaration?
-                todo!("still need to impl struct or union specifier in type name")
+                specifier = CTypeSpecifier::StructOrUnion(self.parse_struct_or_union_specifier());
+                // done!("still need to impl struct or union specifier in type name")
             } else {
                 // unexpected keyword in specifier qualifier list
                 self.error_unexpected(
@@ -530,19 +529,43 @@ pub(crate) enum CBasicTypes {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum CTypeSpecifier {
     Basic(CBasicTypes),
-    Struct(CStructType),
-    Union(CUnionType),
-    Enum(CEnumType),
+    StructOrUnion(Spanned<CStructOrUnionType>),
+    Enum(Spanned<CEnumType>),
     Typedefed(Identifier),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CStructType {
+pub(crate) struct CStructOrUnionType {
+    struct_type: CStructOrUnionTypeType,
     ident: Option<Identifier>,
+    declarations: Vec<CSructDeclaration>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CUnionType {}
+pub(crate) enum CStructOrUnionTypeType {
+    Struct,
+    Union,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct CEnumType {}
+pub(crate) enum CSructDeclaration{
+    StaticAssertDeclaration(StaticAssertDeclaration),
+    StructDeclaration{
+        specifier_qualifier: CTypeBasic,
+        delcarator_list: Vec<CStructDeclarator>,
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum CStructDeclarator{
+    Declarator(Spanned<Declarator>),
+    BitField{
+        declarator: Option<Spanned<Declarator>>,
+        expr: ConstantExpression,
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CEnumType {
+    // TODO:
+}

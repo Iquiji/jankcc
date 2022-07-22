@@ -636,3 +636,309 @@ Declaration:
 
     assert_eq!(got_result, expected_result);
 }
+
+#[test]
+fn declaration_initialized_0() {
+    let code = r#"int x[] = { 1, 3, 5 };"#;
+
+    let expected_result = r#"
+Declaration:
+    specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    init:
+      - - base:
+            identifier: x
+          derive:
+            Array:
+              qualifiers:
+                const_q: false
+                restrict_q: false
+                volatile_q: false
+                atomic_q: false
+              is_static: false
+              size_expr: ~
+              vla: false
+              to: Base
+        - Compound:
+            - - []
+              - Single:
+                  Constant:
+                    Number: "1"
+            - - []
+              - Single:
+                  Constant:
+                    Number: "3"
+            - - []
+              - Single:
+                  Constant:
+                    Number: "5"
+  
+    "#;
+
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
+}
+
+#[test]
+fn declaration_initialized_1() {
+    let code = r#"
+int y[4][3] = {
+    { 1, 3, 5 },
+    { 2, 4, 6 },
+    { 3, 5, 7 },
+};"#;
+
+    let expected_result = r#"
+Declaration:
+    specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    init:
+      - - base:
+            identifier: y
+          derive:
+            Array:
+              qualifiers:
+                const_q: false
+                restrict_q: false
+                volatile_q: false
+                atomic_q: false
+              is_static: false
+              size_expr:
+                Constant:
+                  Number: "3"
+              vla: false
+              to:
+                Array:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  is_static: false
+                  size_expr:
+                    Constant:
+                      Number: "4"
+                  vla: false
+                  to: Base
+        - Compound:
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "1"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "3"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "5"
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "2"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "4"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "6"
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "3"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "5"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "7"
+  
+    "#;
+
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
+}
+
+#[test]
+fn declaration_initialized_2() {
+    let code = r#"
+    short q[4][3][2] = {
+        { 1 },
+        { 2, 3 },
+        { 4, 5, 6 }
+    };"#;
+
+    let expected_result = r#"
+Declaration:
+    specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Short
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    init:
+      - - base:
+            identifier: q
+          derive:
+            Array:
+              qualifiers:
+                const_q: false
+                restrict_q: false
+                volatile_q: false
+                atomic_q: false
+              is_static: false
+              size_expr:
+                Constant:
+                  Number: "2"
+              vla: false
+              to:
+                Array:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  is_static: false
+                  size_expr:
+                    Constant:
+                      Number: "3"
+                  vla: false
+                  to:
+                    Array:
+                      qualifiers:
+                        const_q: false
+                        restrict_q: false
+                        volatile_q: false
+                        atomic_q: false
+                      is_static: false
+                      size_expr:
+                        Constant:
+                          Number: "4"
+                      vla: false
+                      to: Base
+        - Compound:
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "1"
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "2"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "3"
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "4"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "5"
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "6"
+    "#;
+
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
+}
+
+#[test]
+fn declaration_struct_initialized_0() {
+    let code = r#"struct { int a[3], b; } w[] = { { 1 }, 2 };"#;
+
+    let expected_result = r#"
+
+    "#;
+
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
+}
