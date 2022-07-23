@@ -6,7 +6,11 @@ use serde::{Deserialize, Serialize};
 use crate::lexer::{token_types::CKeyword, CToken};
 
 use super::{
-    parse_nodes::{declarations::{DerivedDeclarator, StaticAssertDeclaration, Declarator}, Identifier, expressions::ConstantExpression},
+    parse_nodes::{
+        declarations::{Declarator, DerivedDeclarator, StaticAssertDeclaration},
+        expressions::ConstantExpression,
+        Identifier,
+    },
     span::Spanned,
     CParser,
 };
@@ -465,7 +469,7 @@ impl CParser {
                 todo!("still need to impl enum specifier in type name")
             } else if keyword == CKeyword::STRUCT || keyword == CKeyword::UNION {
                 // struct or union mode
-                // needs to be exported to declaration?
+                self.idx -= 1; // for detection in self.parse_struct_or_union_specifier()
                 specifier = CTypeSpecifier::StructOrUnion(self.parse_struct_or_union_specifier());
                 // done!("still need to impl struct or union specifier in type name")
             } else {
@@ -536,9 +540,9 @@ pub(crate) enum CTypeSpecifier {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CStructOrUnionType {
-    struct_type: CStructOrUnionTypeType,
-    ident: Option<Identifier>,
-    declarations: Vec<CSructDeclaration>,
+    pub(crate) struct_type: CStructOrUnionTypeType,
+    pub(crate) ident: Option<Identifier>,
+    pub(crate) declarations: Vec<CSructDeclaration>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -548,21 +552,21 @@ pub(crate) enum CStructOrUnionTypeType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CSructDeclaration{
-    StaticAssertDeclaration(StaticAssertDeclaration),
-    StructDeclaration{
-        specifier_qualifier: CTypeBasic,
-        delcarator_list: Vec<CStructDeclarator>,
-    }
+pub(crate) enum CSructDeclaration {
+    StaticAssertDeclaration(Spanned<StaticAssertDeclaration>),
+    StructDeclaration {
+        specifier_qualifier: Spanned<CTypeBasic>,
+        delcarator_list: Vec<Spanned<CStructDeclarator>>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum CStructDeclarator{
+pub(crate) enum CStructDeclarator {
     Declarator(Spanned<Declarator>),
-    BitField{
+    BitField {
         declarator: Option<Spanned<Declarator>>,
         expr: ConstantExpression,
-    }
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

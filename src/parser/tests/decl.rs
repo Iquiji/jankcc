@@ -931,7 +931,182 @@ fn declaration_struct_initialized_0() {
     let code = r#"struct { int a[3], b; } w[] = { { 1 }, 2 };"#;
 
     let expected_result = r#"
+Declaration:
+    specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        StructOrUnion:
+          struct_type: Struct
+          ident: ~
+          declarations:
+            - StructDeclaration:
+                specifier_qualifier:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  specifier:
+                    Basic: Int
+                delcarator_list:
+                  - Declarator:
+                      base:
+                        identifier: a
+                      derive:
+                        Array:
+                          qualifiers:
+                            const_q: false
+                            restrict_q: false
+                            volatile_q: false
+                            atomic_q: false
+                          is_static: false
+                          size_expr:
+                            Constant:
+                              Number: "3"
+                          vla: false
+                          to: Base
+                  - Declarator:
+                      base:
+                        identifier: b
+                      derive: Base
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    init:
+      - - base:
+            identifier: w
+          derive:
+            Array:
+              qualifiers:
+                const_q: false
+                restrict_q: false
+                volatile_q: false
+                atomic_q: false
+              is_static: false
+              size_expr: ~
+              vla: false
+              to: Base
+        - Compound:
+            - - []
+              - Compound:
+                  - - []
+                    - Single:
+                        Constant:
+                          Number: "1"
+            - - []
+              - Single:
+                  Constant:
+                    Number: "2"
+  
+    "#;
 
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
+}
+
+#[test]
+fn struct_declaration_nested() {
+    let code = r#"
+struct s {
+    struct { int i; };
+    int a[];
+};"#;
+
+    let expected_result = r#"
+Declaration:
+    specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        StructOrUnion:
+          struct_type: Struct
+          ident:
+            identifier: s
+          declarations:
+            - StructDeclaration:
+                specifier_qualifier:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  specifier:
+                    StructOrUnion:
+                      struct_type: Struct
+                      ident: ~
+                      declarations:
+                        - StructDeclaration:
+                            specifier_qualifier:
+                              qualifiers:
+                                const_q: false
+                                restrict_q: false
+                                volatile_q: false
+                                atomic_q: false
+                              specifier:
+                                Basic: Int
+                            delcarator_list:
+                              - Declarator:
+                                  base:
+                                    identifier: i
+                                  derive: Base
+                delcarator_list: []
+            - StructDeclaration:
+                specifier_qualifier:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  specifier:
+                    Basic: Int
+                delcarator_list:
+                  - Declarator:
+                      base:
+                        identifier: a
+                      derive:
+                        Array:
+                          qualifiers:
+                            const_q: false
+                            restrict_q: false
+                            volatile_q: false
+                            atomic_q: false
+                          is_static: false
+                          size_expr: ~
+                          vla: false
+                          to: Base
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    init: []
+  
     "#;
 
     let mut simple_parser = run_lexer_with_return_that_init_parser(code);

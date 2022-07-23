@@ -8,8 +8,8 @@ use crate::{
     parser::{
         span::{Span, Spanned},
         types::{
-            CBasicTypes, CEnumType, CStructOrUnionType, CTypeName, CTypeQualifiers,
-            CTypeSpecifier,
+            CBasicTypes, CEnumType, CSructDeclaration, CStructDeclarator, CStructOrUnionType,
+            CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier,
         },
         CParser,
     },
@@ -642,8 +642,120 @@ impl CParser {
     // Stubs for later
     pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructOrUnionType> {
         let start = self.current_token().loc;
-        unimplemented!()
+        let struct_or_union_type =
+            if self.current_token().t_type == CTokenType::Keyword(CKeyword::STRUCT) {
+                self.advance_idx();
+                CStructOrUnionTypeType::Struct
+            } else {
+                self.expect_one_of_keywords(&[CKeyword::STRUCT, CKeyword::UNION]);
+                CStructOrUnionTypeType::Union
+            };
+
+        // opt ident
+        let ident = if self.current_token().t_type == CTokenType::Identifier {
+            Some(Identifier {
+                identifier: self.advance_idx().original,
+            })
+        } else {
+            None
+        };
+
+        // opt { struct-declaration-list }
+        if self.current_token().t_type == CTokenType::Punctuator
+            && self.current_token().original == "{"
+        {
+            // struct declaration list
+            self.advance_idx();
+
+            let mut struct_declaration_list = vec![];
+
+            while !(self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "}")
+            {
+                if self.current_token().t_type == CTokenType::Keyword(CKeyword::STATIC_ASSERT) {
+                    struct_declaration_list.push(CSructDeclaration::StaticAssertDeclaration(
+                        self.parse_static_assert(),
+                    ));
+                } else {
+                    // initial
+                    let spec_qual_list = self.parse_specifier_qualifier_list();
+                    if !(self.current_token().t_type == CTokenType::Punctuator
+                        && self.current_token().original == ";")
+                    {
+                        // struct dedclarator
+                        struct_declaration_list.push(CSructDeclaration::StructDeclaration {
+                            specifier_qualifier: spec_qual_list,
+                            delcarator_list: self.parse_struct_declarator_list(),
+                        });
+                    } else {
+                        struct_declaration_list.push(CSructDeclaration::StructDeclaration {
+                            specifier_qualifier: spec_qual_list,
+                            delcarator_list: vec![],
+                        });
+                    }
+                    self.expect_type_and_string(CTokenType::Punctuator, ";");
+                }
+            }
+
+            self.expect_type_and_string(CTokenType::Punctuator, "}");
+
+            Spanned::new(
+                CStructOrUnionType {
+                    struct_type: struct_or_union_type,
+                    ident,
+                    declarations: struct_declaration_list,
+                },
+                start,
+                self.prev_token().loc,
+            )
+        } else if ident.is_none() {
+            self.error_unexpected(
+                self.current_token(),
+                "expected '{' after unnamed struct declaration",
+            );
+            unreachable!();
+        } else {
+            Spanned::new(
+                CStructOrUnionType {
+                    struct_type: struct_or_union_type,
+                    ident,
+                    declarations: vec![],
+                },
+                start,
+                self.prev_token().loc,
+            )
+        }
     }
+    pub(crate) fn parse_struct_declarator_list(&mut self) -> Vec<Spanned<CStructDeclarator>> {
+        let mut result = vec![];
+
+        while !(self.current_token().t_type == CTokenType::Punctuator
+        && self.current_token().original == ";"){
+            let start = self.current_token().loc;
+
+            if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ":"{
+                self.advance_idx();
+                result.push(Spanned::new(CStructDeclarator::BitField { declarator: None, expr: self.parse_constant_expr() },start,self.prev_token().loc));
+            }else{
+                let decl = self.parse_declarator();
+
+                if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ":"{
+                    self.advance_idx();
+                    result.push(Spanned::new(CStructDeclarator::BitField { declarator: Some(decl), expr: self.parse_constant_expr() },start,self.prev_token().loc));
+                } else{
+                    result.push(Spanned::new(CStructDeclarator::Declarator(decl),start,self.prev_token().loc));
+                }
+            }
+            if !(self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ","){
+                break;
+            } else{
+                self.advance_idx();
+            }
+        }
+
+        result
+    }
+
     pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
         unimplemented!()
     }
