@@ -6,13 +6,13 @@
   \___/ \__,_|_| |_|_|\_\  \____\____|
 
 ```
-### A WIP minimal C Compiler written in Rust :]
+### A WIP minimal hobby C Compiler written in Rust :]
 
 ---
 
 ## Features:
 
-- [ ] Preproccessor? (Put on Low Priority for now)
+- [ ] Preproccessor? (Put on Halt for now)
   - [ ] #include
   - [ ] #ifndef
   - [ ] #if
@@ -20,10 +20,11 @@
 - [x] Lexer
   - [ ] Allow Hex Numbers & Co.
   - [ ] Sensible Error Generation
+  - [ ] Fix Column Number Generation
 - [ ] Parser
   - [x] Expresions
   - [x] Type Names
-  - [ ] Declarations -> 90%
+  - [x] Declarations
   - [ ] Statements
   - [ ] Full Parse for subset? of C11 Standard
   - [ ] Error Continuation
@@ -44,4 +45,5 @@
 
 #### Parser:
  - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
+ - Missing: Enum, Alignof, sizeof, Atomic
  - Still in Progress

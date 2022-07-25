@@ -1117,3 +1117,83 @@ Declaration:
 
     assert_eq!(got_result, expected_result);
 }
+
+#[test]
+fn type_initializer_simple_declaration() {
+  let code = r#"int *p = (int []){2, 4};"#;
+
+  let expected_result = r#"
+Declaration:
+  specifiers:
+    storage:
+      typedef_c: false
+      extern_c: false
+      static_c: false
+      thread_local_c: false
+      auto_c: false
+      register_c: false
+    qualifiers:
+      const_q: false
+      restrict_q: false
+      volatile_q: false
+      atomic_q: false
+    specifiers:
+      Basic: Int
+    function:
+      inline: false
+      no_return: false
+    alignment: ~
+  init:
+    - - base:
+          identifier: p
+        derive:
+          Pointer:
+            qualifiers:
+              const_q: false
+              restrict_q: false
+              volatile_q: false
+              atomic_q: false
+            to: Base
+      - Single:
+          TypeInitializer:
+            type_name:
+              base:
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifier:
+                  Basic: Int
+              declarator:
+                Array:
+                  qualifiers:
+                    const_q: false
+                    restrict_q: false
+                    volatile_q: false
+                    atomic_q: false
+                  is_static: false
+                  size_expr: ~
+                  vla: false
+                  to: Base
+            initializer_list:
+              Compound:
+                - - []
+                  - Single:
+                      Constant:
+                        Number: "2"
+                - - []
+                  - Single:
+                      Constant:
+                        Number: "4"
+
+"#;
+
+  let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+  let got_result = simple_parser.parse_declaration();
+  println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+  let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+  assert_eq!(got_result, expected_result);
+}

@@ -636,8 +636,6 @@ pub(crate) enum Designator {
     Member(Identifier),
 }
 
-pub(crate) type InitializerList = Vec<(Vec<Designator>, Spanned<Initializer>)>;
-
 impl CParser {
     // Stubs for later
     pub(crate) fn parse_struct_or_union_specifier(&mut self) -> Spanned<CStructOrUnionType> {

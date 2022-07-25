@@ -3,7 +3,7 @@ use crate::{
     parser::{span::Spanned, types::CTypeName, CParser},
 };
 
-use super::{declarations::InitializerList, Constant, Identifier, NumberLike, StringLiteral};
+use super::{declarations::Initializer, Constant, Identifier, NumberLike, StringLiteral};
 
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
@@ -330,7 +330,7 @@ pub(crate) enum CExpression {
         right_value: Spanned<Self>,
     },
     Cast {
-        type_name: Box<Spanned<CTypeName>>,
+        type_name: Spanned<CTypeName>,
         value: Spanned<Self>,
     },
     PrefixIncrement {
@@ -372,8 +372,7 @@ pub(crate) enum CExpression {
     },
     TypeInitializer {
         type_name: Spanned<CTypeName>,
-        // FIXME:
-        initializer_list: InitializerList,
+        initializer_list: Spanned<Initializer>,
     },
     Identifier(Identifier),
     Constant(Constant),
@@ -802,7 +801,27 @@ impl super::super::CParser {
             && self.check_is_start_of_type_name(&self.next_token())
         {
             // ( type-name ) cast-expression
-            todo!("type cast parsing still unimplemented");
+            
+            // differ between this and init of type name?
+            // parse type name and then check for '{'
+            let start = self.current_token().loc;
+            let idx_before = self.idx;
+            self.advance_idx();
+
+            let type_name = self.parse_type_name();
+
+            self.expect_type_and_string(CTokenType::Punctuator, ")");
+
+            if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "{"{
+                // initializer
+                info!("compound literal in 'type cast' may be buggy");
+                self.idx = idx_before;
+                self.parse_expr_postfix()
+            }else{
+                Spanned::new(CExpression::Cast { type_name, value: self.parse_expr_cast() }, start, self.prev_token().loc)
+            }
+
+
         } else {
             self.parse_expr_unary()
         }
@@ -894,7 +913,19 @@ impl super::super::CParser {
             && self.check_is_start_of_type_name(&self.next_token())
         {
             // ( type-name ) { initializer-list }
-            todo!("type init still unimplemented");
+            self.advance_idx();
+            let type_name = self.parse_type_name();
+
+            self.expect_type_and_string(CTokenType::Punctuator, ")");
+            self.expect_type_and_string(CTokenType::Punctuator, "{");
+            self.idx -= 1;
+
+            let initializer = self.parse_initializer();
+
+            self.idx -= 1;
+            self.expect_type_and_string(CTokenType::Punctuator, "}");
+            
+            Spanned::new(CExpression::TypeInitializer { type_name, initializer_list: initializer }, start.clone(), self.prev_token().loc)
         } else {
             self.parse_expr_primary()
         };

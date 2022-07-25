@@ -401,3 +401,147 @@ fn unified_expression_test_not_unary() {
         &CParser::parse_expression,
     );
 }
+
+
+#[test]
+fn type_cast_simple() {
+  let expr = r#"(double) sum / count"#;
+
+  let expected_result = r#"
+Multiplicative:
+  left_value:
+    Cast:
+      type_name:
+        base:
+          qualifiers:
+            const_q: false
+            restrict_q: false
+            volatile_q: false
+            atomic_q: false
+          specifier:
+            Basic: Double
+        declarator: Base
+      value:
+        Identifier:
+          identifier: sum
+  op: Div
+  right_value:
+    Identifier:
+      identifier: count
+
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+
+#[test]
+fn type_cast_simple_explicit_parenthesis() {
+  let expr = r#"((char*)heap) + offset"#;
+
+  let expected_result = r#"
+Additive:
+  left_value:
+    Paranthesised:
+      Cast:
+        type_name:
+          base:
+            qualifiers:
+              const_q: false
+              restrict_q: false
+              volatile_q: false
+              atomic_q: false
+            specifier:
+              Basic: Char
+          declarator:
+            Pointer:
+              qualifiers:
+                const_q: false
+                restrict_q: false
+                volatile_q: false
+                atomic_q: false
+              to: Base
+        value:
+          Identifier:
+            identifier: heap
+  op: Plus
+  right_value:
+    Identifier:
+      identifier: offset
+
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+#[test]
+fn type_initializer_double_in_function_call() {
+  let expr = r#"\
+drawline((struct point){.x=1, .y=1},
+  (struct point){.x=3, .y=4});"#;
+
+  let expected_result = r#"
+FunctionCall:
+  function:
+    Identifier:
+      identifier: drawline
+  arguments:
+    - TypeInitializer:
+        type_name:
+          base:
+            qualifiers:
+              const_q: false
+              restrict_q: false
+              volatile_q: false
+              atomic_q: false
+            specifier:
+              StructOrUnion:
+                struct_type: Struct
+                ident:
+                  identifier: point
+                declarations: []
+          declarator: Base
+        initializer_list:
+          Compound:
+            - - - Member:
+                    identifier: x
+              - Single:
+                  Constant:
+                    Number: "1"
+            - - - Member:
+                    identifier: y
+              - Single:
+                  Constant:
+                    Number: "1"
+    - TypeInitializer:
+        type_name:
+          base:
+            qualifiers:
+              const_q: false
+              restrict_q: false
+              volatile_q: false
+              atomic_q: false
+            specifier:
+              StructOrUnion:
+                struct_type: Struct
+                ident:
+                  identifier: point
+                declarations: []
+          declarator: Base
+        initializer_list:
+          Compound:
+            - - - Member:
+                    identifier: x
+              - Single:
+                  Constant:
+                    Number: "3"
+            - - - Member:
+                    identifier: y
+              - Single:
+                  Constant:
+                    Number: "4"
+
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
