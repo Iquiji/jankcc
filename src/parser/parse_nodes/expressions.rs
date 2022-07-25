@@ -801,7 +801,7 @@ impl super::super::CParser {
             && self.check_is_start_of_type_name(&self.next_token())
         {
             // ( type-name ) cast-expression
-            
+
             // differ between this and init of type name?
             // parse type name and then check for '{'
             let start = self.current_token().loc;
@@ -812,16 +812,23 @@ impl super::super::CParser {
 
             self.expect_type_and_string(CTokenType::Punctuator, ")");
 
-            if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "{"{
+            if self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "{"
+            {
                 // initializer
                 info!("compound literal in 'type cast' may be buggy");
                 self.idx = idx_before;
                 self.parse_expr_postfix()
-            }else{
-                Spanned::new(CExpression::Cast { type_name, value: self.parse_expr_cast() }, start, self.prev_token().loc)
+            } else {
+                Spanned::new(
+                    CExpression::Cast {
+                        type_name,
+                        value: self.parse_expr_cast(),
+                    },
+                    start,
+                    self.prev_token().loc,
+                )
             }
-
-
         } else {
             self.parse_expr_unary()
         }
@@ -881,10 +888,44 @@ impl super::super::CParser {
             );
         }
         if current_token.t_type == Keyword(CKeyword::SIZEOF) {
-            todo!("sizeof still unimplemented!");
+            self.advance_idx();
+            if self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "("
+            {
+                // type name sizeof
+                self.expect_type_and_string(CTokenType::Punctuator, "(");
+
+                let type_name = self.parse_type_name();
+
+                self.expect_type_and_string(CTokenType::Punctuator, ")");
+                return Spanned::new(
+                    CExpression::SizeOfType { type_name },
+                    start,
+                    self.prev_token().loc,
+                );
+            } else {
+                // sizeof unary-expr
+                return Spanned::new(
+                    CExpression::SizeOf {
+                        value: self.parse_expr_unary(),
+                    },
+                    start,
+                    self.prev_token().loc,
+                );
+            }
         }
         if current_token.t_type == Keyword(CKeyword::ALIGNOF) {
-            todo!("_Alignof still unimplemented!");
+            self.advance_idx();
+            self.expect_type_and_string(CTokenType::Punctuator, "(");
+
+            let type_name = self.parse_type_name();
+
+            self.expect_type_and_string(CTokenType::Punctuator, ")");
+            return Spanned::new(
+                CExpression::AlignOfType { type_name },
+                start,
+                self.prev_token().loc,
+            );
         }
 
         self.parse_expr_postfix()
@@ -924,8 +965,15 @@ impl super::super::CParser {
 
             self.idx -= 1;
             self.expect_type_and_string(CTokenType::Punctuator, "}");
-            
-            Spanned::new(CExpression::TypeInitializer { type_name, initializer_list: initializer }, start.clone(), self.prev_token().loc)
+
+            Spanned::new(
+                CExpression::TypeInitializer {
+                    type_name,
+                    initializer_list: initializer,
+                },
+                start.clone(),
+                self.prev_token().loc,
+            )
         } else {
             self.parse_expr_primary()
         };
@@ -1021,7 +1069,7 @@ impl super::super::CParser {
                 // only GENERIC for generic Selection
                 if keyword == CKeyword::GENERIC {
                     // generic selection
-                    todo!("Generic Selection Expression Still unsuported!")
+                    panic!("Generic Selection Expression Still unsuported!")
                 } else {
                     // panic with unexpected keyword
                     self.error_unexpected(

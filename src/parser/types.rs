@@ -1,9 +1,9 @@
 use std::ops::Add;
 
-use log::trace;
+use log::{trace, info};
 use serde::{Deserialize, Serialize};
 
-use crate::lexer::{token_types::CKeyword, CToken};
+use crate::lexer::{token_types::{CKeyword, CTokenType}, CToken};
 
 use super::{
     parse_nodes::{
@@ -462,11 +462,19 @@ impl CParser {
                 }
             } else if keyword == CKeyword::ATOMIC {
                 // Atomic Type specifier mode
-                todo!("still need to impl atomic specifier in type name")
+                self.expect_type_and_string(Punctuator, "(");
+
+                let type_name = self.parse_type_name();
+
+                self.expect_type_and_string(Punctuator, ")");
+
+                specifier = CTypeSpecifier::Atomic(type_name);
+                info!("_Atomic is still not properly implemented");
             } else if keyword == CKeyword::ENUM {
                 // Enum mode
                 // needs to be exported to declaration?
-                todo!("still need to impl enum specifier in type name")
+                specifier = CTypeSpecifier::Enum(self.parse_enum_specifier());
+                info!("enum specifier is only minimally tested, caution is advised");
             } else if keyword == CKeyword::STRUCT || keyword == CKeyword::UNION {
                 // struct or union mode
                 self.idx -= 1; // for detection in self.parse_struct_or_union_specifier()
@@ -536,6 +544,7 @@ pub(crate) enum CTypeSpecifier {
     StructOrUnion(Spanned<CStructOrUnionType>),
     Enum(Spanned<CEnumType>),
     Typedefed(Identifier),
+    Atomic(Spanned<CTypeName>)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -571,5 +580,12 @@ pub(crate) enum CStructDeclarator {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CEnumType {
-    // TODO:
+    pub(crate) ident: Option<Identifier>,
+    pub(crate) enumerators: Vec<Spanned<CEnumEnumerator>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct CEnumEnumerator {
+    pub(crate) enumeration_constant: Identifier,
+    pub(crate) const_assignment: Option<ConstantExpression>,
 }

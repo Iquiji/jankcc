@@ -100,15 +100,21 @@ impl CParser {
     pub(crate) fn expect_one_of_keywords(&mut self, keywords_to_accept: &[CKeyword]) -> CKeyword {
         // error!("expect_one_of_keywords only stub right now");
         let current_token = self.current_token();
-        if let CTokenType::Keyword(keyword) = current_token.t_type{
-            if keywords_to_accept.contains(&keyword){
+        if let CTokenType::Keyword(keyword) = current_token.t_type {
+            if keywords_to_accept.contains(&keyword) {
                 keyword
-            }else{
-                self.error_unexpected(self.current_token(), &format!("expected one of keywords: {:?}",keywords_to_accept));
+            } else {
+                self.error_unexpected(
+                    self.current_token(),
+                    &format!("expected one of keywords: {:?}", keywords_to_accept),
+                );
                 unreachable!()
             }
-        }else{
-            self.error_unexpected(self.current_token(), &format!("expected one of keywords: {:?}",keywords_to_accept));
+        } else {
+            self.error_unexpected(
+                self.current_token(),
+                &format!("expected one of keywords: {:?}", keywords_to_accept),
+            );
             unreachable!()
         }
     }

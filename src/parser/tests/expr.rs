@@ -402,12 +402,11 @@ fn unified_expression_test_not_unary() {
     );
 }
 
-
 #[test]
 fn type_cast_simple() {
-  let expr = r#"(double) sum / count"#;
+    let expr = r#"(double) sum / count"#;
 
-  let expected_result = r#"
+    let expected_result = r#"
 Multiplicative:
   left_value:
     Cast:
@@ -434,12 +433,11 @@ Multiplicative:
     expresion_test_helper(expr, expected_result, &CParser::parse_expression);
 }
 
-
 #[test]
 fn type_cast_simple_explicit_parenthesis() {
-  let expr = r#"((char*)heap) + offset"#;
+    let expr = r#"((char*)heap) + offset"#;
 
-  let expected_result = r#"
+    let expected_result = r#"
 Additive:
   left_value:
     Paranthesised:
@@ -476,11 +474,11 @@ Additive:
 
 #[test]
 fn type_initializer_double_in_function_call() {
-  let expr = r#"\
+    let expr = r#"\
 drawline((struct point){.x=1, .y=1},
   (struct point){.x=3, .y=4});"#;
 
-  let expected_result = r#"
+    let expected_result = r#"
 FunctionCall:
   function:
     Identifier:
@@ -540,6 +538,56 @@ FunctionCall:
               - Single:
                   Constant:
                     Number: "4"
+
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+#[test]
+fn sizeof_expression_0() {
+    let expr = r#"alloc(sizeof *dp)"#;
+
+    let expected_result = r#"
+FunctionCall:
+  function:
+    Identifier:
+      identifier: alloc
+  arguments:
+    - SizeOf:
+        value:
+          Unary:
+            unary_op: DEREF
+            value:
+              Identifier:
+                identifier: dp
+"#;
+
+    expresion_test_helper(expr, expected_result, &CParser::parse_expression);
+}
+
+#[test]
+fn sizeof_expression_1() {
+    let expr = r#"sizeof array / sizeof array[0]"#;
+
+    let expected_result = r#"
+Multiplicative:
+  left_value:
+    SizeOf:
+      value:
+        Identifier:
+          identifier: array
+  op: Div
+  right_value:
+    SizeOf:
+      value:
+        ArraySubscription:
+          array:
+            Identifier:
+              identifier: array
+          index:
+            Constant:
+              Number: "0"
 
 "#;
 

@@ -9,7 +9,7 @@ use crate::{
         span::{Span, Spanned},
         types::{
             CBasicTypes, CEnumType, CSructDeclaration, CStructDeclarator, CStructOrUnionType,
-            CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier,
+            CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier, CEnumEnumerator,
         },
         CParser,
     },
@@ -728,25 +728,50 @@ impl CParser {
         let mut result = vec![];
 
         while !(self.current_token().t_type == CTokenType::Punctuator
-        && self.current_token().original == ";"){
+            && self.current_token().original == ";")
+        {
             let start = self.current_token().loc;
 
-            if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ":"{
+            if self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == ":"
+            {
                 self.advance_idx();
-                result.push(Spanned::new(CStructDeclarator::BitField { declarator: None, expr: self.parse_constant_expr() },start,self.prev_token().loc));
-            }else{
+                result.push(Spanned::new(
+                    CStructDeclarator::BitField {
+                        declarator: None,
+                        expr: self.parse_constant_expr(),
+                    },
+                    start,
+                    self.prev_token().loc,
+                ));
+            } else {
                 let decl = self.parse_declarator();
 
-                if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ":"{
+                if self.current_token().t_type == CTokenType::Punctuator
+                    && self.current_token().original == ":"
+                {
                     self.advance_idx();
-                    result.push(Spanned::new(CStructDeclarator::BitField { declarator: Some(decl), expr: self.parse_constant_expr() },start,self.prev_token().loc));
-                } else{
-                    result.push(Spanned::new(CStructDeclarator::Declarator(decl),start,self.prev_token().loc));
+                    result.push(Spanned::new(
+                        CStructDeclarator::BitField {
+                            declarator: Some(decl),
+                            expr: self.parse_constant_expr(),
+                        },
+                        start,
+                        self.prev_token().loc,
+                    ));
+                } else {
+                    result.push(Spanned::new(
+                        CStructDeclarator::Declarator(decl),
+                        start,
+                        self.prev_token().loc,
+                    ));
                 }
             }
-            if !(self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ","){
+            if !(self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == ",")
+            {
                 break;
-            } else{
+            } else {
                 self.advance_idx();
             }
         }
@@ -755,7 +780,73 @@ impl CParser {
     }
 
     pub(crate) fn parse_enum_specifier(&mut self) -> Spanned<CEnumType> {
-        unimplemented!()
+        let start = self.current_token().loc;
+        let ident = if self.current_token().t_type == CTokenType::Identifier {
+            Some(Identifier {
+                identifier: self.advance_idx().original,
+            })
+        } else {
+            None
+        };
+
+        if self.current_token().t_type == CTokenType::Punctuator
+            && self.current_token().original == "{"
+        {
+            // struct declaration list
+            self.advance_idx();
+
+            let mut enumerator_list = vec![];
+
+            while !(self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "}")
+            {
+                let start = self.current_token().loc;
+                let enumeration_constant = Identifier {identifier: self.expect_type(CTokenType::Identifier).original };
+                let enum_assignment = if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "="{
+                    self.advance_idx();
+                    Some(self.parse_constant_expr())
+                }else{
+                    None
+                };
+
+                enumerator_list.push(Spanned::new(CEnumEnumerator{
+                    enumeration_constant,
+                    const_assignment: enum_assignment,
+                }, start, self.prev_token().loc));
+
+                if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ","{
+                    self.advance_idx();
+                }else{
+                    break;
+                }
+            }
+
+            self.expect_type_and_string(CTokenType::Punctuator, "}");
+
+            Spanned::new(
+                CEnumType {
+                    ident,
+                    enumerators: enumerator_list,
+                },
+                start,
+                self.prev_token().loc,
+            )
+        } else if ident.is_none() {
+            self.error_unexpected(
+                self.current_token(),
+                "expected '{' after unnamed enum declaration",
+            );
+            unreachable!();
+        } else {
+            Spanned::new(
+                CEnumType {
+                    ident,
+                    enumerators: vec![],
+                },
+                start,
+                self.prev_token().loc,
+            )
+        }
     }
 }
 

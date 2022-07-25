@@ -1,3 +1,6 @@
+use crate::lexer::token_types::CKeyword;
+use crate::lexer::token_types::CTokenType;
+use crate::parser::CParser;
 use crate::parser::span::Spanned;
 
 use super::declarations::*;
@@ -15,12 +18,65 @@ use super::*;
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Statement {
-    Labeled(Box<LabeledStatement>),
-    Compound(Box<CompoundStatement>),
-    CExpression(Box<ExpressionStatement>),
-    Selection(Box<SelectionStatement>),
-    Iteration(Box<IterationStatement>),
-    Jump(Box<JumpStatement>),
+    Labeled(Spanned<LabeledStatement>),
+    Compound(Spanned<CompoundStatement>),
+    CExpression(Option<Spanned<CExpression>>),
+    Selection(Spanned<SelectionStatement>),
+    Iteration(Spanned<IterationStatement>),
+    Jump(Spanned<JumpStatement>),
+}
+
+impl CParser{
+    pub(crate) fn parse_statement(&mut self) -> Statement{
+        // differentiate the different statement types:
+        // labeled -> ident : -> case const-expr : -> default :
+        // compound -> { ... } 
+        // expression -> opt-expression ;
+        // selection -> if ( -> switch (
+        // iteration -> while ( -> do -> for
+        // jump -> goto -> continue -> break -> return
+        match self.current_token().t_type{
+            CTokenType::Keyword(keyword) => {
+                // case,default -> labeled
+                // if,switch -> selection
+                // while,do,for -> iteration
+                // goto,continue,break,return -> jump
+                // rest to expression?
+                if [CKeyword::CASE,CKeyword::DEFAULT].contains(&keyword){
+                    // labeled
+                    return Statement::Labeled(self.parse_labeled_statement());
+                } else if [CKeyword::IF,CKeyword::SWITCH].contains(&keyword){
+                    // selection
+                } else if [CKeyword::WHILE,CKeyword::DO,CKeyword::FOR].contains(&keyword){
+                    // iteration
+                } else if [CKeyword::CASE,CKeyword::DEFAULT].contains(&keyword){
+                    // labeled
+                } 
+                todo!()
+            },
+            CTokenType::Identifier => {
+                // labeled or expression
+                todo!()
+            },
+            CTokenType::Constant => {
+                // expression
+                todo!()
+            },
+            CTokenType::StringLiteral => {
+                // expression
+                todo!()
+            },
+            CTokenType::Punctuator => {
+                // ; -> expression
+                // { -> compound-statement
+                todo!()
+            },
+            CTokenType::Eof => {
+                self.error_unexpected(self.current_token(), "unexpected End of File in parse_statement");
+                unreachable!()
+            },
+        }
+    }
 }
 
 /*
@@ -58,21 +114,18 @@ pub(crate) enum SwitchLabeledStatement {
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CompoundStatement {
-    body: Vec<BlockItem>,
+    body: Vec<Spanned<BlockItem>>,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum BlockItem {
     Statement(Statement),
+    Declaration(Spanned<Declaration>)
 }
 
 /*
 (6.8.3) expression-statement:
-    expressionopt ;
+    expression-opt ;
 */
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct ExpressionStatement {
-    body: Option<Box<Spanned<CExpression>>>,
-}
 
 /*
 (6.8.4) selection-statement:
@@ -83,16 +136,16 @@ pub(crate) struct ExpressionStatement {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum SelectionStatement {
     If {
-        cond: Box<Spanned<CExpression>>,
+        cond: Spanned<CExpression>,
         body: Statement,
     },
     IfElse {
-        cond: Box<Spanned<CExpression>>,
+        cond: Spanned<CExpression>,
         body: Statement,
         else_body: Statement,
     },
     Switch {
-        cond: Box<Spanned<CExpression>>,
+        cond: Spanned<CExpression>,
         body: Vec<SwitchLabeledStatement>,
     },
 }
@@ -107,22 +160,22 @@ pub(crate) enum SelectionStatement {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum IterationStatement {
     While {
-        cond: Box<Spanned<CExpression>>,
+        cond: Spanned<CExpression>,
         body: Statement,
     },
     DoWhile {
-        cond: Box<Spanned<CExpression>>,
+        cond: Spanned<CExpression>,
         body: Statement,
     },
     For {
-        expr1: Option<Box<Spanned<CExpression>>>,
-        expr2: Option<Box<Spanned<CExpression>>>,
-        expr3: Option<Box<Spanned<CExpression>>>,
+        expr1: Option<Spanned<CExpression>>,
+        expr2: Option<Spanned<CExpression>>,
+        expr3: Option<Spanned<CExpression>>,
         body: Statement,
     },
     ForDecl {
-        expr2: Option<Box<Spanned<CExpression>>>,
-        expr3: Option<Box<Spanned<CExpression>>>,
+        expr2: Option<Spanned<CExpression>>,
+        expr3: Option<Spanned<CExpression>>,
         body: Statement,
     },
 }
@@ -139,5 +192,5 @@ pub(crate) enum JumpStatement {
     Goto(Identifier),
     Continue,
     Break,
-    Return(Option<Box<Spanned<CExpression>>>),
+    Return(Option<Spanned<CExpression>>),
 }

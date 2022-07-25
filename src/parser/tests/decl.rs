@@ -1120,9 +1120,9 @@ Declaration:
 
 #[test]
 fn type_initializer_simple_declaration() {
-  let code = r#"int *p = (int []){2, 4};"#;
+    let code = r#"int *p = (int []){2, 4};"#;
 
-  let expected_result = r#"
+    let expected_result = r#"
 Declaration:
   specifiers:
     storage:
@@ -1189,11 +1189,67 @@ Declaration:
 
 "#;
 
-  let mut simple_parser = run_lexer_with_return_that_init_parser(code);
-  let got_result = simple_parser.parse_declaration();
-  println!("{}", serde_yaml::to_string(&got_result).unwrap());
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
 
-  let expected_result = serde_yaml::from_str(expected_result).unwrap();
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
 
-  assert_eq!(got_result, expected_result);
+    assert_eq!(got_result, expected_result);
+}
+
+#[test]
+fn enum_declaration_simple() {
+    let code = r#"enum hue { chartreuse, burgundy, claret=20, winedark };"#;
+
+    let expected_result = r#"
+Declaration:
+  specifiers:
+    storage:
+      typedef_c: false
+      extern_c: false
+      static_c: false
+      thread_local_c: false
+      auto_c: false
+      register_c: false
+    qualifiers:
+      const_q: false
+      restrict_q: false
+      volatile_q: false
+      atomic_q: false
+    specifiers:
+      Enum:
+        ident:
+          identifier: hue
+        enumerators:
+          - enumeration_constant:
+              identifier: chartreuse
+            const_assignment: ~
+          - enumeration_constant:
+              identifier: burgundy
+            const_assignment: ~
+          - enumeration_constant:
+              identifier: claret
+            const_assignment:
+              internal:
+                Constant:
+                  Number: "20"
+          - enumeration_constant:
+              identifier: winedark
+            const_assignment: ~
+    function:
+      inline: false
+      no_return: false
+    alignment: ~
+  init: []
+  
+"#;
+
+    let mut simple_parser = run_lexer_with_return_that_init_parser(code);
+    let got_result = simple_parser.parse_declaration();
+    println!("{}", serde_yaml::to_string(&got_result).unwrap());
+
+    let expected_result = serde_yaml::from_str(expected_result).unwrap();
+
+    assert_eq!(got_result, expected_result);
 }
