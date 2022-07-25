@@ -45,5 +45,4 @@
 
 #### Parser:
  - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
- - Missing: Enum, Alignof, sizeof, Atomic
- - Still in Progress
+ - Still in Progress -> Working on Statement Parsing now!
