@@ -3,6 +3,7 @@ use crate::lexer::Lexer;
 
 mod decl;
 mod expr;
+mod statement_tests;
 mod type_names;
 
 fn init() {

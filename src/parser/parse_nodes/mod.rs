@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use self::{declarations::DeclarationSpecifiers, statements::CompoundStatement};
+use self::{declarations::DeclarationSpecifiers, statements::Statement};
 
 pub mod declarations;
 pub mod expressions;
@@ -52,5 +52,5 @@ pub(crate) enum ExternalDeclaration {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct FunctionDefinition {
     specifiers: Box<DeclarationSpecifiers>,
-    body: Box<CompoundStatement>,
+    body: Box<Statement>,
 }

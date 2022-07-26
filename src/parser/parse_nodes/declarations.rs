@@ -8,8 +8,8 @@ use crate::{
     parser::{
         span::{Span, Spanned},
         types::{
-            CBasicTypes, CEnumType, CSructDeclaration, CStructDeclarator, CStructOrUnionType,
-            CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier, CEnumEnumerator,
+            CBasicTypes, CEnumEnumerator, CEnumType, CSructDeclaration, CStructDeclarator,
+            CStructOrUnionType, CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier,
         },
         CParser,
     },
@@ -801,22 +801,32 @@ impl CParser {
                 && self.current_token().original == "}")
             {
                 let start = self.current_token().loc;
-                let enumeration_constant = Identifier {identifier: self.expect_type(CTokenType::Identifier).original };
-                let enum_assignment = if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "="{
+                let enumeration_constant = Identifier {
+                    identifier: self.expect_type(CTokenType::Identifier).original,
+                };
+                let enum_assignment = if self.current_token().t_type == CTokenType::Punctuator
+                    && self.current_token().original == "="
+                {
                     self.advance_idx();
                     Some(self.parse_constant_expr())
-                }else{
+                } else {
                     None
                 };
 
-                enumerator_list.push(Spanned::new(CEnumEnumerator{
-                    enumeration_constant,
-                    const_assignment: enum_assignment,
-                }, start, self.prev_token().loc));
+                enumerator_list.push(Spanned::new(
+                    CEnumEnumerator {
+                        enumeration_constant,
+                        const_assignment: enum_assignment,
+                    },
+                    start,
+                    self.prev_token().loc,
+                ));
 
-                if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ","{
+                if self.current_token().t_type == CTokenType::Punctuator
+                    && self.current_token().original == ","
+                {
                     self.advance_idx();
-                }else{
+                } else {
                     break;
                 }
             }

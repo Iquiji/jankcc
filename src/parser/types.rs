@@ -1,9 +1,12 @@
 use std::ops::Add;
 
-use log::{trace, info};
+use log::{info, trace};
 use serde::{Deserialize, Serialize};
 
-use crate::lexer::{token_types::{CKeyword, CTokenType}, CToken};
+use crate::lexer::{
+    token_types::{CKeyword, CTokenType},
+    CToken,
+};
 
 use super::{
     parse_nodes::{
@@ -544,7 +547,7 @@ pub(crate) enum CTypeSpecifier {
     StructOrUnion(Spanned<CStructOrUnionType>),
     Enum(Spanned<CEnumType>),
     Typedefed(Identifier),
-    Atomic(Spanned<CTypeName>)
+    Atomic(Spanned<CTypeName>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
