@@ -18,12 +18,38 @@ use super::*;
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Statement {
-    Labeled(Spanned<LabeledStatement>),
-    Compound(Spanned<CompoundStatement>),
-    CExpression(Option<Spanned<CExpression>>),
-    Selection(Spanned<SelectionStatement>),
-    Iteration(Spanned<IterationStatement>),
-    Jump(Spanned<JumpStatement>),
+    Labeled{
+        label: Identifier,
+        body: Spanned<Statement>,
+    },
+    SwitchCase{
+
+    },
+    SwitchDefault{
+
+    },
+    Compound(Vec<Spanned<Self>>),
+    CExpression(Spanned<CExpression>),
+    NoneExpr,
+    If{
+
+    },
+    Switch{
+
+    },
+    While{
+        /// differ do-while and while
+        /// 0 -> while
+        /// 1 -> do-while
+        while_type: bool,
+    },
+    For{
+
+    },
+    Goto(),
+    Continue,
+    Break,
+    Return(),
 }
 
 impl CParser{
@@ -42,9 +68,10 @@ impl CParser{
                 // while,do,for -> iteration
                 // goto,continue,break,return -> jump
                 // rest to expression?
+                #[allow(clippy::if_same_then_else)]
                 if [CKeyword::CASE,CKeyword::DEFAULT].contains(&keyword){
                     // labeled
-                    return Statement::Labeled(self.parse_labeled_statement());
+                    // return Statement::Labeled(self.parse_labeled_statement());
                 } else if [CKeyword::IF,CKeyword::SWITCH].contains(&keyword){
                     // selection
                 } else if [CKeyword::WHILE,CKeyword::DO,CKeyword::FOR].contains(&keyword){
