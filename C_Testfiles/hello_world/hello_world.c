@@ -7,7 +7,7 @@
 */
 int main() {
     printf("hello world\n"); // comment xD
-    if 8 == 9{
+    if (8 == 9){
         return 1;
     } else {
         return 0;

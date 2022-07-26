@@ -32,7 +32,13 @@ impl CParser {
         }
     }
     pub(crate) fn parse(&mut self) -> TranslationUnit {
-        vec![]
+        let mut translation_unit = vec![];
+
+        while self.current_token().t_type != CTokenType::Eof{
+            translation_unit.push(self.parse_external_declaration());
+        }
+        
+        translation_unit
     }
 }
 /*
@@ -102,6 +108,7 @@ impl CParser {
         let current_token = self.current_token();
         if let CTokenType::Keyword(keyword) = current_token.t_type {
             if keywords_to_accept.contains(&keyword) {
+                self.advance_idx();
                 keyword
             } else {
                 self.error_unexpected(

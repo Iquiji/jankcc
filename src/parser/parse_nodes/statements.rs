@@ -333,6 +333,7 @@ impl CParser {
                 } else if self.current_token().original == "{" {
                     // compund expr
                     // block item is either declaration or statement
+                    self.push_typedef_scope();
                     let mut compound_statement_list = vec![];
                     self.advance_idx();
                     while !(self.current_token().t_type == CTokenType::Punctuator
@@ -347,6 +348,7 @@ impl CParser {
                         }
                     }
                     self.advance_idx();
+                    self.pop_typedef_scope();
                     Spanned::new(
                         Statement::Compound(compound_statement_list),
                         start,

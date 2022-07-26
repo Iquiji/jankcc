@@ -5,7 +5,7 @@ use crate::{
 
 use super::{declarations::Initializer, Constant, Identifier, NumberLike, StringLiteral};
 
-use log::{info, warn};
+use log::{info};
 use serde::{Deserialize, Serialize};
 
 /*

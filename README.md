@@ -25,7 +25,8 @@
   - [x] Expresions
   - [x] Type Names
   - [x] Declarations
-  - [ ] Statements
+  - [x] Statements
+  - [ ] Typedef Check -> Context dependent Part
   - [ ] Full Parse for subset? of C11 Standard
   - [ ] Error Continuation
 - [ ] Type Checking on AST

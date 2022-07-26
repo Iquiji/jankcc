@@ -1,5 +1,5 @@
 use log::{debug, error, info, warn};
-use std::{fs::read_to_string, process::Command, time::Instant};
+use std::{fs::{read_to_string, File}, process::Command, time::Instant, path::Path, io::Write};
 use structopt::StructOpt;
 
 /// A StructOpt example
@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if opt.gcc_preprocessor {
         preprocessed_file = String::from_utf8(
             Command::new("gcc")
-                .args(&["-E", &in_file_path])
+                .args(&["-E","-std=c11","-undef", &in_file_path])
                 .output()?
                 .stdout,
         )?;
@@ -96,6 +96,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!("require either Internal or GCC preprocessor! see -h for help!");
         return Ok(());
     }
+    let mut preprocessed_file_handle = File::create(Path::new(&in_file_path).with_extension("i")).unwrap();
+
+    // Write preprocessed_file_handle
+    preprocessed_file_handle.write_all(preprocessed_file.as_bytes()).unwrap();
 
     let timer_start_lexing = Instant::now();
     info!("Starting Lexing of file: {:?}", in_file_path);
