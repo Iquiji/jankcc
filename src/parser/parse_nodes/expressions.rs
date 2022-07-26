@@ -65,11 +65,11 @@ pub(crate) type GenericAssociationList = Vec<GenericAssociation>;
 pub(crate) type ArgumentExpressionList = Vec<Spanned<CExpression>>;
 impl CParser {
     fn parse_argument_expression_list(&mut self) -> ArgumentExpressionList {
-        println!(
-            "current: {:?},next: {:?}",
-            self.current_token(),
-            self.next_token()
-        );
+        // println!(
+        //     "current: {:?},next: {:?}",
+        //     self.current_token(),
+        //     self.next_token()
+        // );
 
         let mut args = vec![];
 
@@ -947,7 +947,7 @@ impl super::super::CParser {
             - parse primary ==> check for [ or (
         */
         let start = self.current_token().loc;
-        let mut end = start.clone();
+        let mut end ; // = start.clone();
 
         let initial: Spanned<CExpression> = if self.current_token().t_type == CTokenType::Punctuator
             && self.current_token().original == "("

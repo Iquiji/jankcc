@@ -14,6 +14,7 @@ where
     T: Clone + Debug,
 {
     pub(crate) inner: Box<T>,
+    #[allow(dead_code)]
     #[serde(skip_serializing)]
     #[serde(default)]
     span: Span,
@@ -53,7 +54,8 @@ impl Span {
 }
 
 impl<T: Clone + Debug> Spanned<T> {
-    pub(crate) fn error_unexpected_span(&mut self, found: Spanned<T>, expected: &str) {
+    #[allow(dead_code)]
+    pub(crate) fn error_unexpected_span(&mut self, _found: Spanned<T>, _expected: &str) {
         unimplemented!()
     }
 }

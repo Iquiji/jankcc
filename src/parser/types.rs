@@ -4,7 +4,7 @@ use log::{info, trace};
 use serde::{Deserialize, Serialize};
 
 use crate::lexer::{
-    token_types::{CKeyword, CTokenType},
+    token_types::{CKeyword},
     CToken,
 };
 

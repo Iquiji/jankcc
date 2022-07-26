@@ -1,5 +1,5 @@
 use crate::parser::{
-    span::Spanned, tests::run_lexer_with_return_that_init_parser, types::CTypeName, CParser,
+    tests::run_lexer_with_return_that_init_parser,
 };
 
 fn type_name_test_helper(c_expression: &str, expected_yaml: &str) {

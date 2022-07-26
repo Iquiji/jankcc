@@ -26,8 +26,8 @@
   - [x] Type Names
   - [x] Declarations
   - [x] Statements
-  - [ ] Typedef Check -> Context dependent Part
-  - [ ] Full Parse for subset? of C11 Standard
+  - [x] Typedef Check -> Context dependent Part
+  - [x] Full Parse for subset? of C11 Standard
   - [ ] Error Continuation
 - [ ] Type Checking on AST
 - [ ] Constant Expression Runner
@@ -46,4 +46,4 @@
 
 #### Parser:
  - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
- - Still in Progress -> Working on Statement Parsing now!
+ - Only minimally tested, check src/parser/tests/ for tests

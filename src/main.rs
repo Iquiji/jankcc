@@ -1,4 +1,4 @@
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use std::{fs::{read_to_string, File}, process::Command, time::Instant, path::Path, io::Write};
 use structopt::StructOpt;
 
@@ -20,6 +20,8 @@ struct Opt {
     gcc_preprocessor: bool,
     /// Input file
     input_file_path: String,
+    #[structopt(short = "f", long = "flush-all")]
+    flush_all_intermediate: bool,
 }
 
 mod lexer;
@@ -67,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
  \___/ \__,_|_| |_|_|\_\  \____\____|
                                      "#
     );
-    println!("by Iquiji --- v0.0.3");
+    println!("by Iquiji --- v0.0.4");
 
     let in_file_path = opt.input_file_path;
 
@@ -121,7 +123,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // do da stuff
     let mut parser = CParser::new(token_arr);
     let parsed = parser.parse();
-    info!("Parsed Program: {:?}", parsed);
+
+    if opt.flush_all_intermediate{
+        let mut preprocessed_file_handle = File::create(Path::new(&in_file_path).with_extension("ast")).unwrap();
+
+        // Write preprocessed_file_handle
+        preprocessed_file_handle.write_all(serde_yaml::to_string(&parsed).unwrap().as_bytes()).unwrap();
+    }
+
+    // info!("Parsed Program: {:?}", parsed);
 
     let timer_end_parsing = timer_start_parsing.elapsed();
     info!("Parsing of file took: {:?}", timer_end_parsing);

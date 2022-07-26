@@ -7,7 +7,7 @@ mod tests;
 
 use std::collections::HashSet;
 
-use log::error;
+
 
 use crate::lexer::token_types::CKeyword;
 use crate::lexer::OriginalLocation;
