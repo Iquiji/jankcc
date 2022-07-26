@@ -19,3 +19,5 @@ Cargo.lock
 /C_Testfiles/**/*.o
 /C_Testfiles/**/*.s
 /C_Testfiles/**/*.out
+flamegraph.*
+perf.data

@@ -33,6 +33,7 @@ use preprocessor::Preprocessor;
 use crate::{lexer::Lexer, parser::CParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let timer_start = Instant::now();
     let opt = Opt::from_args();
 
     let log_level = if opt.quiet {
@@ -98,17 +99,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         error!("require either Internal or GCC preprocessor! see -h for help!");
         return Ok(());
     }
-    let mut preprocessed_file_handle = File::create(Path::new(&in_file_path).with_extension("i")).unwrap();
+    if opt.flush_all_intermediate{
+        let timer_start_flushing_preprocessed_file = Instant::now();
+        info!("Starting Flushing of Preprocessed File: {:?}", Path::new(&in_file_path).with_extension("i"));
+        let mut preprocessed_file_handle = File::create(Path::new(&in_file_path).with_extension("i")).unwrap();
 
-    // Write preprocessed_file_handle
-    preprocessed_file_handle.write_all(preprocessed_file.as_bytes()).unwrap();
+        // Write preprocessed_file_handle
+        preprocessed_file_handle.write_all(preprocessed_file.as_bytes()).unwrap();
+        let timer_end_flushing_preprocessed_file = timer_start_flushing_preprocessed_file.elapsed();
+        info!("Flushing Flushing of Preprocessed File took: {:?}", timer_end_flushing_preprocessed_file);
+    }
+    
+
+
 
     let timer_start_lexing = Instant::now();
     info!("Starting Lexing of file: {:?}", in_file_path);
 
     // call lexer
     let mut lexer = Lexer::new();
-    let token_arr = lexer.string_to_token_arr(preprocessed_file.clone());
+    let token_arr = lexer.string_to_token_arr(preprocessed_file);
 
     for token in &token_arr {
         debug!("{}", token);
@@ -124,17 +134,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut parser = CParser::new(token_arr);
     let parsed = parser.parse();
 
-    if opt.flush_all_intermediate{
-        let mut preprocessed_file_handle = File::create(Path::new(&in_file_path).with_extension("ast")).unwrap();
-
-        // Write preprocessed_file_handle
-        preprocessed_file_handle.write_all(serde_yaml::to_string(&parsed).unwrap().as_bytes()).unwrap();
-    }
-
-    // info!("Parsed Program: {:?}", parsed);
-
     let timer_end_parsing = timer_start_parsing.elapsed();
     info!("Parsing of file took: {:?}", timer_end_parsing);
+
+    if opt.flush_all_intermediate{
+        let timer_start_flushing_ast = Instant::now();
+        info!("Starting Flushing of Ast: {:?}", Path::new(&in_file_path).with_extension("ast"));
+        let mut ast_file_handle = File::create(Path::new(&in_file_path).with_extension("ast")).unwrap();
+
+        // Write ast_file_handle
+        ast_file_handle.write_all(serde_yaml::to_string(&parsed).unwrap().as_bytes()).unwrap();
+        let timer_end_flushing_ast = timer_start_flushing_ast.elapsed();
+        info!("Flushing of Ast took: {:?}", timer_end_flushing_ast);
+    }
+
+    let timer_end = timer_start.elapsed();
+    info!("Compiling took {:?} in Total", timer_end);
 
     Ok(())
 }
