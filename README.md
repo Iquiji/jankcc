@@ -21,7 +21,7 @@
   - [ ] Allow Hex Numbers & Co.
   - [ ] Sensible Error Generation
   - [ ] Fix Column Number Generation
-- [ ] Parser
+- [x] Parser
   - [x] Expresions
   - [x] Type Names
   - [x] Declarations
@@ -29,8 +29,9 @@
   - [x] Typedef Check -> Context dependent Part
   - [x] Full Parse for subset? of C11 Standard
   - [ ] Error Continuation
-- [ ] Type Checking on AST
-- [ ] Constant Expression Runner
+- [ ] Enviroment Builder
+  - [ ] Type Checking on AST
+  - [ ] Constant Expression Runner
 - [ ] Conversion to SSA
 - [ ] SSA optimisier
 - [ ] Register Allocator
@@ -45,5 +46,9 @@
 
 
 #### Parser:
- - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
- - Only minimally tested, check src/parser/tests/ for tests
+  - Handwritten Recursive Descent Parser (Predictive: No Backtracking)
+  - Only minimally tested, check src/parser/tests/ for tests
+
+
+### Enviroment Builder:
+  - In Progress
