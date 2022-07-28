@@ -30,6 +30,7 @@
   - [x] Full Parse for subset? of C11 Standard
   - [ ] Error Continuation
 - [ ] Enviroment Builder
+  - [ ] Symbol Table extraction
   - [ ] Type Checking on AST
   - [ ] Constant Expression Runner
 - [ ] Conversion to SSA
