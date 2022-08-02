@@ -63,7 +63,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     .init()
     //     .unwrap();
 
-    println!(
+    if !opt.quiet {
+        println!(
         r#"      _             _       ____ ____ 
     | | __ _ _ __ | | __  / ___/ ___|
  _  | |/ _` | '_ \| |/ / | |  | |    
@@ -71,7 +72,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
  \___/ \__,_|_| |_|_|\_\  \____\____|
                                      "#
     );
-    println!("by Iquiji --- v0.0.4");
+        println!("by Iquiji --- v0.0.4");
+    }
 
     let in_file_path = opt.input_file_path;
 
