@@ -33,10 +33,13 @@
   - [ ] Symbol Table extraction
   - [ ] Type Checking on AST
   - [ ] Constant Expression Runner
-- [ ] Conversion to SSA
-- [ ] SSA optimisier
-- [ ] Register Allocator
-- [ ] Code Generation from SSA
+  - [ ] MIR generation
+- [ ] MIR to cranelift backend
+- [ ] Custom MIR codegen backend
+  - [ ] Conversion to SSA
+  - [ ] SSA optimisier
+  - [ ] Register Allocator
+  - [ ] Code Generation from SSA
 
 ---
 

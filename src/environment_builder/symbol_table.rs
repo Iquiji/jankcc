@@ -6,6 +6,7 @@ An identifier can denote:
     a typedef name; 
     a label name;
 */
+
 /*
 different entities designated by the same identifier either have different scopes, or are in different name spaces.
 
@@ -28,7 +29,16 @@ Structuring of Object in Scope:
 - Assignment enumeration
 - completeness of type flag
 - qualifiers
+- Value if existant as Constant
 
+*/
+
+/*
+Three Different Name Spaces for:
+— label names (disambiguated by the syntax of the label declaration and use);
+— the tags of structures, unions, and enumerations (disambiguated by following any of the keywords struct, union, or enum);
+— the members of structures or unions; each structure or union has a separate name space for its members (disambiguated by the type of the expression used to access the member via the . or -> operator);
+— all other identifiers, called ordinary identifiers (declared in ordinary declarators or as enumeration constants).
 */
 
 
