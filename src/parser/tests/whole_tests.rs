@@ -1,4 +1,4 @@
-use crate::parser::{span::Spanned, parse_nodes::ExternalDeclaration};
+use crate::parser::{parse_nodes::ExternalDeclaration, span::Spanned};
 
 use super::run_lexer_with_return_that_init_parser;
 
@@ -7,13 +7,14 @@ fn parse_test_helper(code: &str, expected_yaml: &str) {
     let got_result = simple_parser.parse();
     println!("{}", serde_yaml::to_string(&got_result).unwrap());
 
-    let expected_result: Vec<Spanned<ExternalDeclaration>> = serde_yaml::from_str(expected_yaml).unwrap();
+    let expected_result: Vec<Spanned<ExternalDeclaration>> =
+        serde_yaml::from_str(expected_yaml).unwrap();
 
     assert_eq!(got_result, expected_result);
 }
 
 #[test]
-fn simple_hello_world_no_include(){
+fn simple_hello_world_no_include() {
     // remember: no comments in here :)
     let code = r#"
 int main() {
@@ -95,4 +96,3 @@ int main() {
 
     parse_test_helper(code, expected_yaml);
 }
-

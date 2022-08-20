@@ -3,10 +3,7 @@ use std::ops::Add;
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
 
-use crate::lexer::{
-    token_types::{CKeyword},
-    CToken,
-};
+use crate::lexer::{token_types::CKeyword, CToken};
 
 use super::{
     parse_nodes::{

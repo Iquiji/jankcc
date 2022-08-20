@@ -7,8 +7,6 @@ mod tests;
 
 use std::collections::HashSet;
 
-
-
 use crate::lexer::token_types::CKeyword;
 use crate::lexer::OriginalLocation;
 use crate::lexer::{token_types::CTokenType, CToken};
@@ -34,10 +32,10 @@ impl CParser {
     pub(crate) fn parse(&mut self) -> TranslationUnit {
         let mut translation_unit = vec![];
 
-        while self.current_token().t_type != CTokenType::Eof{
+        while self.current_token().t_type != CTokenType::Eof {
             translation_unit.push(self.parse_external_declaration());
         }
-        
+
         translation_unit
     }
 }

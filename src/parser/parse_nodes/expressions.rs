@@ -5,7 +5,7 @@ use crate::{
 
 use super::{declarations::Initializer, Constant, Identifier, NumberLike, StringLiteral};
 
-use log::{info};
+use log::info;
 use serde::{Deserialize, Serialize};
 
 /*
@@ -947,7 +947,7 @@ impl super::super::CParser {
             - parse primary ==> check for [ or (
         */
         let start = self.current_token().loc;
-        let mut end ; // = start.clone();
+        let mut end; // = start.clone();
 
         let initial: Spanned<CExpression> = if self.current_token().t_type == CTokenType::Punctuator
             && self.current_token().original == "("

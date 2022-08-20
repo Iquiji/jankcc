@@ -4,9 +4,9 @@ use log::{error, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    lexer::{token_types::CKeyword},
+    lexer::token_types::CKeyword,
     parser::{
-        span::{Spanned},
+        span::Spanned,
         types::{
             CBasicTypes, CEnumEnumerator, CEnumType, CSructDeclaration, CStructDeclarator,
             CStructOrUnionType, CStructOrUnionTypeType, CTypeName, CTypeQualifiers, CTypeSpecifier,
@@ -79,21 +79,21 @@ Decl:
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct DeclarationSpecifiers {
-    storage: CStorageClass,
-    qualifiers: CTypeQualifiers,
-    specifiers: CTypeSpecifier,
-    function: CFunctionSpecifier,
-    alignment: Option<Spanned<CAlignmentSpecifier>>,
+    pub(crate) storage: CStorageClass,
+    pub(crate) qualifiers: CTypeQualifiers,
+    pub(crate) specifiers: CTypeSpecifier,
+    pub(crate) function: CFunctionSpecifier,
+    pub(crate) alignment: Option<Spanned<CAlignmentSpecifier>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CStorageClass {
-    typedef_c: bool,
-    extern_c: bool,
-    static_c: bool,
-    thread_local_c: bool,
-    auto_c: bool,
-    register_c: bool,
+    pub(crate) typedef_c: bool,
+    pub(crate) extern_c: bool,
+    pub(crate) static_c: bool,
+    pub(crate) thread_local_c: bool,
+    pub(crate) auto_c: bool,
+    pub(crate) register_c: bool,
 }
 
 impl Add for CStorageClass {
@@ -545,8 +545,7 @@ impl CParser {
             // error!("current: {:?}",self.current_token());
             if self.current_token().original == ")" {
                 return Spanned::new(result, start, self.prev_token().loc);
-            }
-            else if self.current_token().original == "," {
+            } else if self.current_token().original == "," {
                 self.advance_idx();
                 if self.current_token().t_type == CTokenType::Punctuator
                     && self.current_token().original == "..."
@@ -555,14 +554,17 @@ impl CParser {
                     return Spanned::new(result, start, self.advance_idx().loc);
                 }
                 result.parameter_list.push(self.parse_parameter_decl());
-            } else{
-                warn!("unknown Punctuator in parse_parameter_type_list: {:?}",self.current_token());
+            } else {
+                warn!(
+                    "unknown Punctuator in parse_parameter_type_list: {:?}",
+                    self.current_token()
+                );
                 panic!()
             }
         }
-        warn!("{:#?}",self.typedef_table);
-        error!("current: {:?}",self.current_token());
-        error!("result.parameter_list: {:?}",result.parameter_list);
+        warn!("{:#?}", self.typedef_table);
+        error!("current: {:?}", self.current_token());
+        error!("result.parameter_list: {:?}", result.parameter_list);
         println!("{}", serde_yaml::to_string(&result.parameter_list).unwrap());
         unreachable!()
     }
@@ -630,8 +632,15 @@ impl CParser {
         }
 
         // type qualifiers are allowed in pointers
-        if let CTokenType::Keyword(keyword) = self.current_token().t_type{
-            if [CKeyword::CONST,CKeyword::RESTRICT,CKeyword::VOLATILE,CKeyword::ATOMIC].contains(&keyword){
+        if let CTokenType::Keyword(keyword) = self.current_token().t_type {
+            if [
+                CKeyword::CONST,
+                CKeyword::RESTRICT,
+                CKeyword::VOLATILE,
+                CKeyword::ATOMIC,
+            ]
+            .contains(&keyword)
+            {
                 self.advance_idx();
                 let temp = self.is_start_of_normal_declarator();
                 self.idx -= 1;
@@ -1035,10 +1044,10 @@ impl CParser {
         let decl = self.parse_declaration_inner();
 
         // check for typedef
-        if let Declaration::Declaration { specifiers, init } = &*decl{
-            if specifiers.storage.typedef_c{
+        if let Declaration::Declaration { specifiers, init } = &*decl {
+            if specifiers.storage.typedef_c {
                 // is typedef
-                for typedef in init{
+                for typedef in init {
                     self.insert_typedef(&typedef.0.base.identifier);
                 }
             }

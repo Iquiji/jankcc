@@ -1,6 +1,4 @@
-use crate::parser::{
-    tests::run_lexer_with_return_that_init_parser,
-};
+use crate::parser::tests::run_lexer_with_return_that_init_parser;
 
 fn type_name_test_helper(c_expression: &str, expected_yaml: &str) {
     let mut simple_parser = run_lexer_with_return_that_init_parser(c_expression);

@@ -1,6 +1,4 @@
-
 use super::run_lexer_with_return_that_init_parser;
-
 
 #[test]
 fn static_assert_basic() {

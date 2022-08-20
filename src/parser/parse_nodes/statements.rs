@@ -284,7 +284,10 @@ impl CParser {
                     }
                 } else {
                     // Jank, but i don't know a better way right now! ;)
-                    self.error_unexpected(self.current_token(), "unknown keyword in statement check");
+                    self.error_unexpected(
+                        self.current_token(),
+                        "unknown keyword in statement check",
+                    );
                     unreachable!()
                 }
             }

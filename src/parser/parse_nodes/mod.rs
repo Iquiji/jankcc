@@ -1,9 +1,12 @@
-use log::{debug};
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 use crate::lexer::token_types::CTokenType;
 
-use self::{declarations::{DeclarationSpecifiers, Declaration, Declarator, DerivedDeclarator}, statements::Statement};
+use self::{
+    declarations::{Declaration, DeclarationSpecifiers, Declarator, DerivedDeclarator},
+    statements::Statement,
+};
 
 use super::{span::Spanned, CParser};
 
@@ -54,12 +57,15 @@ pub(crate) enum ExternalDeclaration {
     Declaration(Spanned<Declaration>),
 }
 
-impl CParser{
-    pub(crate) fn parse_external_declaration(&mut self) -> Spanned<ExternalDeclaration>{
+impl CParser {
+    pub(crate) fn parse_external_declaration(&mut self) -> Spanned<ExternalDeclaration> {
         let start = self.current_token().loc;
 
         // we need to differiantiate between declaratian and function
-        debug!("deciding on function or declaration: {}",self.current_token().loc);
+        debug!(
+            "deciding on function or declaration: {}",
+            self.current_token().loc
+        );
         let before_differ_idx = self.idx;
         // common point decl_specifier
         self.parse_declaration_specifiers();
@@ -68,24 +74,32 @@ impl CParser{
         // ; -> no function
         // warn!("{:?}",self.current_token());
 
-        let is_function = if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == ";"{
+        let is_function = if self.current_token().t_type == CTokenType::Punctuator
+            && self.current_token().original == ";"
+        {
             false
-        } else{
+        } else {
             // another common point if not early end on declaration
             self.parse_declarator();
             // warn!("{:?}",self.current_token());
-            if self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "="{
+            if self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "="
+            {
                 false
-            } else { !(self.current_token().t_type == CTokenType::Punctuator && (self.current_token().original == "," || self.current_token().original == ";")) }
+            } else {
+                !(self.current_token().t_type == CTokenType::Punctuator
+                    && (self.current_token().original == ","
+                        || self.current_token().original == ";"))
+            }
         };
         // reset after "search"
         self.idx = before_differ_idx;
 
-        let res = if is_function{
-            debug!("function on loc: {}",self.current_token().loc);
+        let res = if is_function {
+            debug!("function on loc: {}", self.current_token().loc);
             ExternalDeclaration::FunctionDefinition(self.parse_function_definition())
-        } else{
-            debug!("declaration on loc: {}",self.current_token().loc);
+        } else {
+            debug!("declaration on loc: {}", self.current_token().loc);
             ExternalDeclaration::Declaration(self.parse_declaration())
         };
         debug!("finished!");
@@ -93,7 +107,6 @@ impl CParser{
         Spanned::new(res, start, self.prev_token().loc)
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct FunctionDefinition {
@@ -105,8 +118,8 @@ pub(crate) struct FunctionDefinition {
     body: Spanned<Statement>,
 }
 
-impl CParser{
-    pub(crate) fn parse_function_definition(&mut self) -> Spanned<FunctionDefinition>{
+impl CParser {
+    pub(crate) fn parse_function_definition(&mut self) -> Spanned<FunctionDefinition> {
         let start = self.current_token().loc;
 
         let function_specifiers = self.parse_declaration_specifiers();
@@ -114,13 +127,19 @@ impl CParser{
         let declarator = self.parse_declarator();
 
         // if declarator is a identifier list, this specifies the types
-        let declarations = if let DerivedDeclarator::FunctionIdentified { identifier_list: _, to: _ } = declarator.inner.derive.clone(){
+        let declarations = if let DerivedDeclarator::FunctionIdentified {
+            identifier_list: _,
+            to: _,
+        } = declarator.inner.derive.clone()
+        {
             let mut buf = vec![];
-            while !(self.current_token().t_type == CTokenType::Punctuator && self.current_token().original == "{"){
+            while !(self.current_token().t_type == CTokenType::Punctuator
+                && self.current_token().original == "{")
+            {
                 buf.push(self.parse_declaration());
             }
             buf
-        } else{
+        } else {
             vec![]
         };
 
@@ -129,6 +148,15 @@ impl CParser{
 
         let body = self.parse_statement();
 
-        Spanned::new(FunctionDefinition { function_specifiers, declarator, declarations, body }, start, self.prev_token().loc)
+        Spanned::new(
+            FunctionDefinition {
+                function_specifiers,
+                declarator,
+                declarations,
+                body,
+            },
+            start,
+            self.prev_token().loc,
+        )
     }
 }

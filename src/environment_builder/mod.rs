@@ -1,5 +1,7 @@
-mod symbol_table;
+use self::symbol_table::{BlockContainer, ScopeContainer};
 
+mod symbol_table;
+mod walker;
 
 /*
 Need to know:
@@ -7,15 +9,23 @@ Need to know:
 - Current Switch Statement
 
 */
-pub struct EnvironmentController{
 
+pub struct EnvironmentController {
+    symbol_table: BlockContainer,
 }
 
-impl EnvironmentController{
-    pub fn new() -> Self{
-        EnvironmentController {  }
+impl EnvironmentController {
+    pub fn new() -> Self {
+        EnvironmentController {
+            symbol_table: BlockContainer {
+                scope: ScopeContainer::new(),
+                active_inner: None,
+                past_inner: vec![],
+            },
+        }
     }
-    pub fn build(&mut self,ast: crate::parser::parse_nodes::TranslationUnit){
+    pub(crate) fn build(&mut self, ast: crate::parser::parse_nodes::TranslationUnit) {
+        self.walk_translation_unit(ast);
         todo!()
     }
 }

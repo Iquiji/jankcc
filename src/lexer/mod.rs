@@ -4,7 +4,10 @@ pub mod token_types;
 #[cfg(test)]
 mod tests;
 
-use std::{fmt::{self, Display}, fs::read_to_string};
+use std::{
+    fmt::{self, Display},
+    fs::read_to_string,
+};
 
 use log::{error, trace};
 use serde::{Deserialize, Serialize};
@@ -292,8 +295,8 @@ impl Lexer {
         Ok(())
     }
 }
-impl Display for OriginalLocation{
+impl Display for OriginalLocation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}-{}",self.file,self.line,self.collumn)
+        write!(f, "{}: {}-{}", self.file, self.line, self.collumn)
     }
 }

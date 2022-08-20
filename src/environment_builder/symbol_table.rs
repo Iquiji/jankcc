@@ -1,17 +1,17 @@
 /*
 An identifier can denote:
-    object; 
-    a function; 
-    a tag or a member of a structure, union, or enumeration; 
-    a typedef name; 
+    object;
+    a function;
+    a tag or a member of a structure, union, or enumeration;
+    a typedef name;
     a label name;
 */
 
 /*
 different entities designated by the same identifier either have different scopes, or are in different name spaces.
 
-There are four kinds of scopes: 
-    - function 
+There are four kinds of scopes:
+    - function
     - file
     - block
     - function prototype. (A function prototype is a declaration of a function that declares the types of its parameters.)
@@ -20,7 +20,6 @@ There are four kinds of scopes:
 /*
 label name is the only kind of identifier that has function scope.
 */
-
 
 /*
 Structuring of Object in Scope:
@@ -41,7 +40,36 @@ Three Different Name Spaces for:
 — all other identifiers, called ordinary identifiers (declared in ordinary declarators or as enumeration constants).
 */
 
+use std::collections::HashMap;
 
-struct ScopeContainer{
-
+pub(crate) struct BlockContainer {
+    pub(crate) scope: ScopeContainer,
+    pub(crate) active_inner: Option<Box<BlockContainer>>,
+    pub(crate) past_inner: Vec<BlockContainer>,
 }
+
+pub(crate) struct ScopeContainer {
+    pub(crate) variables: HashMap<String, VariableInstance>,
+    pub(crate) typedefs: HashMap<String, TypedefInstance>,
+    pub(crate) tags: HashMap<String, TagInstance>,
+    pub(crate) members: HashMap<String, MemberInstance>,
+}
+
+impl ScopeContainer {
+    pub(crate) fn new() -> Self {
+        Self {
+            variables: HashMap::new(),
+            typedefs: HashMap::new(),
+            tags: HashMap::new(),
+            members: HashMap::new(),
+        }
+    }
+}
+
+pub(crate) struct VariableInstance {}
+
+pub(crate) struct TypedefInstance {}
+
+pub(crate) struct TagInstance {}
+
+pub(crate) struct MemberInstance {}
