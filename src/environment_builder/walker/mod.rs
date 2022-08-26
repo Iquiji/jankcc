@@ -1,5 +1,6 @@
 use log::warn;
 
+use crate::environment_builder::symbol_table::TypedefInstance;
 use crate::parser::parse_nodes::TranslationUnit;
 use crate::parser::parse_nodes::ExternalDeclaration::*;
 use crate::parser::parse_nodes::declarations::Declaration;
@@ -23,7 +24,16 @@ impl EnvironmentController{
         match &*declaration.inner{
             Declaration::Declaration { specifiers, init } => {
                 if specifiers.storage.typedef_c{
-                    warn!("Typedef: {:?} -> {:?}",init[0].0.base.identifier,specifiers.specifiers);
+                    for typedefed_name in init{
+                        // self.symbol_table.scope.typedefs.insert(typedefed_name.0.base.identifier, TypedefInstance{
+                        //     qualifiers: typedefed_name.0.derive,
+                        //     specifier: specifiers.specifiers,
+                        //     func_spec: None,
+                        //     alignment: specifiers.alignment,
+                        //     derive: typedefed_name.0.derive,
+                        // });
+                        warn!("Typedef: {:?} -> {:?}",init[0].0.base.identifier,specifiers.specifiers);
+                    }
                 }else{
                     warn!("Non Typedef");
                 }

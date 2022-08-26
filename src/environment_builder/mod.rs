@@ -2,6 +2,7 @@ use self::symbol_table::{BlockContainer, ScopeContainer};
 
 mod symbol_table;
 mod walker;
+mod ext_type;
 
 /*
 Need to know:
@@ -10,6 +11,9 @@ Need to know:
 
 */
 
+/*
+Need to Add new Type Representation that has the expr and stuff removed
+*/
 pub struct EnvironmentController {
     symbol_table: BlockContainer,
 }

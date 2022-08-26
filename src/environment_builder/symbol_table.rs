@@ -42,6 +42,8 @@ Three Different Name Spaces for:
 
 use std::collections::HashMap;
 
+use crate::parser::{types::{CTypeQualifiers, CTypeSpecifier}, parse_nodes::declarations::{CFunctionSpecifier, CAlignmentSpecifier, DerivedDeclarator}};
+
 pub(crate) struct BlockContainer {
     pub(crate) scope: ScopeContainer,
     pub(crate) active_inner: Option<Box<BlockContainer>>,
@@ -68,7 +70,13 @@ impl ScopeContainer {
 
 pub(crate) struct VariableInstance {}
 
-pub(crate) struct TypedefInstance {}
+pub(crate) struct TypedefInstance {
+    pub(crate) qualifiers: CTypeQualifiers,
+    pub(crate) specifier: CTypeSpecifier,
+    pub(crate) func_spec: Option<CFunctionSpecifier>,
+    pub(crate) alignment: Option<CAlignmentSpecifier>,
+    pub(crate) derive: DerivedDeclarator,
+}
 
 pub(crate) struct TagInstance {}
 

@@ -10,4 +10,6 @@ Usage:
 IR:
 — consists of Blocks taking Args?
 — Stuff only has a type denoting its size in bytes
+- Control Flow Graph but non-SSA
+- Globals? -> Static Vals as Pointer :)
 */
