@@ -1,8 +1,12 @@
-use crate::{parser::{span::Spanned, parse_nodes::declarations::StaticAssertDeclaration}, environment_builder::EnvironmentController};
+use crate::{
+    environment_builder::EnvironmentController,
+    parser::{parse_nodes::declarations::StaticAssertDeclaration, span::Spanned},
+};
 
-impl EnvironmentController{
-    pub(crate) fn handle_static_assert(&mut self,static_assert: &Spanned<StaticAssertDeclaration>){
-
-
+impl EnvironmentController {
+    pub(crate) fn handle_static_assert(
+        &mut self,
+        static_assert: &Spanned<StaticAssertDeclaration>,
+    ) {
     }
 }

@@ -3,6 +3,12 @@
 # 0 "<command-line>"
 # 1 "/usr/include/stdc-predef.h" 1 3 4
 # 0 "<command-line>" 2
+# 1 "././header_fixes/fix.h" 1
+
+
+
+typedef char* __builtin_va_list;
+# 0 "<command-line>" 2
 # 1 "C_Testfiles/hello_world/hello_world.c"
 
 
@@ -49,16 +55,16 @@
 
 
 
-# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stddef.h" 1 3 4
-# 214 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stddef.h" 3 4
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stddef.h" 1 3 4
+# 214 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stddef.h" 3 4
 
-# 214 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stddef.h" 3 4
+# 214 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stddef.h" 3 4
 typedef long unsigned int size_t;
 # 34 "/usr/include/stdio.h" 2 3 4
 
 
-# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stdarg.h" 1 3 4
-# 40 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stdarg.h" 3 4
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stdarg.h" 1 3 4
+# 40 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stdarg.h" 3 4
 typedef __builtin_va_list __gnuc_va_list;
 # 37 "/usr/include/stdio.h" 2 3 4
 
@@ -326,8 +332,8 @@ struct _IO_FILE
 };
 # 44 "/usr/include/stdio.h" 2 3 4
 # 56 "/usr/include/stdio.h" 3 4
-# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stdarg.h" 1 3 4
-# 99 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include/stdarg.h" 3 4
+# 1 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stdarg.h" 1 3 4
+# 99 "/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include/stdarg.h" 3 4
 typedef __gnuc_va_list va_list;
 # 57 "/usr/include/stdio.h" 2 3 4
 

@@ -12,34 +12,34 @@
 
 ## Features:
 
-- [ ] Preproccessor? (Put on Halt for now)
-  - [ ] #include
-  - [ ] #ifndef
-  - [ ] #if
-  - [ ] ...
-- [x] Lexer
-  - [ ] Allow Hex Numbers & Co.
-  - [ ] Sensible Error Generation
-  - [ ] Fix Column Number Generation
-- [x] Parser
-  - [x] Expresions
-  - [x] Type Names
-  - [x] Declarations
-  - [x] Statements
-  - [x] Typedef Check -> Context dependent Part
-  - [x] Full Parse for subset? of C11 Standard
-  - [ ] Error Continuation
-- [ ] Enviroment Builder
-  - [ ] Symbol Table extraction
-  - [ ] Type Checking on AST
-  - [ ] Constant Expression Runner
-  - [ ] MIR generation
-- [ ] MIR to cranelift backend
-- [ ] Custom MIR codegen backend
-  - [ ] Conversion to SSA
-  - [ ] SSA optimisier
-  - [ ] Register Allocator
-  - [ ] Code Generation from SSA
+- :x: Preproccessor? (Put on Halt for now)
+  - :x: #include
+  - :x: #ifndef
+  - :x: #if
+  - :x: ...
+- :heavy_check_mark: Lexer
+  - :x: Allow Hex Numbers & Co.
+  - :x: Sensible Error Generation
+  - :x: Fix Column Number Generation
+- :heavy_check_mark: Parser
+  - :heavy_check_mark: Expresions
+  - :heavy_check_mark: Type Names
+  - :heavy_check_mark: Declarations
+  - :heavy_check_mark: Statements
+  - :heavy_check_mark: Typedef Check -> Context dependent Part
+  - :heavy_check_mark: Full Parse for subset? of C11 Standard
+  - :x: Error Continuation
+- :warning: Enviroment Builder
+  - :warning: Symbol Table extraction
+  - :warning: Type Checking on AST
+  - :warning: Constant Expression Runner
+  - :warning: MIR generation
+- :x: MIR to cranelift backend
+- :x: Custom MIR codegen backend
+  - :x: Conversion to SSA
+  - :x: SSA optimisier
+  - :x: Register Allocator
+  - :x: Code Generation from SSA
 
 ---
 

@@ -25,8 +25,8 @@ use crate::lexer::token_types::CTokenType;
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct StaticAssertDeclaration {
-    expression: ConstantExpression,
-    string_literal: StringLiteral,
+    pub(crate) expression: ConstantExpression,
+    pub(crate) string_literal: StringLiteral,
 }
 
 impl CParser {
@@ -113,8 +113,8 @@ impl Add for CStorageClass {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CFunctionSpecifier {
-    inline: bool,
-    no_return: bool,
+    pub(crate) inline: bool,
+    pub(crate) no_return: bool,
 }
 
 impl Add for CFunctionSpecifier {
@@ -527,8 +527,8 @@ impl CParser {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ParameterTypeList {
-    parameter_list: Vec<Spanned<ParameterDeclaration>>,
-    ellipsis: bool,
+    pub(crate) parameter_list: Vec<Spanned<ParameterDeclaration>>,
+    pub(crate) ellipsis: bool,
 }
 
 impl CParser {

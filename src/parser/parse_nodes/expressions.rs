@@ -235,7 +235,7 @@ pub(crate) enum AssignmentOperator {
 */
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ConstantExpression {
-    internal: Spanned<CExpression>,
+    pub(crate) internal: Spanned<CExpression>,
 }
 impl CParser {
     pub(crate) fn parse_constant_expr(&mut self) -> ConstantExpression {

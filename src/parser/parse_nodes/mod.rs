@@ -110,12 +110,12 @@ impl CParser {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct FunctionDefinition {
-    function_specifiers: DeclarationSpecifiers,
+    pub(crate) function_specifiers: DeclarationSpecifiers,
     /// base of declarator is the name of the function
-    declarator: Spanned<Declarator>,
+    pub(crate) declarator: Spanned<Declarator>,
     /// if declarator is a identifier list, this specifies the types
-    declarations: Vec<Spanned<Declaration>>,
-    body: Spanned<Statement>,
+    pub(crate) declarations: Vec<Spanned<Declaration>>,
+    pub(crate) body: Spanned<Statement>,
 }
 
 impl CParser {

@@ -3,6 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use log::error;
 use serde::{Deserialize, Serialize};
 
 use crate::lexer::OriginalLocation;
@@ -17,7 +18,7 @@ where
     #[allow(dead_code)]
     #[serde(skip_serializing)]
     #[serde(default)]
-    span: Span,
+    pub(crate) span: Span,
 }
 impl<T: Clone + Debug> Deref for Spanned<T> {
     type Target = T;
@@ -50,6 +51,17 @@ pub(crate) struct Span {
 impl Span {
     pub(crate) fn new(start: OriginalLocation, end: OriginalLocation) -> Self {
         Span { start, end }
+    }
+    pub(crate) fn error_at_span(&self, err: &str) {
+        error!(
+            "file: {} loc: {}-{} to {}-{} => {}",
+            self.start.file,
+            self.start.line,
+            self.start.collumn,
+            self.end.line,
+            self.end.collumn,
+            err
+        );
     }
 }
 

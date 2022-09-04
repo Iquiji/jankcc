@@ -40,9 +40,14 @@ Three Different Name Spaces for:
 — all other identifiers, called ordinary identifiers (declared in ordinary declarators or as enumeration constants).
 */
 
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
-use crate::parser::{types::{CTypeQualifiers, CTypeSpecifier}, parse_nodes::declarations::{CFunctionSpecifier, CAlignmentSpecifier, DerivedDeclarator}};
+use crate::parser::{
+    parse_nodes::declarations::{CAlignmentSpecifier, CFunctionSpecifier, DerivedDeclarator},
+    types::{CTypeQualifiers, CTypeSpecifier},
+};
+
+use super::ext_type::PrettyType;
 
 pub(crate) struct BlockContainer {
     pub(crate) scope: ScopeContainer,
@@ -50,10 +55,46 @@ pub(crate) struct BlockContainer {
     pub(crate) past_inner: Vec<BlockContainer>,
 }
 
+impl BlockContainer {
+    pub(crate) fn get_top_typedefed(&mut self, ident: &str) -> Option<&RefCell<TypedefInstance>> {
+        if let Some(active) = &mut self.active_inner {
+            let res = active.get_top_typedefed(ident);
+            if res.is_some() {
+                return res;
+            }
+        }
+        self.scope.typedefs.get(ident)
+    }
+    pub(crate) fn get_top_tag(&mut self, ident: &str) -> Option<&RefCell<TagInstance>> {
+        if let Some(active) = &mut self.active_inner {
+            let res = active.get_top_tag(ident);
+            if res.is_some() {
+                return res;
+            }
+        }
+        self.scope.tags.get(ident)
+    }
+    pub(crate) fn get_top_variable(&mut self, ident: &str) -> Option<&RefCell<VariableInstance>> {
+        let result = {
+            if let Some(active) = &mut self.active_inner {
+                let res = active.get_top_variable(ident);
+                if res.is_some() {
+                    return res;
+                }
+            }
+            self.scope.variables.get(ident)
+        };
+        if let Some(result) = result {
+            result.borrow_mut().usage_counter += 1;
+        }
+        result
+    }
+}
+
 pub(crate) struct ScopeContainer {
-    pub(crate) variables: HashMap<String, VariableInstance>,
-    pub(crate) typedefs: HashMap<String, TypedefInstance>,
-    pub(crate) tags: HashMap<String, TagInstance>,
+    pub(crate) variables: HashMap<String, RefCell<VariableInstance>>,
+    pub(crate) typedefs: HashMap<String, RefCell<TypedefInstance>>,
+    pub(crate) tags: HashMap<String, RefCell<TagInstance>>,
     pub(crate) members: HashMap<String, MemberInstance>,
 }
 
@@ -68,16 +109,19 @@ impl ScopeContainer {
     }
 }
 
-pub(crate) struct VariableInstance {}
-
-pub(crate) struct TypedefInstance {
-    pub(crate) qualifiers: CTypeQualifiers,
-    pub(crate) specifier: CTypeSpecifier,
-    pub(crate) func_spec: Option<CFunctionSpecifier>,
-    pub(crate) alignment: Option<CAlignmentSpecifier>,
-    pub(crate) derive: DerivedDeclarator,
+pub(crate) struct VariableInstance {
+    pub(crate) is_extern: bool,
+    pub(crate) usage_counter: usize,
+    pub(crate) associated_type: PrettyType,
 }
 
-pub(crate) struct TagInstance {}
+pub(crate) struct TypedefInstance {
+    pub(crate) def_type: PrettyType,
+}
+
+/// Must Refer to enum or union or struct :)
+pub(crate) struct TagInstance {
+    pub(crate) tag_type: PrettyType,
+}
 
 pub(crate) struct MemberInstance {}

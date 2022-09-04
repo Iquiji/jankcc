@@ -15,6 +15,39 @@
           volatile_q: false
           atomic_q: false
         specifiers:
+          Basic: Char
+        function:
+          inline: false
+          no_return: false
+        alignment: ~
+      init:
+        - - base:
+              identifier: __builtin_va_list
+            derive:
+              Pointer:
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                to: Base
+          - ~
+- Declaration:
+    Declaration:
+      specifiers:
+        storage:
+          typedef_c: true
+          extern_c: false
+          static_c: false
+          thread_local_c: false
+          auto_c: false
+          register_c: false
+        qualifiers:
+          const_q: false
+          restrict_q: false
+          volatile_q: false
+          atomic_q: false
+        specifiers:
           Basic: UnLong
         function:
           inline: false

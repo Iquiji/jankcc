@@ -8,7 +8,7 @@ use std::{
 };
 use structopt::StructOpt;
 
-/// A StructOpt example
+/// JankCC a hobby WIP C Compiler
 #[derive(StructOpt, Debug)]
 #[structopt()]
 struct Opt {
@@ -32,12 +32,13 @@ struct Opt {
 
 mod environment_builder;
 mod lexer;
+mod mir;
 mod parser;
 mod preprocessor;
 
 use preprocessor::Preprocessor;
 
-use crate::{lexer::Lexer, parser::CParser, environment_builder::EnvironmentController};
+use crate::{environment_builder::EnvironmentController, lexer::Lexer, parser::CParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timer_start = Instant::now();
@@ -98,12 +99,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // let mut file = File::create(Path::new(&in_file_path).with_extension("j.i"))?;
         // file.write_all(preprocessed_file.as_bytes())?;
     } else if opt.gcc_preprocessor {
-        preprocessed_file = String::from_utf8(
-            Command::new("gcc")
-                .args(&["-E", "-std=c11", "-undef", &in_file_path])
-                .output()?
-                .stdout,
-        )?;
+        let output_from_gcc = Command::new("gcc")
+            .args(&[
+                "-E",
+                "-std=c11",
+                "-undef",
+                "-fno-builtin",
+                "-include",
+                "./header_fixes/fix.h",
+                &in_file_path,
+            ])
+            .output()?;
+        if !output_from_gcc.stderr.is_empty() {
+            error!("{}", String::from_utf8(output_from_gcc.stderr,)?)
+        }
+        preprocessed_file = String::from_utf8(output_from_gcc.stdout)?;
     } else {
         error!("require either Internal or GCC preprocessor! see -h for help!");
         return Ok(());
@@ -171,16 +181,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let timer_start_environment = Instant::now();
     info!("Starting Environment of file: {:?}", in_file_path);
-    
+
     let mut controller = EnvironmentController::new();
     controller.build(parsed);
 
-
     let timer_end_parsing = timer_start_parsing.elapsed();
     info!("Building of Environment took: {:?}", timer_end_parsing);
+    
+
+    let timer_start_codegen = Instant::now();
+    info!("Starting Codegen of file: {:?}", in_file_path);
+
+    let mir_programm = controller.get_mir();
+
+    let timer_end_codegen = timer_start_codegen.elapsed();
+    info!("Building of Codegen took: {:?}", timer_end_codegen);
+
 
     let timer_end = timer_start.elapsed();
     info!("Compiling took {:?} in Total", timer_end);
+
 
     Ok(())
 }
