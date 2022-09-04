@@ -55,7 +55,7 @@
         alignment: ~
       init:
         - - base:
-              identifier: printf
+              identifier: puts
             derive:
               FunctionType:
                 parameter_type_list:
@@ -82,16 +82,16 @@
                           alignment: ~
                         declarator:
                           base:
-                            identifier: __format
+                            identifier: __s
                           derive:
                             Pointer:
                               qualifiers:
                                 const_q: false
-                                restrict_q: true
+                                restrict_q: false
                                 volatile_q: false
                                 atomic_q: false
                               to: Base
-                  ellipsis: true
+                  ellipsis: false
                 to: Base
           - ~
 - FunctionDefinition:
@@ -127,6 +127,51 @@
     body:
       Compound:
         - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: Hello World!
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: I was compiled by JankCC!
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: ""
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: ""
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: "minimal example works! :)"
+        - Statement:
             Return:
               Constant:
-                Number: "0"
+                Number: "42"

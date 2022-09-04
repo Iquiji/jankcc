@@ -61,7 +61,7 @@ pub(crate) struct MIR_Block {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIR_Instruction {
-    Call(MIR_Location, Vec<MIR_Location>),
+    Call(MIR_Location, String, Vec<MIR_Location>),
     Return(MIR_Location),
 }
 

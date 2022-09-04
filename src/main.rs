@@ -30,6 +30,7 @@ struct Opt {
     flush_all_intermediate: bool,
 }
 
+mod cranelift_backend;
 mod environment_builder;
 mod lexer;
 mod mir;
@@ -38,7 +39,10 @@ mod preprocessor;
 
 use preprocessor::Preprocessor;
 
-use crate::{environment_builder::EnvironmentController, lexer::Lexer, parser::CParser};
+use crate::{
+    cranelift_backend::CraneliftBackend, environment_builder::EnvironmentController, lexer::Lexer,
+    parser::CParser,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timer_start = Instant::now();
@@ -187,20 +191,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let timer_end_parsing = timer_start_parsing.elapsed();
     info!("Building of Environment took: {:?}", timer_end_parsing);
-    
 
     let timer_start_codegen = Instant::now();
     info!("Starting Codegen of file: {:?}", in_file_path);
 
     let mir_programm = controller.get_mir();
+    println!("{}", serde_yaml::to_string(&mir_programm).unwrap());
+
+    let mut cranelift_backend = CraneliftBackend::default();
+    cranelift_backend.compile(mir_programm);
+
+    let object_file_data = cranelift_backend.finish();
+    let mut object_file_handle =
+        File::create(Path::new(&in_file_path).with_extension("o")).unwrap();
+
+    // Write object_file
+    object_file_handle.write_all(&object_file_data).unwrap();
 
     let timer_end_codegen = timer_start_codegen.elapsed();
     info!("Building of Codegen took: {:?}", timer_end_codegen);
 
-
     let timer_end = timer_start.elapsed();
     info!("Compiling took {:?} in Total", timer_end);
-
 
     Ok(())
 }

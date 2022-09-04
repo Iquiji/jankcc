@@ -1,5 +1,10 @@
-extern int printf (const char *restrict __format, ...);
+extern int puts (const char *__s);
 
 int main() {
-    return 0;
+    puts("Hello World!");
+    puts("I was compiled by JankCC!");
+    puts("");
+    puts("");
+    puts("minimal example works! :)");
+    return 42;
 }

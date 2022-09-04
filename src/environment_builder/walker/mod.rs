@@ -12,6 +12,7 @@ use crate::parser::span::Spanned;
 use super::EnvironmentController;
 
 mod static_and_constant_expr;
+mod walk_expressions;
 mod walk_func;
 
 impl EnvironmentController {

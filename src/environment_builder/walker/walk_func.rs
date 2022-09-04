@@ -4,7 +4,7 @@ use log::{error, info};
 
 use crate::{
     environment_builder::{symbol_table::VariableInstance, EnvironmentController},
-    mir::{MIR_Block, MIR_Function, MIR_Instruction, MIR_Location, MIR_Type},
+    mir::{GlobalEntity, MIR_Block, MIR_Function, MIR_Instruction, MIR_Location, MIR_Type},
     parser::{
         parse_nodes::{
             statements::{self, Statement},
@@ -34,6 +34,15 @@ impl EnvironmentController {
             func.declarator.base.identifier, extracted_type
         );
 
+        let mut func_ctx = FunctionContext::new(func.declarator.base.identifier.clone());
+
+        func_ctx.mir_function.blocks.push(MIR_Block {
+            instr: vec![],
+            branches: None,
+        });
+
+        self.walk_statement(&mut func_ctx, func.body.clone());
+
         let used_vars = self
             .symbol_table
             .scope
@@ -46,14 +55,25 @@ impl EnvironmentController {
 
         info!("all_used_vars: {}", used_vars);
 
-        let mut func_ctx = FunctionContext::new(func.declarator.base.identifier.clone());
+        self.mir_programm.functions.push(func_ctx.mir_function);
 
-        self.walk_statement(&mut func_ctx, func.body.clone());
+        self.mir_programm.globals.extend(
+            self.symbol_table
+                .scope
+                .variables
+                .iter()
+                .filter(|var| var.1.borrow().usage_counter > 0)
+                .map(|extern_var| GlobalEntity {
+                    name: extern_var.0.clone(),
+                    extern_linkage: true,
+                }),
+        ) // todo fix this true
     }
 }
 
 pub(crate) struct FunctionContext {
     pub(crate) mir_function: MIR_Function,
+    pub(crate) temp_counter: usize,
 }
 impl FunctionContext {
     pub(crate) fn new(name: String) -> FunctionContext {
@@ -62,6 +82,7 @@ impl FunctionContext {
                 name,
                 blocks: vec![],
             },
+            temp_counter: 0,
         }
     }
 }
@@ -90,7 +111,9 @@ impl EnvironmentController {
                     }
                 }
             }
-            Statement::CExpression(_) => todo!(),
+            Statement::CExpression(expression) => {
+                let _ = self.walk_expression(ctx, expression.clone());
+            }
             Statement::NoneExpr => {}
             Statement::If {
                 controlling_expr,
@@ -125,13 +148,12 @@ impl EnvironmentController {
                     crate::environment_builder::CompileTimeValue::Float(_) => todo!(),
                     crate::environment_builder::CompileTimeValue::String(_) => todo!(),
                 };
-                ctx.mir_function.blocks.push(MIR_Block {
-                    instr: vec![MIR_Instruction::Return(MIR_Location::Constant(
+                ctx.mir_function.blocks[0]
+                    .instr
+                    .push(MIR_Instruction::Return(MIR_Location::Constant(
                         val as i64,
                         MIR_Type::i64,
-                    ))],
-                    branches: None,
-                });
+                    )));
             }
         }
     }
