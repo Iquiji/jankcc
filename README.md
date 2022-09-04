@@ -21,7 +21,7 @@
   - Allow Hex Numbers & Co. 
   - Sensible Error Generation :o: 
   - Fix Column Number Generation :o: 
--  Parser :heavy_check_mark:
+- Parser :heavy_check_mark:
   - Expresions :heavy_check_mark:
   - Type Names :heavy_check_mark:
   - Declarations :heavy_check_mark:
