@@ -34,7 +34,7 @@
   - Type Checking on AST :warning:
   - Constant Expression Runner :warning:
   - MIR generation :warning:
-- MIR to cranelift backend :o:
+- MIR to cranelift backend :warning:
 - Custom MIR codegen backend :o:
   - Conversion to SSA :o:
   - SSA optimisier :o:
@@ -55,4 +55,11 @@
 
 
 #### Enviroment Builder:
-  - In Progress
+  - Early Work started, extremely unstable API and many features missing
+
+### MIR:
+  - Currently only a jankc custom Call and Return command are semi working
+
+### MIR to Cranelift:
+  - [minimal example](C_Testfiles/minimal/minimal.c) works :)
+  - more will come as MIR is developed further ;) 
