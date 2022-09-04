@@ -18,7 +18,7 @@
   - #if :x: 
   - ... :x: 
 - Lexer :heavy_check_mark: 
-  - Allow Hex Numbers & Co. 
+  - Allow Hex Numbers & Co. :o: 
   - Sensible Error Generation :o: 
   - Fix Column Number Generation :o: 
 - Parser :heavy_check_mark:
