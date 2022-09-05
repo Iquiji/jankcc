@@ -1,16 +1,32 @@
 use std::ops::Deref;
 
 use cranelift::{
-    codegen::ir::{Constant, ConstantPool},
-    prelude::*,
+    codegen::ir::{Constant, ConstantPool, Function},
+    prelude::{*, isa::CallConv},
 };
 use cranelift_module::{DataContext, Linkage, Module};
 use cranelift_object::ObjectModule;
 use log::info;
 
-use crate::mir::{MIR_Function, MIR_Instruction};
+use crate::mir::{MIR_Function, MIR_Instruction, MIR_Type};
 
 use super::CraneliftBackend;
+
+impl MIR_Type{
+    pub(crate) fn into_cranelift_type(&self) -> Type{
+        match self{
+            MIR_Type::u8 => todo!(),
+            MIR_Type::i8 => todo!(),
+            MIR_Type::u16 => todo!(),
+            MIR_Type::i16 => todo!(),
+            MIR_Type::u32 => todo!(),
+            MIR_Type::i32 => types::I32,
+            MIR_Type::u64 => todo!(),
+            MIR_Type::i64 => types::I64,
+        }
+    }
+}
+
 
 impl CraneliftBackend {
     pub(crate) fn translate_function(
@@ -18,17 +34,17 @@ impl CraneliftBackend {
         input: MIR_Function,
         constant_pool: &mut ConstantPool,
     ) {
+        self.ctx.func.clear();
+        self.ctx.func.signature.call_conv = CallConv::SystemV;
         // Our toy language currently only supports I64 values, though Cranelift
         // supports other types.
-        let int = types::I32;
-
-        // for _p in &params {
-        //     self.ctx.func.signature.params.push(AbiParam::new(int));
-        // }
+        for p in input.signature.args{
+            self.ctx.func.signature.params.push(AbiParam::new(p.into_cranelift_type()));
+        }
 
         // Our toy language currently only supports one return value, though
         // Cranelift is designed to support more.
-        self.ctx.func.signature.returns.push(AbiParam::new(int));
+        self.ctx.func.signature.returns.push(AbiParam::new(input.signature.return_type.into_cranelift_type()));
 
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
@@ -70,42 +86,34 @@ impl CraneliftBackend {
     ) {
         match instr {
             MIR_Instruction::Return(arg) => {
-                let return_value = match arg {
-                    crate::mir::MIR_Location::Global(_, _) => todo!(),
-                    crate::mir::MIR_Location::Constant(val, val_type) => {
-                        let int = types::I32;
-                        func_builder.ins().iconst(int, val)
-                    }
-                    crate::mir::MIR_Location::ConstantLocation(_, _) => todo!(),
-                    crate::mir::MIR_Location::Local(_, _) => todo!(),
-                };
+                let return_value = arg.into_cranelift_value(func_builder);
                 func_builder.ins().return_(&[return_value]);
             }
-            MIR_Instruction::Call(return_loc, symbol, arg_locations) => {
+            MIR_Instruction::Call(return_loc, symbol, arg_locations,mir_signature) => {
                 // func_builder.ins().call(, args)
                 let mut sig = module.make_signature();
 
                 // Add a parameter for each argument.
-                // for _arg in &args {
-                sig.params.push(AbiParam::new(types::I64));
-                // }
-
-                // For simplicity for now, just make all calls return a single I64.
-                sig.returns.push(AbiParam::new(types::I32));
+                for p in mir_signature.args{
+                    sig.params.push(AbiParam::new(p.into_cranelift_type()));
+                }
+        
+                // return type of called function
+                sig.returns.push(AbiParam::new(mir_signature.return_type.into_cranelift_type()));
 
                 let callee = module
                     .declare_function(&symbol, Linkage::Export, &sig)
                     .map_err(|e| e.to_string())
                     .unwrap();
 
-                let local_callee = module.declare_func_in_func(callee, &mut func_builder.func);
+                let local_callee = module.declare_func_in_func(callee, func_builder.func);
 
                 let mut arg_values = Vec::new();
                 for arg in arg_locations {
                     arg_values.push(match arg {
                         crate::mir::MIR_Location::Global(_, _) => todo!(),
                         crate::mir::MIR_Location::Constant(val, val_type) => {
-                            let int = types::I32;
+                            let int = val_type.into_cranelift_type();
                             func_builder.ins().iconst(int, val)
                         }
                         crate::mir::MIR_Location::ConstantLocation(const_num, _val_type) => {
@@ -135,6 +143,11 @@ impl CraneliftBackend {
                 let call = func_builder.ins().call(local_callee, &arg_values);
                 let _return_value = func_builder.inst_results(call)[0];
             }
+            MIR_Instruction::Add(return_loc, left_loc, right_loc) => {
+                let left_value = left_loc.into_cranelift_value(func_builder);
+                let right_value = right_loc.into_cranelift_value(func_builder);
+                func_builder.ins().iadd(left_value, right_value);
+            },
         }
     }
 }

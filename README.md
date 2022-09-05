@@ -10,6 +10,10 @@
 
 ---
 
+## Usage:
+
+---
+
 ## Features:
 
 - Preproccessor? (Put on Halt for now) :x:  
@@ -32,7 +36,7 @@
 - Enviroment Builder :warning:
   - Symbol Table extraction :warning:
   - Type Checking on AST :warning:
-  - Constant Expression Runner :warning:
+  - Constant Expression Runner :o:
   - MIR generation :warning:
 - MIR to cranelift backend :warning:
 - Custom MIR codegen backend :o:

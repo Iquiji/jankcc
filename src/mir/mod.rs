@@ -8,6 +8,8 @@ Usage:
 
 use serde::{Deserialize, Serialize};
 
+use crate::environment_builder::ext_type::{ExtType, PrettyType};
+
 /*
 IR:
 — consists of Blocks taking Args?
@@ -48,7 +50,71 @@ pub(crate) struct Constant {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct MIR_Function {
     pub(crate) name: String,
+    pub(crate) signature: MIR_Signature,
+    pub(crate) parameter_names: Vec<String>,
+    pub(crate) vars: Vec<String>,
     pub(crate) blocks: Vec<MIR_Block>,
+    pub(crate) temp_counter: usize,
+}
+impl MIR_Function{
+    pub(crate) fn new() -> MIR_Function{
+        MIR_Function {
+            name: String::new(),
+            blocks: vec![],
+            signature: MIR_Signature {
+                return_type: MIR_Type::i64,
+                args: vec![],
+                overloadable: false,
+            },
+            parameter_names: vec![],
+            vars: vec![],
+            temp_counter: 0,
+        }
+    }
+    pub(crate) fn make_temp_name(&mut self) -> String{
+        let string = format!("_t{}", self.temp_counter);
+        self.temp_counter += 1;
+        string
+    }
+    pub(crate) fn make_temp_location(&mut self,mir_type: MIR_Type) -> MIR_Location{
+        MIR_Location::Local(self.make_temp_name(), mir_type)
+    }
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct MIR_Signature {
+    pub(crate) return_type: MIR_Type,
+    pub(crate) args: Vec<MIR_Type>,
+    pub(crate) overloadable: bool,
+}
+
+impl MIR_Signature {
+    pub(crate) fn from_function_pretty_type(p_type: &PrettyType) -> MIR_Signature {
+        if let ExtType::Function {
+            overextendable,
+            returns,
+            parameters,
+        } = &p_type.inner_type
+        {
+            MIR_Signature {
+                return_type: MIR_Type::extract_from_pretty_type(&PrettyType {
+                    inner_type: *returns.clone(),
+                }),
+                args: parameters
+                    .iter()
+                    .map(|parameter| {
+                        MIR_Type::extract_from_pretty_type(&PrettyType {
+                            inner_type: *parameter.parameter_type.clone(),
+                        })
+                    })
+                    .collect(),
+                overloadable: *overextendable,
+            }
+        } else {
+            panic!("cannot make MIR function signature out of not function PrettyType")
+        }
+    }
 }
 
 #[allow(non_camel_case_types)]
@@ -61,7 +127,8 @@ pub(crate) struct MIR_Block {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIR_Instruction {
-    Call(MIR_Location, String, Vec<MIR_Location>),
+    Add(MIR_Location,MIR_Location,MIR_Location),
+    Call(MIR_Location, String, Vec<MIR_Location>,MIR_Signature),
     Return(MIR_Location),
 }
 
@@ -74,6 +141,16 @@ pub(crate) enum MIR_Location {
     /// Needs to be Pointer
     ConstantLocation(usize, MIR_Type),
     Local(String, MIR_Type),
+}
+impl MIR_Location{
+    pub(crate) fn get_mir_type(&self) -> MIR_Type{
+        match self{
+            MIR_Location::Global(_, mir_type) => mir_type.clone(),
+            MIR_Location::Constant(_, mir_type) => mir_type.clone(),
+            MIR_Location::ConstantLocation(_, mir_type) => mir_type.clone(),
+            MIR_Location::Local(_, mir_type) => mir_type.clone(),
+        }
+    }
 }
 
 #[allow(non_camel_case_types)]
@@ -96,4 +173,72 @@ pub(crate) enum MIR_Type {
     i32,
     u64,
     i64,
+}
+
+impl MIR_Type {
+    pub(crate) fn extract_from_pretty_type(p_type: &PrettyType) -> MIR_Type {
+        use crate::environment_builder::ext_type::*;
+        match &p_type.inner_type {
+            ExtType::Void => todo!(),
+            ExtType::Int {
+                is_const,
+                is_volatile,
+                signed,
+                size,
+            } => {
+                use MIR_Type::*;
+                if *signed {
+                    match size {
+                        1 => i8,
+                        2 => i16,
+                        4 => i32,
+                        8 => i64,
+                        _ => unreachable!(),
+                    }
+                } else {
+                    match size {
+                        1 => u8,
+                        2 => u16,
+                        4 => u32,
+                        8 => u64,
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            ExtType::Float {
+                is_const,
+                is_volatile,
+                size,
+            } => todo!(),
+            ExtType::Array {
+                is_const,
+                is_volatile,
+                arr_size,
+                to,
+            } => todo!(),
+            ExtType::Pointer {
+                is_const,
+                is_volatile,
+                to,
+            } => MIR_Type::i64,
+            ExtType::Function {
+                overextendable,
+                returns,
+                parameters,
+            } => todo!(),
+            ExtType::Struct {
+                is_const,
+                is_volatile,
+                tag,
+                alignment,
+                members,
+            } => todo!(),
+            ExtType::Union {
+                is_const,
+                is_volatile,
+                tag,
+                members,
+            } => todo!(),
+        }
+    }
 }

@@ -1,6 +1,6 @@
 use crate::{
-    environment_builder::EnvironmentController,
-    mir::{self, MIR_Location, MIR_Type},
+    environment_builder::{EnvironmentController, ext_type::{ExtType, PrettyType}},
+    mir::{self, MIR_Location, MIR_Type, MIR_Instruction, MIR_Signature},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -48,7 +48,15 @@ impl EnvironmentController {
                 left_value,
                 op,
                 right_value,
-            } => todo!(),
+            } => {
+                let left_value = self.walk_expression(ctx, left_value.clone());
+                let right_value = self.walk_expression(ctx, right_value.clone());
+                let return_loc = ctx.mir_function.make_temp_location(left_value.get_mir_type());
+                ctx.mir_function.blocks[0]
+                    .instr
+                    .push(mir::MIR_Instruction::Add(return_loc.clone(), left_value,right_value));
+                return_loc
+            },
             CExpression::Multiplicative {
                 left_value,
                 op,
@@ -77,18 +85,28 @@ impl EnvironmentController {
                 };
 
                 if let Some(function_type) = function_type {
+                    let function_type = function_type.borrow().associated_type.clone();
                     let mut args = vec![];
                     for arg in arguments {
                         args.push(self.walk_expression(ctx, arg.clone()));
                     }
-                    // TODO fix type here as well :)
-                    let location =
-                        MIR_Location::Local(format!("t{}", ctx.temp_counter), MIR_Type::i64);
-                    ctx.temp_counter += 1;
-                    ctx.mir_function.blocks[0]
-                        .instr
-                        .push(mir::MIR_Instruction::Call(location.clone(), ident, args));
-                    location
+                    if let ExtType::Function {
+                        overextendable: _,
+                        returns,
+                        parameters: _,
+                    } = &function_type.inner_type
+                    {
+                        let location = ctx.mir_function.make_temp_location(MIR_Type::extract_from_pretty_type(&PrettyType {
+                            inner_type: *returns.clone(),
+                        }));
+                        ctx.mir_function.blocks[0]
+                            .instr
+                            .push(mir::MIR_Instruction::Call(location.clone(), ident, args,MIR_Signature::from_function_pretty_type(&function_type)));
+                        location
+                    } else {
+                        panic!("cannot make MIR function signature out of not function PrettyType")
+                    }
+
                 } else {
                     function.span.error_at_span("function name unknown!");
                     panic!();
@@ -105,7 +123,16 @@ impl EnvironmentController {
                 initializer_list,
             } => todo!(),
             CExpression::Identifier(_) => todo!(),
-            CExpression::Constant(_) => todo!(),
+            CExpression::Constant(constant) => {
+                match constant{
+                    crate::parser::parse_nodes::Constant::Number(numberlike) => {
+                        MIR_Location::Constant(
+                            numberlike.from.parse::<i64>().unwrap(),
+                            MIR_Type::i32,
+                        )
+                    },
+                }
+            },
             CExpression::StringLiteral(literal) => {
                 let mut value = literal.value.as_bytes().to_vec();
                 value.push(0);

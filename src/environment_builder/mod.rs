@@ -6,7 +6,7 @@ use self::symbol_table::{BlockContainer, ScopeContainer};
 mod tests;
 
 mod constant_expr;
-mod ext_type;
+pub mod ext_type;
 mod symbol_table;
 mod walker;
 

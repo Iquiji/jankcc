@@ -67,8 +67,8 @@ pub(crate) struct StructOrUnionMember {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct FunctionParameter {
-    ident: String,
-    parameter_type: Box<ExtType>,
+    pub(crate) ident: String,
+    pub(crate) parameter_type: Box<ExtType>,
 }
 
 impl EnvironmentController {

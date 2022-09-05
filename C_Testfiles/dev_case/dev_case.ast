@@ -1,0 +1,256 @@
+---
+- Declaration:
+    Declaration:
+      specifiers:
+        storage:
+          typedef_c: true
+          extern_c: false
+          static_c: false
+          thread_local_c: false
+          auto_c: false
+          register_c: false
+        qualifiers:
+          const_q: false
+          restrict_q: false
+          volatile_q: false
+          atomic_q: false
+        specifiers:
+          Basic: Char
+        function:
+          inline: false
+          no_return: false
+        alignment: ~
+      init:
+        - - base:
+              identifier: __builtin_va_list
+            derive:
+              Pointer:
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                to: Base
+          - ~
+- Declaration:
+    Declaration:
+      specifiers:
+        storage:
+          typedef_c: false
+          extern_c: true
+          static_c: false
+          thread_local_c: false
+          auto_c: false
+          register_c: false
+        qualifiers:
+          const_q: false
+          restrict_q: false
+          volatile_q: false
+          atomic_q: false
+        specifiers:
+          Basic: Int
+        function:
+          inline: false
+          no_return: false
+        alignment: ~
+      init:
+        - - base:
+              identifier: puts
+            derive:
+              FunctionType:
+                parameter_type_list:
+                  parameter_list:
+                    - Declarator:
+                        specifiers:
+                          storage:
+                            typedef_c: false
+                            extern_c: false
+                            static_c: false
+                            thread_local_c: false
+                            auto_c: false
+                            register_c: false
+                          qualifiers:
+                            const_q: true
+                            restrict_q: false
+                            volatile_q: false
+                            atomic_q: false
+                          specifiers:
+                            Basic: Char
+                          function:
+                            inline: false
+                            no_return: false
+                          alignment: ~
+                        declarator:
+                          base:
+                            identifier: __s
+                          derive:
+                            Pointer:
+                              qualifiers:
+                                const_q: false
+                                restrict_q: false
+                                volatile_q: false
+                                atomic_q: false
+                              to: Base
+                  ellipsis: false
+                to: Base
+          - ~
+- FunctionDefinition:
+    function_specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    declarator:
+      base:
+        identifier: add
+      derive:
+        FunctionType:
+          parameter_type_list:
+            parameter_list:
+              - Declarator:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Int
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  declarator:
+                    base:
+                      identifier: a
+                    derive: Base
+              - Declarator:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Int
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  declarator:
+                    base:
+                      identifier: b
+                    derive: Base
+            ellipsis: false
+          to: Base
+    declarations: []
+    body:
+      Compound:
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: "add called! :)"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: add
+                arguments:
+                  - Constant:
+                      Number: "4"
+                  - Constant:
+                      Number: "7"
+        - Statement:
+            Return:
+              Constant:
+                Number: "7"
+- FunctionDefinition:
+    function_specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    declarator:
+      base:
+        identifier: main
+      derive:
+        FunctionType:
+          parameter_type_list:
+            parameter_list: []
+            ellipsis: false
+          to: Base
+    declarations: []
+    body:
+      Compound:
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: I was compiled by JankCC!
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: add
+                arguments:
+                  - Constant:
+                      Number: "4"
+                  - Constant:
+                      Number: "7"
+        - Statement:
+            Return:
+              Constant:
+                Number: "42"

@@ -3,8 +3,11 @@ use std::{borrow::Borrow, cell::RefCell};
 use log::{error, info};
 
 use crate::{
-    environment_builder::{symbol_table::VariableInstance, EnvironmentController},
-    mir::{GlobalEntity, MIR_Block, MIR_Function, MIR_Instruction, MIR_Location, MIR_Type},
+    environment_builder::{symbol_table::VariableInstance, EnvironmentController, ext_type::ExtType},
+    mir::{
+        GlobalEntity, MIR_Block, MIR_Function, MIR_Instruction, MIR_Location, MIR_Signature,
+        MIR_Type,
+    },
     parser::{
         parse_nodes::{
             statements::{self, Statement},
@@ -34,7 +37,23 @@ impl EnvironmentController {
             func.declarator.base.identifier, extracted_type
         );
 
-        let mut func_ctx = FunctionContext::new(func.declarator.base.identifier.clone());
+        let mut func_ctx = FunctionContext::new();
+        func_ctx.mir_function.name = func.declarator.base.identifier.clone();
+
+        func_ctx.mir_function.signature = MIR_Signature::from_function_pretty_type(&extracted_type);
+        if let ExtType::Function {
+            overextendable: _,
+            returns: _,
+            parameters,
+        } = &extracted_type.inner_type
+        {
+            for parameter_name in parameters{
+                func_ctx.mir_function.parameter_names.push(parameter_name.ident.clone());
+            }
+        } else {
+            panic!("cannot make MIR function signature out of not function PrettyType")
+        }
+        
 
         func_ctx.mir_function.blocks.push(MIR_Block {
             instr: vec![],
@@ -65,24 +84,19 @@ impl EnvironmentController {
                 .filter(|var| var.1.borrow().usage_counter > 0)
                 .map(|extern_var| GlobalEntity {
                     name: extern_var.0.clone(),
-                    extern_linkage: true,
+                    extern_linkage: extern_var.1.borrow().is_extern,
                 }),
-        ) // todo fix this true
+        )
     }
 }
 
 pub(crate) struct FunctionContext {
     pub(crate) mir_function: MIR_Function,
-    pub(crate) temp_counter: usize,
 }
 impl FunctionContext {
-    pub(crate) fn new(name: String) -> FunctionContext {
+    pub(crate) fn new() -> FunctionContext {
         FunctionContext {
-            mir_function: MIR_Function {
-                name,
-                blocks: vec![],
-            },
-            temp_counter: 0,
+            mir_function: MIR_Function::new(),
         }
     }
 }
@@ -152,7 +166,7 @@ impl EnvironmentController {
                     .instr
                     .push(MIR_Instruction::Return(MIR_Location::Constant(
                         val as i64,
-                        MIR_Type::i64,
+                        MIR_Type::i32,
                     )));
             }
         }

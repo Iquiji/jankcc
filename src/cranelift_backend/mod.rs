@@ -1,6 +1,7 @@
 mod translate_function;
+mod helpers;
 
-use std::error::Error;
+use std::{error::Error, borrow::Borrow};
 
 use cranelift::{
     codegen::ir::{Constant, ConstantData, ConstantPool},
@@ -63,27 +64,31 @@ impl CraneliftBackend {
                 ConstantData::from(constant.1.value.clone()),
             )
         }
-        for function in input.functions {
-            self.translate_function(function, &mut constant_pool);
+        println!("before func: {}",self.ctx.func);
+        for function in &input.functions {
+            self.translate_function(function.clone(), &mut constant_pool);
+
+
+            // Next, declare the function to Object. Functions must be declared
+            // before they can be called, or defined.
+            let id = self
+                .module
+                .declare_function(function.name.clone().borrow(), Linkage::Export, &self.ctx.func.signature)
+                .map_err(|e| e.to_string())
+                .unwrap();
+
+                
+            // Define the function to Object. This finishes compilation, although
+            // there may be outstanding relocations to perform. Currently, Object
+            // cannot finish relocations until all functions to be called are
+            // defined. For this toy demo for now, we'll just finalize the
+            // function below.
+            self.module
+                .define_function(id, &mut self.ctx)
+                .map_err(|e| e.to_string())
+                .unwrap();
         }
 
-        // Next, declare the function to Object. Functions must be declared
-        // before they can be called, or defined.
-        let id = self
-            .module
-            .declare_function("main", Linkage::Export, &self.ctx.func.signature)
-            .map_err(|e| e.to_string())
-            .unwrap();
-
-        // Define the function to Object. This finishes compilation, although
-        // there may be outstanding relocations to perform. Currently, Object
-        // cannot finish relocations until all functions to be called are
-        // defined. For this toy demo for now, we'll just finalize the
-        // function below.
-        self.module
-            .define_function(id, &mut self.ctx)
-            .map_err(|e| e.to_string())
-            .unwrap();
 
         // Now that compilation is finished, we can clear out the context state.
         self.module.clear_context(&mut self.ctx);

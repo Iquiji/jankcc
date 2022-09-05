@@ -55,7 +55,7 @@ impl EnvironmentController {
                         self.symbol_table.scope.variables.insert(
                             variable_name.0.base.identifier.clone(),
                             RefCell::new(VariableInstance {
-                                is_extern: false,
+                                is_extern: specifiers.storage.extern_c,
                                 usage_counter: 0,
                                 associated_type: extracted_type.clone(),
                             }),
