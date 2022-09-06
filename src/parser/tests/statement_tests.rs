@@ -373,7 +373,7 @@ For:
                     identifier: printf
                 arguments:
                   - StringLiteral:
-                      value: "value of a: %d\\n"
+                      value: "value of a: %d\n"
                   - Identifier:
                       identifier: a
 

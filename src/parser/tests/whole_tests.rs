@@ -67,7 +67,7 @@ int main() {
                     identifier: printf
                 arguments:
                   - StringLiteral:
-                      value: "hello world\\n"
+                      value: "hello world\n"
         - Statement:
             If:
               controlling_expr:

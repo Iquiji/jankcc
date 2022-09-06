@@ -86,7 +86,7 @@ int main() {
         },
         CToken {
             t_type: StringLiteral,
-            original: "hello world\\n".to_string(),
+            original: "hello world\n".to_string(),
             loc: OriginalLocation {
                 file: "".to_string(),
                 line: 2,

@@ -66,4 +66,5 @@
 
 ### MIR to Cranelift:
   - [minimal example](C_Testfiles/minimal/minimal.c) works :)
+  - only 1 kind of signature to a function like printf that has varargs is supported :/
   - more will come as MIR is developed further ;) 
