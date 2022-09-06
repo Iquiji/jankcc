@@ -45,7 +45,7 @@ impl EnvironmentController {
     pub(crate) fn build(&mut self, ast: crate::parser::parse_nodes::TranslationUnit) {
         self.walk_translation_unit(ast);
     }
-    pub fn get_mir(&mut self) -> MIR_Programm {
+    pub(crate) fn get_mir(&mut self) -> MIR_Programm {
         self.mir_programm.clone()
     }
 }
