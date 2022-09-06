@@ -57,8 +57,8 @@ impl EnvironmentController {
                 op,
                 right_value,
             } => {
-                let left_value = self.walk_expression(ctx, left_value.clone(), &wanted_type);
-                let right_value = self.walk_expression(ctx, right_value.clone(), &wanted_type);
+                let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
+                let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
                 let return_loc = ctx
                     .mir_function
                     .make_temp_location(left_value.get_mir_type());
