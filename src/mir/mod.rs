@@ -52,12 +52,12 @@ pub(crate) struct MIR_Function {
     pub(crate) name: String,
     pub(crate) signature: MIR_Signature,
     pub(crate) parameter_names: Vec<String>,
-    pub(crate) vars: Vec<String>,
+    pub(crate) vars: Vec<(String, MIR_Type)>,
     pub(crate) blocks: Vec<MIR_Block>,
     pub(crate) temp_counter: usize,
 }
-impl MIR_Function{
-    pub(crate) fn new() -> MIR_Function{
+impl MIR_Function {
+    pub(crate) fn new() -> MIR_Function {
         MIR_Function {
             name: String::new(),
             blocks: vec![],
@@ -71,13 +71,14 @@ impl MIR_Function{
             temp_counter: 0,
         }
     }
-    pub(crate) fn make_temp_name(&mut self) -> String{
+    pub(crate) fn make_temp_name(&mut self, temp_type: MIR_Type) -> String {
         let string = format!("_t{}", self.temp_counter);
         self.temp_counter += 1;
+        self.vars.push((string.clone(), temp_type));
         string
     }
-    pub(crate) fn make_temp_location(&mut self,mir_type: MIR_Type) -> MIR_Location{
-        MIR_Location::Local(self.make_temp_name(), mir_type)
+    pub(crate) fn make_temp_location(&mut self, mir_type: MIR_Type) -> MIR_Location {
+        MIR_Location::Local(self.make_temp_name(mir_type), mir_type)
     }
 }
 
@@ -127,8 +128,9 @@ pub(crate) struct MIR_Block {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIR_Instruction {
-    Add(MIR_Location,MIR_Location,MIR_Location),
-    Call(MIR_Location, String, Vec<MIR_Location>,MIR_Signature),
+    Assign(MIR_Location, MIR_Location),
+    Add(MIR_Location, MIR_Location, MIR_Location),
+    Call(MIR_Location, String, Vec<MIR_Location>, MIR_Signature),
     Return(MIR_Location),
 }
 
@@ -142,9 +144,9 @@ pub(crate) enum MIR_Location {
     ConstantLocation(usize, MIR_Type),
     Local(String, MIR_Type),
 }
-impl MIR_Location{
-    pub(crate) fn get_mir_type(&self) -> MIR_Type{
-        match self{
+impl MIR_Location {
+    pub(crate) fn get_mir_type(&self) -> MIR_Type {
+        match self {
             MIR_Location::Global(_, mir_type) => mir_type.clone(),
             MIR_Location::Constant(_, mir_type) => mir_type.clone(),
             MIR_Location::ConstantLocation(_, mir_type) => mir_type.clone(),
@@ -163,7 +165,7 @@ pub(crate) struct MIR_Branch {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIR_Type {
     u8,
     i8,

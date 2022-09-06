@@ -214,9 +214,25 @@ impl EnvironmentController {
     }
 }
 
+impl ExtType {
+    pub(crate) fn into_pretty(&self) -> PrettyType {
+        PrettyType {
+            inner_type: self.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct PrettyType {
     pub(crate) inner_type: ExtType,
+}
+
+impl PrettyType {
+    pub(crate) fn default_void() -> PrettyType {
+        PrettyType {
+            inner_type: ExtType::Void,
+        }
+    }
 }
 
 impl EnvironmentController {

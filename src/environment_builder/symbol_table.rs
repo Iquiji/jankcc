@@ -54,6 +54,15 @@ pub(crate) struct BlockContainer {
     pub(crate) active_inner: Option<Box<BlockContainer>>,
     pub(crate) past_inner: Vec<BlockContainer>,
 }
+impl BlockContainer {
+    pub(crate) fn get_current_scope(&mut self) -> &mut ScopeContainer {
+        if let Some(active) = &mut self.active_inner {
+            active.get_current_scope()
+        } else {
+            &mut self.scope
+        }
+    }
+}
 
 impl BlockContainer {
     pub(crate) fn get_top_typedefed(&mut self, ident: &str) -> Option<&RefCell<TypedefInstance>> {

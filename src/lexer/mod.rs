@@ -233,6 +233,13 @@ impl Lexer {
                                 } else {
                                     break;
                                 }
+                            } else if character_next == 'n' {
+                                if current_token_string.ends_with('\\') {
+                                    current_token_string.remove(current_token_string.len() - 1);
+                                    current_token_string.push('\n');
+                                    continue;
+                                }
+                                current_token_string.push(character_next);
                             } else {
                                 current_token_string.push(character_next);
                             }
@@ -250,7 +257,7 @@ impl Lexer {
                             "string-end!: '{}' - {:?}-{:?}",
                             current_token_string,
                             self.current_loc.line,
-                            self.current_loc.collumn
+                            self.current_loc.collumn,
                         );
                         current_token_string = String::new();
                     }

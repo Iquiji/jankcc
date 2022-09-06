@@ -1,7 +1,7 @@
-mod translate_function;
 mod helpers;
+mod translate_function;
 
-use std::{error::Error, borrow::Borrow};
+use std::{borrow::Borrow, error::Error};
 
 use cranelift::{
     codegen::ir::{Constant, ConstantData, ConstantPool},
@@ -64,20 +64,22 @@ impl CraneliftBackend {
                 ConstantData::from(constant.1.value.clone()),
             )
         }
-        println!("before func: {}",self.ctx.func);
+        println!("before func: {}", self.ctx.func);
         for function in &input.functions {
             self.translate_function(function.clone(), &mut constant_pool);
-
 
             // Next, declare the function to Object. Functions must be declared
             // before they can be called, or defined.
             let id = self
                 .module
-                .declare_function(function.name.clone().borrow(), Linkage::Export, &self.ctx.func.signature)
+                .declare_function(
+                    function.name.clone().borrow(),
+                    Linkage::Export,
+                    &self.ctx.func.signature,
+                )
                 .map_err(|e| e.to_string())
                 .unwrap();
 
-                
             // Define the function to Object. This finishes compilation, although
             // there may be outstanding relocations to perform. Currently, Object
             // cannot finish relocations until all functions to be called are
@@ -88,7 +90,6 @@ impl CraneliftBackend {
                 .map_err(|e| e.to_string())
                 .unwrap();
         }
-
 
         // Now that compilation is finished, we can clear out the context state.
         self.module.clear_context(&mut self.ctx);
