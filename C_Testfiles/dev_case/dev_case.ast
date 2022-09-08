@@ -367,77 +367,29 @@
     body:
       Compound:
         - Statement:
-            CExpression:
-              FunctionCall:
-                function:
-                  Identifier:
-                    identifier: puts
-                arguments:
-                  - StringLiteral:
-                      value: I was compiled by JankCC!
-        - Statement:
-            CExpression:
-              FunctionCall:
-                function:
-                  Identifier:
-                    identifier: add
-                arguments:
-                  - Constant:
-                      Number: "4"
-                  - Constant:
-                      Number: "9"
-        - Declaration:
-            Declaration:
-              specifiers:
-                storage:
-                  typedef_c: false
-                  extern_c: false
-                  static_c: false
-                  thread_local_c: false
-                  auto_c: false
-                  register_c: false
-                qualifiers:
-                  const_q: false
-                  restrict_q: false
-                  volatile_q: false
-                  atomic_q: false
-                specifiers:
-                  Basic: Int
-                function:
-                  inline: false
-                  no_return: false
-                alignment: ~
-              init:
-                - - base:
-                      identifier: res
-                    derive: Base
-                  - Single:
-                      FunctionCall:
-                        function:
-                          Identifier:
-                            identifier: add
-                        arguments:
-                          - Constant:
-                              Number: "4"
-                          - Constant:
-                              Number: "7"
-        - Statement:
-            CExpression:
-              FunctionCall:
-                function:
-                  Identifier:
-                    identifier: printf
-                arguments:
-                  - StringLiteral:
-                      value: "4+7=%d\n"
-                  - Identifier:
-                      identifier: res
+            If:
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Constant:
+                      Number: "5"
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "5"
+              true_body:
+                Compound:
+                  - Statement:
+                      CExpression:
+                        FunctionCall:
+                          function:
+                            Identifier:
+                              identifier: puts
+                          arguments:
+                            - StringLiteral:
+                                value: if 5==5!
+              else_body: ~
         - Statement:
             Return:
-              FunctionCall:
-                function:
-                  Identifier:
-                    identifier: dumb_func
-                arguments:
-                  - Constant:
-                      Number: "77"
+              Constant:
+                Number: "77"

@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{collections::{BTreeMap, HashMap}, cell::RefCell, rc::Rc};
 
 use cranelift::{
     codegen::ir::{Constant, ConstantData, ConstantPool},
@@ -7,9 +7,9 @@ use cranelift::{
 
 use cranelift_module::{DataContext, Linkage, Module};
 use cranelift_object::ObjectModule;
-use log::info;
+use log::{info, debug};
 
-use crate::mir::{MIRFunction, MIRInstruction, MIRType, MIRValue};
+use crate::mir::{MIRFunction, MIRInstruction, MIRType, MIRValue, MIRBlock};
 
 use super::CraneliftBackend;
 
@@ -106,11 +106,23 @@ impl CraneliftBackend {
             func_builder: &mut builder,
             module: &mut self.module,
             var_map: &mut var_map,
+            block_map: HashMap::new(),
             value_trans_map: BTreeMap::new(),
         };
 
-        for instr in &translator.mir_function.blocks[0].borrow().instr {
-            translator.translate_instruction(instr.clone());
+        // initialize all blocks
+        for block in translator.mir_function.blocks.iter().enumerate(){
+            if block.0 == 0{
+                continue;
+            }else{
+                let new_block = translator.func_builder.create_block();
+                translator.block_map.insert(block.0, new_block);
+            }
+        }
+
+        // translate all blocks
+        for block in translator.mir_function.blocks.iter().enumerate(){
+            translator.translate_block(block.1.clone(),block.0);
         }
 
         // Tell the builder we're done with this function.
@@ -125,9 +137,41 @@ pub(crate) struct CraneliftFunctionTranslator<'a> {
     pub(crate) func_builder: &'a mut FunctionBuilder<'a>,
     pub(crate) module: &'a mut ObjectModule,
     pub(crate) var_map: &'a mut HashMap<String, Variable>,
+    pub(crate) block_map: HashMap<usize,Block>,
     pub(crate) value_trans_map: BTreeMap<MIRValue, Value>,
 }
 impl CraneliftFunctionTranslator<'_> {
+    pub(crate) fn translate_block(&mut self,current_block: Rc<RefCell<MIRBlock>>,block_idx: usize){
+        debug!("block: {:?}",block_idx);
+        let current_cranelift_block = if block_idx != 0{
+            *self.block_map.get(&block_idx).unwrap()
+        }else{
+            self.func_builder.current_block().unwrap()
+        };
+        self.func_builder.switch_to_block(current_cranelift_block);
+
+        if block_idx != 0{
+            self.func_builder.seal_block(current_cranelift_block);
+            debug!("sealing block: {:?}",block_idx);
+        }
+
+        let current_block = current_block.borrow();
+
+        for instr in &current_block.instr {
+            self.translate_instruction(instr.clone());
+        }
+
+        if let Some(branches) = &current_block.branches{
+            let cond_value = self.mir_value_to_cranelift_value(branches.0);
+            for branch in &branches.1{
+                if branch.is_default{
+                    self.func_builder.ins().jump(*self.block_map.get(&branch.to_block).unwrap(), &[]);
+                }else{
+                    self.func_builder.ins().brnz(cond_value,*self.block_map.get(&branch.to_block).unwrap(), &[]);
+                }
+            }
+        }
+    }
     pub(crate) fn translate_instruction(&mut self, instr: MIRInstruction) {
         match instr {
             MIRInstruction::GetConstDataPtr(output_mir_value, const_ref) => {
@@ -266,7 +310,16 @@ impl CraneliftFunctionTranslator<'_> {
             MIRInstruction::Return(mir_value) => {
                 let cranelift_value = self.mir_value_to_cranelift_value(mir_value);
                 self.func_builder.ins().return_(&[cranelift_value]);
-            }
+            },
+            MIRInstruction::Compare(compare_result,left_mir_value ,right_mir_value ) => {
+                let left_value = self.mir_value_to_cranelift_value(left_mir_value);
+                let right_value = self.mir_value_to_cranelift_value(right_mir_value);
+                let cmp_value = self.func_builder.ins().icmp(IntCC::Equal,left_value, right_value);
+                let cmp_value = self.func_builder.ins().bint(self.mir_function.value_type_map.get(&compare_result).unwrap().into_cranelift_type(), cmp_value);
+                self.insert_value_trans_pair(compare_result, cmp_value);
+            },
+            #[allow(unreachable_patterns)]
+            _ => unimplemented!(),
         }
     }
 }

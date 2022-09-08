@@ -17,10 +17,15 @@ int dumb_func(int wow){
 }
 
 int main() {
-    puts("I was compiled by JankCC!");
-    add(4,9);
-    int res = add(4,7);
-    printf("4+7=%d\n",res);
-    return dumb_func(77);
+    // puts("I was compiled by JankCC!");
+    // add(4,9);
+    // int res = add(4,7);
+    // printf("4+7=%d\n",res);
+    // printf("7==7: %d\n",7==7);
+    // printf("5==8: %d\n",5==8);
+    if (5==5){
+        puts("if 5==5!");
+    }
+    return 77;
 }
 

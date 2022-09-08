@@ -11,6 +11,7 @@ pub(crate) use crate::{
 
 mod compound;
 mod r#return;
+mod if_statement;
 
 impl EnvironmentController {
     pub(crate) fn walk_statement(
@@ -34,10 +35,12 @@ impl EnvironmentController {
             }
             Statement::NoneExpr => {}
             Statement::If {
-                controlling_expr: _,
-                true_body: _,
-                else_body: _,
-            } => todo!(),
+                controlling_expr,
+                true_body,
+                else_body,
+            } => {
+                self.handle_if_statement(ctx, controlling_expr,true_body,else_body);
+            },
             Statement::Switch {
                 controlling_expr: _,
                 body: _,

@@ -29,9 +29,14 @@ int dumb_func(int wow){
 }
 
 int main() {
-    puts("I was compiled by JankCC!");
-    add(4,9);
-    int res = add(4,7);
-    printf("4+7=%d\n",res);
-    return dumb_func(77);
+
+
+
+
+
+
+    if (5==5){
+        puts("if 5==5!");
+    }
+    return 77;
 }

@@ -40,15 +40,37 @@ impl EnvironmentController {
             CExpression::ExlusiveOr(_) => todo!(),
             CExpression::And(_) => todo!(),
             CExpression::Equality {
-                left_piece: _,
+                left_piece ,
                 equality_op: _,
-                right_piece: _,
-            } => todo!(),
+                right_piece,
+            } => {
+                let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
+                let right_value = self.walk_expression(ctx, right_piece.clone(), wanted_type);
+                let output_value = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::Compare(output_value, left_value, right_value),
+                );
+                output_value
+            },
             CExpression::Relational {
-                left_piece: _,
+                left_piece,
                 equality_op: _,
-                right_piece: _,
-            } => todo!(),
+                right_piece,
+            } => {
+                let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
+                let right_value = self.walk_expression(ctx, right_piece.clone(), wanted_type);
+                let output_value = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::Compare(output_value, left_value, right_value),
+                );
+                output_value
+            },
             CExpression::Shift {
                 value: _,
                 shift_type: _,
@@ -114,7 +136,7 @@ impl EnvironmentController {
                         // this is for variadic functions so if there is a variadic function we can extend the type iter and dont care about overloading the function
                         let temp = vec![FunctionParameter {
                             ident: String::new(),
-                            parameter_type: Box::new(ExtType::Void),
+                            parameter_type: Box::new(ExtType::Int { is_const: false, is_volatile: false, signed: true, size: 4 }), // todo!(this needs better default handling or something if we dont have a wanted type);
                         }];
                         let temp_non_extending = vec![];
                         let iter_extension = if *overextendable {
