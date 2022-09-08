@@ -52,12 +52,18 @@ impl EnvironmentController {
                 op: _,
                 right_value: _,
             } => todo!(),
-            CExpression::Cast { type_name: _, value: _ } => todo!(),
+            CExpression::Cast {
+                type_name: _,
+                value: _,
+            } => todo!(),
             CExpression::PrefixIncrement {
                 increment_type: _,
                 value: _,
             } => todo!(),
-            CExpression::Unary { unary_op: _, value: _ } => todo!(),
+            CExpression::Unary {
+                unary_op: _,
+                value: _,
+            } => todo!(),
             CExpression::SizeOf { value: _ } => todo!(),
             CExpression::SizeOfType { type_name: _ } => todo!(),
             CExpression::AlignOfType { type_name: _ } => todo!(),
@@ -66,8 +72,14 @@ impl EnvironmentController {
                 function: _,
                 arguments: _,
             } => todo!(),
-            CExpression::DirectMemberAccess { to_access: _, member: _ } => todo!(),
-            CExpression::IndirectMemberAccess { to_access: _, member: _ } => todo!(),
+            CExpression::DirectMemberAccess {
+                to_access: _,
+                member: _,
+            } => todo!(),
+            CExpression::IndirectMemberAccess {
+                to_access: _,
+                member: _,
+            } => todo!(),
             CExpression::PostfixIncrement {
                 increment_type: _,
                 value: _,

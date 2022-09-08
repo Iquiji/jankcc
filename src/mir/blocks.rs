@@ -29,7 +29,7 @@ impl MIRBlock {
 }
 
 impl MIRBlock {
-    pub(crate) fn ins_instr(rc_self: Rc<RefCell<Self>>, instr: MIRInstruction) {
+    pub(crate) fn ins_instr(rc_self: &Rc<RefCell<Self>>, instr: MIRInstruction) {
         rc_self.borrow_mut().instr.push(instr);
     }
 }

@@ -9,7 +9,7 @@ use value::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIRInstruction {
     GetConstDataPtr(MIRValue, DataConstantRef),
-    ConstNum(MIRValue, MIRType),
+    ConstNum(MIRValue, i64, MIRType),
     ReadLocal(MIRValue, LocalRef),
     AssignLocal(LocalRef, MIRValue),
     Add(MIRValue, MIRValue, MIRValue),

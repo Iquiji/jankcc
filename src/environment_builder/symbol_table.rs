@@ -45,8 +45,6 @@ use std::{cell::RefCell, collections::HashMap};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-
-
 use super::ext_type::PrettyType;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

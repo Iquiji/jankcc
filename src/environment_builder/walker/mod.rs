@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use log::debug;
+pub(crate) use log::*;
 
 use crate::environment_builder::symbol_table::TypedefInstance;
 use crate::environment_builder::symbol_table::VariableInstance;
@@ -8,14 +8,13 @@ use crate::parser::parse_nodes::declarations::Declaration;
 use crate::parser::parse_nodes::ExternalDeclaration::*;
 use crate::parser::parse_nodes::TranslationUnit;
 
-pub(crate) use crate::parser::span::Spanned;
 pub(crate) use super::EnvironmentController;
+pub(crate) use crate::parser::span::Spanned;
 
-
-mod static_and_constant_expr;
-mod walk_expressions;
-mod walk_func;
+mod expressions;
 mod statements;
+mod static_and_constant_expr;
+mod walk_func;
 
 impl EnvironmentController {
     pub(crate) fn walk_translation_unit(&mut self, translation_unit: TranslationUnit) {

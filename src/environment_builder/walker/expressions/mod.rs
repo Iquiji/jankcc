@@ -1,9 +1,11 @@
+use super::*;
+
 use crate::{
     environment_builder::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{MIRValue},
+    mir::{MIRBlock, MIRInstruction, MIRType, MIRValue},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -18,7 +20,7 @@ impl EnvironmentController {
         &mut self,
         ctx: &mut FunctionContext,
         expression: Spanned<CExpression>,
-        _wanted_type: &PrettyType,
+        wanted_type: &PrettyType,
     ) -> MIRValue {
         match &*expression.inner {
             CExpression::Expression(_) => todo!(),
@@ -77,12 +79,18 @@ impl EnvironmentController {
                 op: _,
                 right_value: _,
             } => todo!(),
-            CExpression::Cast { type_name: _, value: _ } => todo!(),
+            CExpression::Cast {
+                type_name: _,
+                value: _,
+            } => todo!(),
             CExpression::PrefixIncrement {
                 increment_type: _,
                 value: _,
             } => todo!(),
-            CExpression::Unary { unary_op: _, value: _ } => todo!(),
+            CExpression::Unary {
+                unary_op: _,
+                value: _,
+            } => todo!(),
             CExpression::SizeOf { value: _ } => todo!(),
             CExpression::SizeOfType { type_name: _ } => todo!(),
             CExpression::AlignOfType { type_name: _ } => todo!(),
@@ -152,8 +160,14 @@ impl EnvironmentController {
                     panic!();
                 }
             }
-            CExpression::DirectMemberAccess { to_access: _, member: _ } => todo!(),
-            CExpression::IndirectMemberAccess { to_access: _, member: _ } => todo!(),
+            CExpression::DirectMemberAccess {
+                to_access: _,
+                member: _,
+            } => todo!(),
+            CExpression::IndirectMemberAccess {
+                to_access: _,
+                member: _,
+            } => todo!(),
             CExpression::PostfixIncrement {
                 increment_type: _,
                 value: _,
@@ -164,8 +178,18 @@ impl EnvironmentController {
             } => todo!(),
             CExpression::Identifier(_ident) => todo!(),
             CExpression::Constant(constant) => match constant {
-                crate::parser::parse_nodes::Constant::Number(_numberlike) => {
-                    todo!()
+                crate::parser::parse_nodes::Constant::Number(numberlike) => {
+                    // make intermediate value insert instr to fetch constant number and return the opaque pointer to the value
+                    let value_ref = ctx.mir_function.ctx_gen.make_intermediate_value();
+                    MIRBlock::ins_instr(
+                        &ctx.mir_function.current_block,
+                        MIRInstruction::ConstNum(
+                            value_ref,
+                            numberlike.from.parse::<i64>().unwrap(),
+                            MIRType::extract_from_pretty_type(wanted_type),
+                        ),
+                    );
+                    value_ref
                 }
             },
             CExpression::StringLiteral(_literal) => {

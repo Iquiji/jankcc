@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, cell::RefCell};
 
-use log::{info};
+use log::info;
 
 use crate::{
     environment_builder::{
@@ -9,12 +9,7 @@ use crate::{
         EnvironmentController,
     },
     mir::{GlobalEntity, MIRFunction, MIRSignature},
-    parser::{
-        parse_nodes::{
-            FunctionDefinition,
-        },
-        span::Spanned,
-    },
+    parser::{parse_nodes::FunctionDefinition, span::Spanned},
 };
 
 impl EnvironmentController {
@@ -82,6 +77,7 @@ impl EnvironmentController {
 
         self.mir_programm.functions.push(func_ctx.mir_function);
 
+        // TODO: move this
         self.mir_programm.globals.extend(
             self.symbol_table
                 .scope
@@ -108,4 +104,3 @@ impl FunctionContext {
         }
     }
 }
-

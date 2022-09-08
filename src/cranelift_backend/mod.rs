@@ -1,12 +1,8 @@
 mod helpers;
 mod translate_function;
 
-
-
-use cranelift::{
-    prelude::*,
-};
-use cranelift_module::{DataContext, Module};
+use cranelift::{prelude::*, codegen::ir::ConstantPool};
+use cranelift_module::{DataContext, Module, Linkage};
 use cranelift_object::{ObjectBuilder, ObjectModule};
 
 use crate::mir::MIRProgramm;
@@ -52,9 +48,8 @@ impl Default for CraneliftBackend {
 
 impl CraneliftBackend {
     /// Compile a string in the toy language into machine code.
-    pub(crate) fn compile(&mut self, _input: MIRProgramm) {
-        todo!()
-        // let mut constant_pool = ConstantPool::new();
+    pub(crate) fn compile(&mut self, input: MIRProgramm) {
+        let mut constant_pool = ConstantPool::new();
         // for global in input.globals {
         //     if global.extern_linkage {}
         // }
@@ -65,34 +60,34 @@ impl CraneliftBackend {
         //     )
         // }
         // println!("before func: {}", self.ctx.func);
-        // for function in &input.functions {
-        //     self.translate_function(function.clone(), &mut constant_pool);
+        for function in &input.functions {
+            self.translate_function(function.clone(), &mut constant_pool);
 
-        //     // Next, declare the function to Object. Functions must be declared
-        //     // before they can be called, or defined.
-        //     let id = self
-        //         .module
-        //         .declare_function(
-        //             function.name.clone().borrow(),
-        //             Linkage::Export,
-        //             &self.ctx.func.signature,
-        //         )
-        //         .map_err(|e| e.to_string())
-        //         .unwrap();
+            // Next, declare the function to Object. Functions must be declared
+            // before they can be called, or defined.
+            let id = self
+                .module
+                .declare_function(
+                    &function.name,
+                    Linkage::Export,
+                    &self.ctx.func.signature,
+                )
+                .map_err(|e| e.to_string())
+                .unwrap();
 
-        //     // Define the function to Object. This finishes compilation, although
-        //     // there may be outstanding relocations to perform. Currently, Object
-        //     // cannot finish relocations until all functions to be called are
-        //     // defined. For this toy demo for now, we'll just finalize the
-        //     // function below.
-        //     self.module
-        //         .define_function(id, &mut self.ctx)
-        //         .map_err(|e| e.to_string())
-        //         .unwrap();
-        // }
+            // Define the function to Object. This finishes compilation, although
+            // there may be outstanding relocations to perform. Currently, Object
+            // cannot finish relocations until all functions to be called are
+            // defined. For this toy demo for now, we'll just finalize the
+            // function below.
+            self.module
+                .define_function(id, &mut self.ctx)
+                .map_err(|e| e.to_string())
+                .unwrap();
+        }
 
-        // // Now that compilation is finished, we can clear out the context state.
-        // self.module.clear_context(&mut self.ctx);
+        // Now that compilation is finished, we can clear out the context state.
+        self.module.clear_context(&mut self.ctx);
     }
     pub(crate) fn finish(self) -> Vec<u8> {
         // Finalize the functions which we just defined, which resolves any

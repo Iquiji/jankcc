@@ -1,14 +1,14 @@
-use std::{collections::HashMap};
+use std::collections::{HashMap, BTreeMap};
 
 use cranelift::{
-    codegen::ir::{ConstantPool},
+    codegen::ir::ConstantPool,
     prelude::{isa::CallConv, *},
 };
 
 use cranelift_object::ObjectModule;
 use log::info;
 
-use crate::mir::{MIRFunction, MIRInstruction, MIRType};
+use crate::mir::{MIRFunction, MIRInstruction, MIRType, MIRValue};
 
 use super::CraneliftBackend;
 
@@ -99,16 +99,17 @@ impl CraneliftBackend {
         //     }
         // }
 
-        let translator = CraneliftFunctionTranslator {
+        let mut translator = CraneliftFunctionTranslator {
             func_builder: &mut builder,
             module: &mut self.module,
             constant_pool,
             var_map: &mut var_map,
+            value_trans_map: BTreeMap::new(),
         };
 
-        // for instr in &input.blocks[0].instr {
-        //     translator.translate_instruction(instr.clone());
-        // }
+        for instr in &input.blocks[0].borrow().instr {
+            translator.translate_instruction(instr.clone());
+        }
 
         // Tell the builder we're done with this function.
         translator.func_builder.finalize();
@@ -122,10 +123,25 @@ pub(crate) struct CraneliftFunctionTranslator<'a> {
     pub(crate) module: &'a mut ObjectModule,
     pub(crate) constant_pool: &'a mut ConstantPool,
     pub(crate) var_map: &'a mut HashMap<String, Variable>,
+    pub(crate) value_trans_map: BTreeMap<MIRValue,Value>,
 }
 impl CraneliftFunctionTranslator<'_> {
-    pub(crate) fn translate_instruction(&mut self, _instr: MIRInstruction) {
-        todo!()
+    pub(crate) fn translate_instruction(&mut self, instr: MIRInstruction) {
+        match instr{
+            MIRInstruction::GetConstDataPtr(_, _) => todo!(),
+            MIRInstruction::ConstNum(mir_value, num, num_type) => {
+                let cranelift_value = self.func_builder.ins().iconst(num_type.into_cranelift_type(),num);
+                self.insert_value_trans_pair(mir_value, cranelift_value);
+            },
+            MIRInstruction::ReadLocal(_, _) => todo!(),
+            MIRInstruction::AssignLocal(_, _) => todo!(),
+            MIRInstruction::Add(_, _, _) => todo!(),
+            MIRInstruction::Call(_, _, _, _) => todo!(),
+            MIRInstruction::Return(mir_value) => {
+                let cranelift_value = self.mir_value_to_cranelift_value(mir_value);
+                self.func_builder.ins().return_(&[cranelift_value]);
+            },
+        }
         // match instr {
         //     MIRInstruction::Return(arg) => {
         //         let return_value = self.into_cranelift_value(arg);
@@ -196,5 +212,14 @@ impl CraneliftFunctionTranslator<'_> {
         //         }
         //     }
         // }
+    }
+}
+
+impl CraneliftFunctionTranslator<'_>{
+    pub(crate) fn mir_value_to_cranelift_value(&mut self,mir_value: MIRValue) -> Value{
+        *self.value_trans_map.get(&mir_value).unwrap()
+    }
+    pub(crate) fn insert_value_trans_pair(&mut self,mir_value: MIRValue,cranelift_value: Value){
+        self.value_trans_map.insert(mir_value, cranelift_value);
     }
 }
