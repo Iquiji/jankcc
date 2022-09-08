@@ -3,7 +3,7 @@ use crate::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{self, MIR_Instruction, MIR_Location, MIR_Signature, MIR_Type},
+    mir::{self, MIRInstruction, MIRSignature, MIRType, MIRValue},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -19,7 +19,7 @@ impl EnvironmentController {
         ctx: &mut FunctionContext,
         expression: Spanned<CExpression>,
         wanted_type: &PrettyType,
-    ) -> MIR_Location {
+    ) -> MIRValue {
         match &*expression.inner {
             CExpression::Expression(_) => todo!(),
             CExpression::Assignment {
@@ -57,19 +57,20 @@ impl EnvironmentController {
                 op,
                 right_value,
             } => {
-                let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
-                let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
-                let return_loc = ctx
-                    .mir_function
-                    .make_temp_location(left_value.get_mir_type());
-                ctx.mir_function.blocks[0]
-                    .instr
-                    .push(mir::MIR_Instruction::Add(
-                        return_loc.clone(),
-                        left_value,
-                        right_value,
-                    ));
-                return_loc
+                todo!()
+                // let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
+                // let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
+                // let return_loc = ctx
+                //     .mir_function
+                //     .make_temp_location(left_value.get_mir_type());
+                // ctx.mir_function.blocks[0]
+                //     .instr
+                //     .push(mir::MIR_Instruction::Add(
+                //         return_loc.clone(),
+                //         left_value,
+                //         right_value,
+                //     ));
+                // return_loc
             }
             CExpression::Multiplicative {
                 left_value,
@@ -129,20 +130,20 @@ impl EnvironmentController {
                             ));
                         }
 
-                        let location = ctx.mir_function.make_temp_location(
-                            MIR_Type::extract_from_pretty_type(&PrettyType {
-                                inner_type: *returns.clone(),
-                            }),
-                        );
-                        ctx.mir_function.blocks[0]
-                            .instr
-                            .push(mir::MIR_Instruction::Call(
-                                location.clone(),
-                                ident,
-                                args,
-                                MIR_Signature::from_function_pretty_type(&function_type),
-                            ));
-                        location
+                        // let location = ctx.mir_function.make_temp_location(
+                        //     MIR_Type::extract_from_pretty_type(&PrettyType {
+                        //         inner_type: *returns.clone(),
+                        //     }),
+                        // );
+                        // ctx.mir_function.blocks[0]
+                        //     .instr
+                        //     .push(mir::MIR_Instruction::Call(
+                        //         location.clone(),
+                        //         ident,
+                        //         args,
+                        //         MIR_Signature::from_function_pretty_type(&function_type),
+                        //     ));
+                        todo!()
                     } else {
                         panic!("cannot make MIR function signature out of not function PrettyType")
                     }
@@ -161,38 +162,29 @@ impl EnvironmentController {
                 type_name,
                 initializer_list,
             } => todo!(),
-            CExpression::Identifier(ident) => MIR_Location::Local(
-                ident.identifier.clone(),
-                MIR_Type::extract_from_pretty_type(
-                    &self
-                        .symbol_table
-                        .get_top_variable(&ident.identifier.clone())
-                        .unwrap()
-                        .borrow()
-                        .associated_type,
-                ),
-            ),
+            CExpression::Identifier(ident) => todo!(),
             CExpression::Constant(constant) => match constant {
                 crate::parser::parse_nodes::Constant::Number(numberlike) => {
-                    MIR_Location::Constant(numberlike.from.parse::<i64>().unwrap(), MIR_Type::i32)
+                    todo!()
                 }
             },
             CExpression::StringLiteral(literal) => {
-                let mut value = vec![];
-                let char_iter = literal.value.chars();
+                todo!()
+                // let mut value = vec![];
+                // let char_iter = literal.value.chars();
 
-                for character in char_iter {
-                    // println!("{}",character);
-                    if character == '\n' {
-                        value.push(0xA);
-                    } else {
-                        value.extend(character.to_string().as_bytes());
-                    }
-                }
+                // for character in char_iter {
+                //     // println!("{}",character);
+                //     if character == '\n' {
+                //         value.push(0xA);
+                //     } else {
+                //         value.extend(character.to_string().as_bytes());
+                //     }
+                // }
 
-                value.push(0);
-                self.mir_programm.constants.push(mir::Constant { value });
-                MIR_Location::ConstantLocation(self.mir_programm.constants.len() - 1, MIR_Type::i64)
+                // value.push(0);
+                // self.mir_programm.constants.push(mir::Constant { value });
+                // MIR_Location::ConstantLocation(self.mir_programm.constants.len() - 1, MIR_Type::i64)
             }
             CExpression::Paranthesised(_) => todo!(),
             CExpression::GenericSelection(_) => todo!(),

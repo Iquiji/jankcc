@@ -10,7 +10,7 @@ use cranelift::{
 use cranelift_module::{DataContext, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule};
 
-use crate::mir::MIR_Programm;
+use crate::mir::MIRProgramm;
 
 /// The basic Object class.
 pub struct CraneliftBackend {
@@ -53,46 +53,47 @@ impl Default for CraneliftBackend {
 
 impl CraneliftBackend {
     /// Compile a string in the toy language into machine code.
-    pub(crate) fn compile(&mut self, input: MIR_Programm) {
-        let mut constant_pool = ConstantPool::new();
-        for global in input.globals {
-            if global.extern_linkage {}
-        }
-        for constant in input.constants.iter().enumerate() {
-            constant_pool.set(
-                Constant::from_u32(constant.0 as u32),
-                ConstantData::from(constant.1.value.clone()),
-            )
-        }
-        println!("before func: {}", self.ctx.func);
-        for function in &input.functions {
-            self.translate_function(function.clone(), &mut constant_pool);
+    pub(crate) fn compile(&mut self, input: MIRProgramm) {
+        todo!()
+        // let mut constant_pool = ConstantPool::new();
+        // for global in input.globals {
+        //     if global.extern_linkage {}
+        // }
+        // for constant in input.constants.iter().enumerate() {
+        //     constant_pool.set(
+        //         Constant::from_u32(constant.0 as u32),
+        //         ConstantData::from(constant.1.value.clone()),
+        //     )
+        // }
+        // println!("before func: {}", self.ctx.func);
+        // for function in &input.functions {
+        //     self.translate_function(function.clone(), &mut constant_pool);
 
-            // Next, declare the function to Object. Functions must be declared
-            // before they can be called, or defined.
-            let id = self
-                .module
-                .declare_function(
-                    function.name.clone().borrow(),
-                    Linkage::Export,
-                    &self.ctx.func.signature,
-                )
-                .map_err(|e| e.to_string())
-                .unwrap();
+        //     // Next, declare the function to Object. Functions must be declared
+        //     // before they can be called, or defined.
+        //     let id = self
+        //         .module
+        //         .declare_function(
+        //             function.name.clone().borrow(),
+        //             Linkage::Export,
+        //             &self.ctx.func.signature,
+        //         )
+        //         .map_err(|e| e.to_string())
+        //         .unwrap();
 
-            // Define the function to Object. This finishes compilation, although
-            // there may be outstanding relocations to perform. Currently, Object
-            // cannot finish relocations until all functions to be called are
-            // defined. For this toy demo for now, we'll just finalize the
-            // function below.
-            self.module
-                .define_function(id, &mut self.ctx)
-                .map_err(|e| e.to_string())
-                .unwrap();
-        }
+        //     // Define the function to Object. This finishes compilation, although
+        //     // there may be outstanding relocations to perform. Currently, Object
+        //     // cannot finish relocations until all functions to be called are
+        //     // defined. For this toy demo for now, we'll just finalize the
+        //     // function below.
+        //     self.module
+        //         .define_function(id, &mut self.ctx)
+        //         .map_err(|e| e.to_string())
+        //         .unwrap();
+        // }
 
-        // Now that compilation is finished, we can clear out the context state.
-        self.module.clear_context(&mut self.ctx);
+        // // Now that compilation is finished, we can clear out the context state.
+        // self.module.clear_context(&mut self.ctx);
     }
     pub(crate) fn finish(self) -> Vec<u8> {
         // Finalize the functions which we just defined, which resolves any

@@ -1,4 +1,4 @@
-use crate::mir::MIR_Programm;
+use crate::mir::MIRProgramm;
 
 use self::symbol_table::{BlockContainer, ScopeContainer};
 
@@ -28,7 +28,7 @@ Need to Add new Type Representation that has the expr and stuff removed
 */
 pub struct EnvironmentController {
     symbol_table: BlockContainer,
-    mir_programm: MIR_Programm,
+    mir_programm: MIRProgramm,
 }
 
 impl EnvironmentController {
@@ -39,13 +39,13 @@ impl EnvironmentController {
                 active_inner: None,
                 past_inner: vec![],
             },
-            mir_programm: MIR_Programm::new(),
+            mir_programm: MIRProgramm::new(),
         }
     }
     pub(crate) fn build(&mut self, ast: crate::parser::parse_nodes::TranslationUnit) {
         self.walk_translation_unit(ast);
     }
-    pub(crate) fn get_mir(&mut self) -> MIR_Programm {
+    pub(crate) fn get_mir(&mut self) -> MIRProgramm {
         self.mir_programm.clone()
     }
 }

@@ -8,21 +8,21 @@ use cranelift_module::{DataContext, Linkage, Module};
 use cranelift_object::ObjectModule;
 use log::info;
 
-use crate::mir::{MIR_Function, MIR_Instruction, MIR_Location, MIR_Type};
+use crate::mir::{MIRFunction, MIRInstruction, MIRType};
 
 use super::CraneliftBackend;
 
-impl MIR_Type {
+impl MIRType {
     pub(crate) fn into_cranelift_type(&self) -> Type {
         match self {
-            MIR_Type::u8 => todo!(),
-            MIR_Type::i8 => todo!(),
-            MIR_Type::u16 => todo!(),
-            MIR_Type::i16 => todo!(),
-            MIR_Type::u32 => todo!(),
-            MIR_Type::i32 => types::I32,
-            MIR_Type::u64 => todo!(),
-            MIR_Type::i64 => types::I64,
+            MIRType::u8 => todo!(),
+            MIRType::i8 => todo!(),
+            MIRType::u16 => todo!(),
+            MIRType::i16 => todo!(),
+            MIRType::u32 => todo!(),
+            MIRType::i32 => types::I32,
+            MIRType::u64 => todo!(),
+            MIRType::i64 => types::I64,
         }
     }
 }
@@ -30,7 +30,7 @@ impl MIR_Type {
 impl CraneliftBackend {
     pub(crate) fn translate_function(
         &mut self,
-        input: MIR_Function,
+        input: MIRFunction,
         constant_pool: &mut ConstantPool,
     ) {
         self.ctx.func.clear();
@@ -90,14 +90,14 @@ impl CraneliftBackend {
         }
 
         // register all function variables
-        for var_name in input.vars {
-            let var = Variable::new(var_idx_counter);
-            if let std::collections::hash_map::Entry::Vacant(e) = var_map.entry(var_name.0) {
-                e.insert(var);
-                builder.declare_var(var, var_name.1.into_cranelift_type());
-                var_idx_counter += 1;
-            }
-        }
+        // for var_name in input.vars {
+        //     let var = Variable::new(var_idx_counter);
+        //     if let std::collections::hash_map::Entry::Vacant(e) = var_map.entry(var_name.0) {
+        //         e.insert(var);
+        //         builder.declare_var(var, var_name.1.into_cranelift_type());
+        //         var_idx_counter += 1;
+        //     }
+        // }
 
         let mut translator = CraneliftFunctionTranslator {
             func_builder: &mut builder,
@@ -106,9 +106,9 @@ impl CraneliftBackend {
             var_map: &mut var_map,
         };
 
-        for instr in &input.blocks[0].instr {
-            translator.translate_instruction(instr.clone());
-        }
+        // for instr in &input.blocks[0].instr {
+        //     translator.translate_instruction(instr.clone());
+        // }
 
         // Tell the builder we're done with this function.
         translator.func_builder.finalize();
@@ -124,76 +124,77 @@ pub(crate) struct CraneliftFunctionTranslator<'a> {
     pub(crate) var_map: &'a mut HashMap<String, Variable>,
 }
 impl CraneliftFunctionTranslator<'_> {
-    pub(crate) fn translate_instruction(&mut self, instr: MIR_Instruction) {
-        match instr {
-            MIR_Instruction::Return(arg) => {
-                let return_value = self.into_cranelift_value(arg);
-                self.func_builder.ins().return_(&[return_value]);
-            }
-            MIR_Instruction::Call(return_loc, symbol, arg_locations, mir_signature) => {
-                // func_builder.ins().call(, args)
-                let mut sig = self.module.make_signature();
+    pub(crate) fn translate_instruction(&mut self, instr: MIRInstruction) {
+        todo!()
+        // match instr {
+        //     MIRInstruction::Return(arg) => {
+        //         let return_value = self.into_cranelift_value(arg);
+        //         self.func_builder.ins().return_(&[return_value]);
+        //     }
+        //     MIRInstruction::Call(return_loc, symbol, arg_locations, mirsignature) => {
+        //         // func_builder.ins().call(, args)
+        //         let mut sig = self.module.make_signature();
 
-                // Add a parameter for each argument.
-                if !mir_signature.overloadable {
-                    for p in mir_signature.args {
-                        sig.params.push(AbiParam::new(p.into_cranelift_type()));
-                    }
-                } else {
-                    for parg in &arg_locations {
-                        sig.params
-                            .push(AbiParam::new(parg.get_mir_type().into_cranelift_type()));
-                    }
-                }
+        //         // Add a parameter for each argument.
+        //         if !mirsignature.overloadable {
+        //             for p in mirsignature.args {
+        //                 sig.params.push(AbiParam::new(p.into_cranelift_type()));
+        //             }
+        //         } else {
+        //             for parg in &arg_locations {
+        //                 sig.params
+        //                     .push(AbiParam::new(parg.get_mirtype().into_cranelift_type()));
+        //             }
+        //         }
 
-                // return type of called function
-                sig.returns.push(AbiParam::new(
-                    mir_signature.return_type.into_cranelift_type(),
-                ));
+        //         // return type of called function
+        //         sig.returns.push(AbiParam::new(
+        //             mirsignature.return_type.into_cranelift_type(),
+        //         ));
 
-                let callee = self
-                    .module
-                    .declare_function(&symbol, Linkage::Export, &sig)
-                    .map_err(|e| e.to_string())
-                    .unwrap();
+        //         let callee = self
+        //             .module
+        //             .declare_function(&symbol, Linkage::Export, &sig)
+        //             .map_err(|e| e.to_string())
+        //             .unwrap();
 
-                let local_callee = self
-                    .module
-                    .declare_func_in_func(callee, self.func_builder.func);
+        //         let local_callee = self
+        //             .module
+        //             .declare_func_in_func(callee, self.func_builder.func);
 
-                let mut arg_values = Vec::new();
-                for arg in arg_locations {
-                    arg_values.push(self.into_cranelift_value(arg));
-                }
-                let call = self.func_builder.ins().call(local_callee, &arg_values);
-                let return_value = self.func_builder.inst_results(call)[0];
-                if let MIR_Location::Local(name, mir_type) = return_loc {
-                    let variable = self.var_map.get(&name).unwrap();
-                    self.func_builder.def_var(*variable, return_value);
-                } else {
-                    unimplemented!()
-                }
-            }
-            MIR_Instruction::Add(add_res_loc, left_loc, right_loc) => {
-                let left_value = self.into_cranelift_value(right_loc);
-                let right_value = self.into_cranelift_value(left_loc);
-                let add_res = self.func_builder.ins().iadd(left_value, right_value);
-                if let MIR_Location::Local(name, mir_type) = add_res_loc {
-                    let variable = self.var_map.get(&name).unwrap();
-                    self.func_builder.def_var(*variable, add_res);
-                } else {
-                    unimplemented!()
-                }
-            }
-            MIR_Instruction::Assign(to_assign_loc, from_loc) => {
-                if let MIR_Location::Local(name, mir_type) = to_assign_loc {
-                    let assign_value = self.into_cranelift_value(from_loc);
-                    let variable = self.var_map.get(&name).unwrap();
-                    self.func_builder.def_var(*variable, assign_value);
-                } else {
-                    unimplemented!()
-                }
-            }
-        }
+        //         let mut arg_values = Vec::new();
+        //         for arg in arg_locations {
+        //             arg_values.push(self.into_cranelift_value(arg));
+        //         }
+        //         let call = self.func_builder.ins().call(local_callee, &arg_values);
+        //         let return_value = self.func_builder.inst_results(call)[0];
+        //         if let MIRLocation::Local(name, mirtype) = return_loc {
+        //             let variable = self.var_map.get(&name).unwrap();
+        //             self.func_builder.def_var(*variable, return_value);
+        //         } else {
+        //             unimplemented!()
+        //         }
+        //     }
+        //     MIRInstruction::Add(add_res_loc, left_loc, right_loc) => {
+        //         let left_value = self.into_cranelift_value(right_loc);
+        //         let right_value = self.into_cranelift_value(left_loc);
+        //         let add_res = self.func_builder.ins().iadd(left_value, right_value);
+        //         if let MIRLocation::Local(name, mirtype) = add_res_loc {
+        //             let variable = self.var_map.get(&name).unwrap();
+        //             self.func_builder.def_var(*variable, add_res);
+        //         } else {
+        //             unimplemented!()
+        //         }
+        //     }
+        //     MIRInstruction::Assign(to_assign_loc, from_loc) => {
+        //         if let MIRLocation::Local(name, mirtype) = to_assign_loc {
+        //             let assign_value = self.into_cranelift_value(from_loc);
+        //             let variable = self.var_map.get(&name).unwrap();
+        //             self.func_builder.def_var(*variable, assign_value);
+        //         } else {
+        //             unimplemented!()
+        //         }
+        //     }
+        // }
     }
 }

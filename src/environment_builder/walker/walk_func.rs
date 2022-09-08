@@ -8,10 +8,7 @@ use crate::{
         symbol_table::VariableInstance,
         EnvironmentController,
     },
-    mir::{
-        GlobalEntity, MIR_Block, MIR_Function, MIR_Instruction, MIR_Location, MIR_Signature,
-        MIR_Type,
-    },
+    mir::{GlobalEntity, MIRBlock, MIRFunction, MIRInstruction, MIRSignature, MIRType},
     parser::{
         parse_nodes::{
             statements::{self, Statement},
@@ -44,7 +41,7 @@ impl EnvironmentController {
         let mut func_ctx = FunctionContext::new();
         func_ctx.mir_function.name = func.declarator.base.identifier.clone();
 
-        func_ctx.mir_function.signature = MIR_Signature::from_function_pretty_type(&extracted_type);
+        func_ctx.mir_function.signature = MIRSignature::from_function_pretty_type(&extracted_type);
         if let ExtType::Function {
             overextendable: _,
             returns,
@@ -69,11 +66,6 @@ impl EnvironmentController {
         } else {
             panic!("cannot make MIR function signature out of not function PrettyType")
         }
-
-        func_ctx.mir_function.blocks.push(MIR_Block {
-            instr: vec![],
-            branches: None,
-        });
 
         self.walk_statement(&mut func_ctx, func.body.clone());
 
@@ -106,13 +98,13 @@ impl EnvironmentController {
 }
 
 pub(crate) struct FunctionContext {
-    pub(crate) mir_function: MIR_Function,
+    pub(crate) mir_function: MIRFunction,
     pub(crate) pretty_return_type: PrettyType,
 }
 impl FunctionContext {
     pub(crate) fn new() -> FunctionContext {
         FunctionContext {
-            mir_function: MIR_Function::new(),
+            mir_function: MIRFunction::new(),
             pretty_return_type: PrettyType::default_void(),
         }
     }
@@ -159,10 +151,10 @@ impl EnvironmentController {
                                                 associated_type: extracted_type.clone(),
                                             }),
                                         );
-                                        ctx.mir_function.vars.push((
-                                            var_name.clone(),
-                                            MIR_Type::extract_from_pretty_type(&extracted_type),
-                                        ));
+                                        // ctx.mir_function.vars.push((
+                                        //     var_name.clone(),
+                                        //     MIRType::extract_from_pretty_type(&extracted_type),
+                                        // ));
                                         debug!(
                                             "Variable decl as Compound Item: {:?} -> {:?}",
                                             var_that_is_declared.0.base.identifier, extracted_type
@@ -175,17 +167,17 @@ impl EnvironmentController {
                                                         single.clone(),
                                                         &extracted_type,
                                                     );
-                                                    ctx.mir_function.blocks[0].instr.push(
-                                                        MIR_Instruction::Assign(
-                                                            MIR_Location::Local(
-                                                                var_name.clone(),
-                                                                MIR_Type::extract_from_pretty_type(
-                                                                    &extracted_type,
-                                                                ),
-                                                            ),
-                                                            expr_result,
-                                                        ),
-                                                    );
+                                                    // ctx.mir_function.blocks[0].instr.push(
+                                                    //     MIRInstruction::Assign(
+                                                    //         MIRLocation::Local(
+                                                    //             var_name.clone(),
+                                                    //             MIRType::extract_from_pretty_type(
+                                                    //                 &extracted_type,
+                                                    //             ),
+                                                    //         ),
+                                                    //         expr_result,
+                                                    //     ),
+                                                    // );
                                                 }
                                                 Initializer::Compound(_) => todo!(),
                                             }
@@ -229,21 +221,21 @@ impl EnvironmentController {
             Statement::Continue => todo!(),
             Statement::Break => todo!(),
             Statement::Return(expr) => {
-                if let Some(expr) = &expr {
-                    let return_location =
-                        self.walk_expression(ctx, expr.clone(), &ctx.pretty_return_type.clone());
-                    ctx.mir_function.blocks[0]
-                        .instr
-                        .push(MIR_Instruction::Return(return_location));
-                } else {
-                    warn!("return without parameter is probably not functioning correctly!");
-                    ctx.mir_function.blocks[0]
-                        .instr
-                        .push(MIR_Instruction::Return(MIR_Location::Constant(
-                            0,
-                            MIR_Type::i64,
-                        )));
-                }
+                // if let Some(expr) = &expr {
+                //     let return_location =
+                //         self.walk_expression(ctx, expr.clone(), &ctx.pretty_return_type.clone());
+                //     ctx.mir_function.blocks[0]
+                //         .instr
+                //         .push(MIR_Instruction::Return(return_location));
+                // } else {
+                //     warn!("return without parameter is probably not functioning correctly!");
+                //     ctx.mir_function.blocks[0]
+                //         .instr
+                //         .push(MIR_Instruction::Return(MIR_Location::Constant(
+                //             0,
+                //             MIRType::i64,
+                //         )));
+                // }
             }
         }
     }
