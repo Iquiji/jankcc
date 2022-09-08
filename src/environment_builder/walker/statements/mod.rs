@@ -1,4 +1,4 @@
-use super::*;
+use super::{*, walk_func::FunctionContext};
 use crate::{
     environment_builder::{
         ext_type::{ExtType, PrettyType},
