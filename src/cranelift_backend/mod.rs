@@ -1,11 +1,14 @@
 mod helpers;
 mod translate_function;
 
-use cranelift::{prelude::*, codegen::ir::ConstantPool};
-use cranelift_module::{DataContext, Module, Linkage};
+use cranelift::{
+    codegen::ir::{ConstantData, ConstantPool},
+    prelude::*,
+};
+use cranelift_module::{DataContext, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule};
 
-use crate::mir::MIRProgramm;
+use crate::{mir::MIRProgramm, parser::parse_nodes::Constant};
 
 /// The basic Object class.
 pub struct CraneliftBackend {
@@ -49,29 +52,18 @@ impl Default for CraneliftBackend {
 impl CraneliftBackend {
     /// Compile a string in the toy language into machine code.
     pub(crate) fn compile(&mut self, input: MIRProgramm) {
-        let mut constant_pool = ConstantPool::new();
-        // for global in input.globals {
-        //     if global.extern_linkage {}
-        // }
-        // for constant in input.constants.iter().enumerate() {
-        //     constant_pool.set(
-        //         Constant::from_u32(constant.0 as u32),
-        //         ConstantData::from(constant.1.value.clone()),
-        //     )
-        // }
+        for global in input.globals {
+            if global.extern_linkage {}
+        }
         // println!("before func: {}", self.ctx.func);
         for function in &input.functions {
-            self.translate_function(function.clone(), &mut constant_pool);
+            self.translate_function(function.clone());
 
             // Next, declare the function to Object. Functions must be declared
             // before they can be called, or defined.
             let id = self
                 .module
-                .declare_function(
-                    &function.name,
-                    Linkage::Export,
-                    &self.ctx.func.signature,
-                )
+                .declare_function(&function.name, Linkage::Export, &self.ctx.func.signature)
                 .map_err(|e| e.to_string())
                 .unwrap();
 

@@ -9,12 +9,13 @@ pub(crate) struct MIRFunction {
     pub(crate) name: String,
     pub(crate) signature: MIRSignature,
     pub(crate) parameter_names: Vec<String>,
-    pub(crate) var_name_id_map: BiBTreeMap<u32, String>,
-    pub(crate) var_type_map: BTreeMap<u32, MIRType>,
-    pub(crate) data_const_id_map: BiBTreeMap<u32, MIRConstant>,
+    pub(crate) var_name_id_map: BiBTreeMap<LocalRef, String>,
+    pub(crate) var_type_map: BTreeMap<LocalRef, MIRType>,
+    pub(crate) data_const_id_map: BiBTreeMap<DataConstantRef, MIRConstant>,
     pub(crate) blocks: Vec<Rc<RefCell<MIRBlock>>>,
     pub(crate) current_block: Rc<RefCell<MIRBlock>>,
     pub(crate) ctx_gen: MIRFunctionContextGenerator,
+    pub(crate) value_type_map: BTreeMap<MIRValue, MIRType>,
 }
 impl MIRFunction {
     pub(crate) fn new() -> MIRFunction {
@@ -32,6 +33,7 @@ impl MIRFunction {
             data_const_id_map: BiBTreeMap::new(),
             blocks: vec![origin_block.clone()],
             current_block: origin_block,
+            value_type_map: BTreeMap::new(),
             ctx_gen: MIRFunctionContextGenerator::new(),
         }
     }
@@ -52,13 +54,14 @@ impl MIRFunctionContextGenerator {
             var_ref_counter: 0,
         }
     }
-    pub(crate) fn make_intermediate_value(&mut self) -> MIRValue {
+    fn make_intermediate_value(&mut self) -> MIRValue {
         let temp = MIRValue {
             opaque_ref: self.intermediate_value_counter,
         };
         self.intermediate_value_counter += 1;
         temp
     }
+
     pub(crate) fn make_data_const_ref(&mut self) -> DataConstantRef {
         let temp = DataConstantRef {
             opaque_ref: self.data_const_ref_counter,
@@ -76,19 +79,24 @@ impl MIRFunctionContextGenerator {
 }
 
 impl MIRFunction {
+    pub(crate) fn make_intermediate_value_typed(&mut self, mir_type: MIRType) -> MIRValue {
+        let value = self.ctx_gen.make_intermediate_value();
+        self.value_type_map.insert(value, mir_type);
+        value
+    }
     pub(crate) fn insert_constant(&mut self, constant: MIRConstant) -> DataConstantRef {
         let c_ref = self.ctx_gen.make_data_const_ref();
         self.data_const_id_map
-            .insert_no_overwrite(c_ref.opaque_ref, constant)
+            .insert_no_overwrite(c_ref, constant)
             .expect("internal data const ref error");
         c_ref
     }
     pub(crate) fn insert_variable(&mut self, var: String, var_type: MIRType) -> LocalRef {
         let var_ref = self.ctx_gen.make_var_ref();
         self.var_name_id_map
-            .insert_no_overwrite(var_ref.opaque_ref, var)
+            .insert_no_overwrite(var_ref, var)
             .expect("internal var ref error");
-        self.var_type_map.insert(var_ref.opaque_ref, var_type);
+        self.var_type_map.insert(var_ref, var_type);
         var_ref
     }
 }

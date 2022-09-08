@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::environment_builder::ext_type::PrettyType;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub(crate) enum MIRType {
     U8,
     I8,

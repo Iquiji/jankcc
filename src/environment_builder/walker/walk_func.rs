@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, cell::RefCell};
 
-use log::info;
+use log::{info, debug};
 
 use crate::{
     environment_builder::{
@@ -8,7 +8,7 @@ use crate::{
         symbol_table::VariableInstance,
         EnvironmentController,
     },
-    mir::{GlobalEntity, MIRFunction, MIRSignature},
+    mir::{GlobalEntity, MIRFunction, MIRSignature, MIRType},
     parser::{parse_nodes::FunctionDefinition, span::Spanned},
 };
 
@@ -43,10 +43,17 @@ impl EnvironmentController {
         } = &extracted_type.inner_type
         {
             for parameter_name in parameters {
+                // param name for later
                 func_ctx
                     .mir_function
                     .parameter_names
                     .push(parameter_name.ident.clone());
+                // param is also a local variable
+                func_ctx.mir_function.insert_variable(
+                    parameter_name.ident.clone(),
+                    MIRType::extract_from_pretty_type(&parameter_name.parameter_type.into_pretty()),
+                );
+                // it is also in the symbol table
                 self.symbol_table.get_current_scope().variables.insert(
                     parameter_name.ident.clone(),
                     RefCell::new(VariableInstance {
@@ -74,6 +81,9 @@ impl EnvironmentController {
             .join("\n");
 
         info!("all_used_vars: {}", used_vars);
+        
+        debug!("{:#?}",func_ctx.mir_function.ctx_gen.intermediate_value_counter);
+        debug!("{:#?}",func_ctx.mir_function.value_type_map);
 
         self.mir_programm.functions.push(func_ctx.mir_function);
 
@@ -88,7 +98,8 @@ impl EnvironmentController {
                     name: extern_var.0.clone(),
                     extern_linkage: extern_var.1.borrow().is_extern,
                 }),
-        )
+        );
+
     }
 }
 

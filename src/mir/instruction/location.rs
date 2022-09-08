@@ -18,12 +18,12 @@ use super::*;
 //     }
 // }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Copy)]
 pub(crate) struct LocalRef {
     pub(crate) opaque_ref: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Copy)]
 pub(crate) struct DataConstantRef {
     pub(crate) opaque_ref: u32,
 }

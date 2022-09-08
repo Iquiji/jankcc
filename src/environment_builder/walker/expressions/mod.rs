@@ -5,7 +5,7 @@ use crate::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{MIRBlock, MIRInstruction, MIRType, MIRValue},
+    mir::{MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -55,24 +55,20 @@ impl EnvironmentController {
                 shift_amount: _,
             } => todo!(),
             CExpression::Additive {
-                left_value: _,
+                left_value,
                 op: _,
-                right_value: _,
+                right_value,
             } => {
-                todo!()
-                // let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
-                // let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
-                // let return_loc = ctx
-                //     .mir_function
-                //     .make_temp_location(left_value.get_mir_type());
-                // ctx.mir_function.blocks[0]
-                //     .instr
-                //     .push(mir::MIR_Instruction::Add(
-                //         return_loc.clone(),
-                //         left_value,
-                //         right_value,
-                //     ));
-                // return_loc
+                let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
+                let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
+                let output_value = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::Add(output_value, left_value, right_value),
+                );
+                output_value
             }
             CExpression::Multiplicative {
                 left_value: _,
@@ -99,7 +95,7 @@ impl EnvironmentController {
                 function,
                 arguments,
             } => {
-                let (function_type, _ident) = match &*function.inner {
+                let (function_type, ident) = match &*function.inner {
                     CExpression::Identifier(ident) => (
                         self.symbol_table.get_top_variable(&ident.identifier),
                         ident.identifier.clone(),
@@ -111,10 +107,11 @@ impl EnvironmentController {
                     let function_type = function_type.borrow().associated_type.clone();
                     if let ExtType::Function {
                         overextendable,
-                        returns: _,
+                        returns,
                         parameters,
                     } = &function_type.inner_type
                     {
+                        // this is for variadic functions so if there is a variadic function we can extend the type iter and dont care about overloading the function
                         let temp = vec![FunctionParameter {
                             ident: String::new(),
                             parameter_type: Box::new(ExtType::Void),
@@ -126,6 +123,7 @@ impl EnvironmentController {
                             temp_non_extending.iter().cycle()
                         };
 
+                        // collect all arg values by walking the ast and requiring the given type
                         let mut args = vec![];
                         for (arg, param_type) in arguments
                             .iter()
@@ -138,20 +136,20 @@ impl EnvironmentController {
                             ));
                         }
 
-                        // let location = ctx.mir_function.make_temp_location(
-                        //     MIR_Type::extract_from_pretty_type(&PrettyType {
-                        //         inner_type: *returns.clone(),
-                        //     }),
-                        // );
-                        // ctx.mir_function.blocks[0]
-                        //     .instr
-                        //     .push(mir::MIR_Instruction::Call(
-                        //         location.clone(),
-                        //         ident,
-                        //         args,
-                        //         MIR_Signature::from_function_pretty_type(&function_type),
-                        //     ));
-                        todo!()
+                        // push the actual call and return the MIRValue that results from that :)
+                        let output_value = ctx.mir_function.make_intermediate_value_typed(
+                            MIRType::extract_from_pretty_type(&returns.into_pretty()),
+                        );
+                        MIRBlock::ins_instr(
+                            &ctx.mir_function.current_block,
+                            MIRInstruction::Call(
+                                output_value,
+                                ident,
+                                args,
+                                MIRSignature::from_function_pretty_type(&function_type),
+                            ),
+                        );
+                        output_value
                     } else {
                         panic!("cannot make MIR function signature out of not function PrettyType")
                     }
@@ -176,39 +174,78 @@ impl EnvironmentController {
                 type_name: _,
                 initializer_list: _,
             } => todo!(),
-            CExpression::Identifier(_ident) => todo!(),
+            CExpression::Identifier(ident) => {
+                // get local_ref
+                let local_ref = *ctx
+                    .mir_function
+                    .var_name_id_map
+                    .get_by_right(&ident.identifier)
+                    .unwrap_or_else(|| panic!("using undeclared variable"));
+                let _mir_var_type = ctx.mir_function.var_type_map.get(&local_ref).unwrap();
+                let var_type = self
+                    .symbol_table
+                    .get_top_variable(&ident.identifier)
+                    .unwrap_or_else(|| panic!("using undeclared variable"))
+                    .borrow()
+                    .associated_type
+                    .clone();
+
+                if &var_type != wanted_type {
+                    // todo!(: fix this)
+                    if wanted_type == &ExtType::Void.into_pretty(){
+                        warn!("wanted type is void, ignoring in current version, subject to rework!");
+                        expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
+                    }else{
+                        expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
+                        panic!("var type different from wanted type!");
+                    }
+                }
+                // insert load local instruction
+                let value_ref = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(&var_type));
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::ReadLocal(value_ref, local_ref),
+                );
+                println!("ident: '{}' read value_ref: {} ",ident.identifier,value_ref.opaque_ref);
+                assert_ne!(MIRValue{ opaque_ref: 0 },MIRValue{ opaque_ref: 2 });
+                value_ref
+            }
             CExpression::Constant(constant) => match constant {
                 crate::parser::parse_nodes::Constant::Number(numberlike) => {
+                    let mir_type = MIRType::extract_from_pretty_type(wanted_type);
                     // make intermediate value insert instr to fetch constant number and return the opaque pointer to the value
-                    let value_ref = ctx.mir_function.ctx_gen.make_intermediate_value();
+                    let value_ref = ctx.mir_function.make_intermediate_value_typed(mir_type);
                     MIRBlock::ins_instr(
                         &ctx.mir_function.current_block,
                         MIRInstruction::ConstNum(
                             value_ref,
                             numberlike.from.parse::<i64>().unwrap(),
-                            MIRType::extract_from_pretty_type(wanted_type),
+                            mir_type,
                         ),
                     );
                     value_ref
                 }
             },
-            CExpression::StringLiteral(_literal) => {
-                todo!()
-                // let mut value = vec![];
-                // let char_iter = literal.value.chars();
+            CExpression::StringLiteral(literal) => {
+                warn!(
+                    "wanted type for string literal is: {:?}, unhandled :./",
+                    wanted_type
+                );
+                let mir_type = MIRType::extract_from_pretty_type(wanted_type);
 
-                // for character in char_iter {
-                //     // println!("{}",character);
-                //     if character == '\n' {
-                //         value.push(0xA);
-                //     } else {
-                //         value.extend(character.to_string().as_bytes());
-                //     }
-                // }
+                // get constant and make a ref to the data constant
+                let constant = MIRConstant::from_string(literal.value.clone());
+                let constant_ref = ctx.mir_function.insert_constant(constant);
 
-                // value.push(0);
-                // self.mir_programm.constants.push(mir::Constant { value });
-                // MIR_Location::ConstantLocation(self.mir_programm.constants.len() - 1, MIR_Type::i64)
+                // insert the GetConstDataPtr instr and return the value ref
+                let value_ref = ctx.mir_function.make_intermediate_value_typed(mir_type);
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::GetConstDataPtr(value_ref, constant_ref),
+                );
+                value_ref
             }
             CExpression::Paranthesised(_) => todo!(),
             CExpression::GenericSelection(_) => todo!(),
