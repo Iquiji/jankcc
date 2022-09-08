@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::environment_builder::ext_type::{ExtType, PrettyType};
-
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -17,4 +15,10 @@ impl MIRProgramm {
             functions: vec![],
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct GlobalEntity {
+    pub(crate) name: String,
+    pub(crate) extern_linkage: bool,
 }

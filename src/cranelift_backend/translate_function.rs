@@ -15,14 +15,14 @@ use super::CraneliftBackend;
 impl MIRType {
     pub(crate) fn into_cranelift_type(&self) -> Type {
         match self {
-            MIRType::u8 => todo!(),
-            MIRType::i8 => todo!(),
-            MIRType::u16 => todo!(),
-            MIRType::i16 => todo!(),
-            MIRType::u32 => todo!(),
-            MIRType::i32 => types::I32,
-            MIRType::u64 => todo!(),
-            MIRType::i64 => types::I64,
+            MIRType::U8 => todo!(),
+            MIRType::I8 => todo!(),
+            MIRType::U16 => todo!(),
+            MIRType::I16 => todo!(),
+            MIRType::U32 => todo!(),
+            MIRType::I32 => types::I32,
+            MIRType::U64 => todo!(),
+            MIRType::I64 => types::I64,
         }
     }
 }

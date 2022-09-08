@@ -22,7 +22,7 @@ impl MIRFunction {
         MIRFunction {
             name: String::new(),
             signature: MIRSignature {
-                return_type: MIRType::i64,
+                return_type: MIRType::I64,
                 args: vec![],
                 overloadable: false,
             },

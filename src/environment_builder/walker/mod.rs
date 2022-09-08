@@ -7,13 +7,15 @@ use crate::environment_builder::symbol_table::VariableInstance;
 use crate::parser::parse_nodes::declarations::Declaration;
 use crate::parser::parse_nodes::ExternalDeclaration::*;
 use crate::parser::parse_nodes::TranslationUnit;
-use crate::parser::span::Spanned;
 
-use super::EnvironmentController;
+pub(crate) use crate::parser::span::Spanned;
+pub(crate) use super::EnvironmentController;
+pub(crate) use crate::mir::*;
 
 mod static_and_constant_expr;
 mod walk_expressions;
 mod walk_func;
+mod statements;
 
 impl EnvironmentController {
     pub(crate) fn walk_translation_unit(&mut self, translation_unit: TranslationUnit) {

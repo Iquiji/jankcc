@@ -189,8 +189,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut controller = EnvironmentController::new();
     controller.build(parsed);
 
-    let timer_end_parsing = timer_start_parsing.elapsed();
-    info!("Building of Environment took: {:?}", timer_end_parsing);
+    let timer_end_environment = timer_start_environment.elapsed();
+    info!("Building of Environment took: {:?}", timer_end_environment);
 
     let timer_start_codegen = Instant::now();
     info!("Starting Codegen of file: {:?}", in_file_path);

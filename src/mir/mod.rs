@@ -33,12 +33,6 @@ pub(crate) use instruction::*;
 pub(crate) use programm::*;
 pub(crate) use types::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct GlobalEntity {
-    pub(crate) name: String,
-    pub(crate) extern_linkage: bool,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub(crate) struct MIRConstant {
     pub(crate) value: Vec<u8>,

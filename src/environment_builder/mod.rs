@@ -34,11 +34,7 @@ pub struct EnvironmentController {
 impl EnvironmentController {
     pub fn new() -> Self {
         EnvironmentController {
-            symbol_table: BlockContainer {
-                scope: ScopeContainer::new(),
-                active_inner: None,
-                past_inner: vec![],
-            },
+            symbol_table: BlockContainer::new(),
             mir_programm: MIRProgramm::new(),
         }
     }
