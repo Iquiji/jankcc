@@ -10,7 +10,7 @@ use crate::parser::parse_nodes::TranslationUnit;
 
 pub(crate) use crate::parser::span::Spanned;
 pub(crate) use super::EnvironmentController;
-pub(crate) use crate::mir::*;
+
 
 mod static_and_constant_expr;
 mod walk_expressions;

@@ -20,8 +20,8 @@ impl MIRType {
         match &p_type.inner_type {
             ExtType::Void => todo!(),
             ExtType::Int {
-                is_const,
-                is_volatile,
+                is_const: _,
+                is_volatile: _,
                 signed,
                 size,
             } => {
@@ -45,38 +45,38 @@ impl MIRType {
                 }
             }
             ExtType::Float {
-                is_const,
-                is_volatile,
-                size,
+                is_const: _,
+                is_volatile: _,
+                size: _,
             } => todo!(),
             ExtType::Array {
-                is_const,
-                is_volatile,
-                arr_size,
-                to,
+                is_const: _,
+                is_volatile: _,
+                arr_size: _,
+                to: _,
             } => todo!(),
             ExtType::Pointer {
-                is_const,
-                is_volatile,
-                to,
+                is_const: _,
+                is_volatile: _,
+                to: _,
             } => MIRType::I64,
             ExtType::Function {
-                overextendable,
-                returns,
-                parameters,
+                overextendable: _,
+                returns: _,
+                parameters: _,
             } => todo!(),
             ExtType::Struct {
-                is_const,
-                is_volatile,
-                tag,
-                alignment,
-                members,
+                is_const: _,
+                is_volatile: _,
+                tag: _,
+                alignment: _,
+                members: _,
             } => todo!(),
             ExtType::Union {
-                is_const,
-                is_volatile,
-                tag,
-                members,
+                is_const: _,
+                is_volatile: _,
+                tag: _,
+                members: _,
             } => todo!(),
         }
     }

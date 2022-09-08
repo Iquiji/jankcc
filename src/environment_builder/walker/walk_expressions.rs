@@ -3,7 +3,7 @@ use crate::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{self, MIRInstruction, MIRSignature, MIRType, MIRValue},
+    mir::{MIRValue},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -18,19 +18,19 @@ impl EnvironmentController {
         &mut self,
         ctx: &mut FunctionContext,
         expression: Spanned<CExpression>,
-        wanted_type: &PrettyType,
+        _wanted_type: &PrettyType,
     ) -> MIRValue {
         match &*expression.inner {
             CExpression::Expression(_) => todo!(),
             CExpression::Assignment {
-                to_assign,
-                operator,
-                value,
+                to_assign: _,
+                operator: _,
+                value: _,
             } => todo!(),
             CExpression::Ternary {
-                condition,
-                if_true,
-                tern_else,
+                condition: _,
+                if_true: _,
+                tern_else: _,
             } => todo!(),
             CExpression::LogicalOr(_) => todo!(),
             CExpression::LogicalAnd(_) => todo!(),
@@ -38,24 +38,24 @@ impl EnvironmentController {
             CExpression::ExlusiveOr(_) => todo!(),
             CExpression::And(_) => todo!(),
             CExpression::Equality {
-                left_piece,
-                equality_op,
-                right_piece,
+                left_piece: _,
+                equality_op: _,
+                right_piece: _,
             } => todo!(),
             CExpression::Relational {
-                left_piece,
-                equality_op,
-                right_piece,
+                left_piece: _,
+                equality_op: _,
+                right_piece: _,
             } => todo!(),
             CExpression::Shift {
-                value,
-                shift_type,
-                shift_amount,
+                value: _,
+                shift_type: _,
+                shift_amount: _,
             } => todo!(),
             CExpression::Additive {
-                left_value,
-                op,
-                right_value,
+                left_value: _,
+                op: _,
+                right_value: _,
             } => {
                 todo!()
                 // let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
@@ -73,25 +73,25 @@ impl EnvironmentController {
                 // return_loc
             }
             CExpression::Multiplicative {
-                left_value,
-                op,
-                right_value,
+                left_value: _,
+                op: _,
+                right_value: _,
             } => todo!(),
-            CExpression::Cast { type_name, value } => todo!(),
+            CExpression::Cast { type_name: _, value: _ } => todo!(),
             CExpression::PrefixIncrement {
-                increment_type,
-                value,
+                increment_type: _,
+                value: _,
             } => todo!(),
-            CExpression::Unary { unary_op, value } => todo!(),
-            CExpression::SizeOf { value } => todo!(),
-            CExpression::SizeOfType { type_name } => todo!(),
-            CExpression::AlignOfType { type_name } => todo!(),
-            CExpression::ArraySubscription { array, index } => todo!(),
+            CExpression::Unary { unary_op: _, value: _ } => todo!(),
+            CExpression::SizeOf { value: _ } => todo!(),
+            CExpression::SizeOfType { type_name: _ } => todo!(),
+            CExpression::AlignOfType { type_name: _ } => todo!(),
+            CExpression::ArraySubscription { array: _, index: _ } => todo!(),
             CExpression::FunctionCall {
                 function,
                 arguments,
             } => {
-                let (function_type, ident) = match &*function.inner {
+                let (function_type, _ident) = match &*function.inner {
                     CExpression::Identifier(ident) => (
                         self.symbol_table.get_top_variable(&ident.identifier),
                         ident.identifier.clone(),
@@ -103,7 +103,7 @@ impl EnvironmentController {
                     let function_type = function_type.borrow().associated_type.clone();
                     if let ExtType::Function {
                         overextendable,
-                        returns,
+                        returns: _,
                         parameters,
                     } = &function_type.inner_type
                     {
@@ -152,23 +152,23 @@ impl EnvironmentController {
                     panic!();
                 }
             }
-            CExpression::DirectMemberAccess { to_access, member } => todo!(),
-            CExpression::IndirectMemberAccess { to_access, member } => todo!(),
+            CExpression::DirectMemberAccess { to_access: _, member: _ } => todo!(),
+            CExpression::IndirectMemberAccess { to_access: _, member: _ } => todo!(),
             CExpression::PostfixIncrement {
-                increment_type,
-                value,
+                increment_type: _,
+                value: _,
             } => todo!(),
             CExpression::TypeInitializer {
-                type_name,
-                initializer_list,
+                type_name: _,
+                initializer_list: _,
             } => todo!(),
-            CExpression::Identifier(ident) => todo!(),
+            CExpression::Identifier(_ident) => todo!(),
             CExpression::Constant(constant) => match constant {
-                crate::parser::parse_nodes::Constant::Number(numberlike) => {
+                crate::parser::parse_nodes::Constant::Number(_numberlike) => {
                     todo!()
                 }
             },
-            CExpression::StringLiteral(literal) => {
+            CExpression::StringLiteral(_literal) => {
                 todo!()
                 // let mut value = vec![];
                 // let char_iter = literal.value.chars();

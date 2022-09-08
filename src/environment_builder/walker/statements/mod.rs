@@ -1,15 +1,13 @@
 use super::{*, walk_func::FunctionContext};
 use crate::{
     environment_builder::{
-        ext_type::{ExtType, PrettyType},
+        ext_type::{PrettyType},
         symbol_table::VariableInstance,
         EnvironmentController,
     },
-    mir::{GlobalEntity, MIRBlock, MIRFunction, MIRInstruction, MIRSignature, MIRType},
     parser::{
         parse_nodes::{
             statements::{self, Statement},
-            FunctionDefinition,
         },
         span::Spanned,
     },
@@ -23,12 +21,12 @@ impl EnvironmentController {
     ) {
         println!("{}", serde_yaml::to_string(&statement).unwrap());
         match &*statement.inner {
-            Statement::Labeled { label, body } => todo!(),
+            Statement::Labeled { label: _, body: _ } => todo!(),
             Statement::SwitchCase {
-                const_expr,
-                statement,
+                const_expr: _,
+                statement: _,
             } => todo!(),
-            Statement::SwitchDefault { statement } => todo!(),
+            Statement::SwitchDefault { statement: _ } => todo!(),
             Statement::Compound(compound_statement_list) => {
                 for statement in compound_statement_list {
                     match statement {
@@ -67,7 +65,7 @@ impl EnvironmentController {
                                         if let Some(initializer) = &var_that_is_declared.1 {
                                             match &*initializer.inner {
                                                 Initializer::Single(single) => {
-                                                    let expr_result = self.walk_expression(
+                                                    let _expr_result = self.walk_expression(
                                                         ctx,
                                                         single.clone(),
                                                         &extracted_type,
@@ -102,30 +100,30 @@ impl EnvironmentController {
             }
             Statement::NoneExpr => {}
             Statement::If {
-                controlling_expr,
-                true_body,
-                else_body,
+                controlling_expr: _,
+                true_body: _,
+                else_body: _,
             } => todo!(),
             Statement::Switch {
-                controlling_expr,
-                body,
+                controlling_expr: _,
+                body: _,
             } => todo!(),
             Statement::While {
-                while_type,
-                controlling_expr,
-                body,
+                while_type: _,
+                controlling_expr: _,
+                body: _,
             } => todo!(),
             Statement::For {
-                decl_clause,
-                expr_clause,
-                controlling_expr,
-                after_expr,
-                body,
+                decl_clause: _,
+                expr_clause: _,
+                controlling_expr: _,
+                after_expr: _,
+                body: _,
             } => todo!(),
             Statement::Goto(_) => todo!(),
             Statement::Continue => todo!(),
             Statement::Break => todo!(),
-            Statement::Return(expr) => {
+            Statement::Return(_expr) => {
                 // if let Some(expr) = &expr {
                 //     let return_location =
                 //         self.walk_expression(ctx, expr.clone(), &ctx.pretty_return_type.clone());

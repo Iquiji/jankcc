@@ -1,13 +1,12 @@
 mod helpers;
 mod translate_function;
 
-use std::{borrow::Borrow, error::Error};
+
 
 use cranelift::{
-    codegen::ir::{Constant, ConstantData, ConstantPool},
     prelude::*,
 };
-use cranelift_module::{DataContext, Linkage, Module};
+use cranelift_module::{DataContext, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule};
 
 use crate::mir::MIRProgramm;
@@ -53,7 +52,7 @@ impl Default for CraneliftBackend {
 
 impl CraneliftBackend {
     /// Compile a string in the toy language into machine code.
-    pub(crate) fn compile(&mut self, input: MIRProgramm) {
+    pub(crate) fn compile(&mut self, _input: MIRProgramm) {
         todo!()
         // let mut constant_pool = ConstantPool::new();
         // for global in input.globals {

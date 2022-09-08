@@ -45,10 +45,7 @@ use std::{cell::RefCell, collections::HashMap};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::parser::{
-    parse_nodes::declarations::{CAlignmentSpecifier, CFunctionSpecifier, DerivedDeclarator},
-    types::{CTypeQualifiers, CTypeSpecifier},
-};
+
 
 use super::ext_type::PrettyType;
 

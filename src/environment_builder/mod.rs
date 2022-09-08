@@ -1,6 +1,6 @@
 use crate::mir::MIRProgramm;
 
-use self::symbol_table::{BlockContainer, ScopeContainer};
+use self::symbol_table::{BlockContainer};
 
 #[cfg(test)]
 mod tests;

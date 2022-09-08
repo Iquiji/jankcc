@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, cell::RefCell};
 
-use log::{debug, error, info, warn};
+use log::{info};
 
 use crate::{
     environment_builder::{
@@ -8,10 +8,9 @@ use crate::{
         symbol_table::VariableInstance,
         EnvironmentController,
     },
-    mir::{GlobalEntity, MIRBlock, MIRFunction, MIRInstruction, MIRSignature, MIRType},
+    mir::{GlobalEntity, MIRFunction, MIRSignature},
     parser::{
         parse_nodes::{
-            statements::{self, Statement},
             FunctionDefinition,
         },
         span::Spanned,

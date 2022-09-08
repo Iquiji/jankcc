@@ -1,10 +1,10 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::HashMap};
 
 use cranelift::{
-    codegen::ir::{Constant, ConstantPool, Function},
+    codegen::ir::{ConstantPool},
     prelude::{isa::CallConv, *},
 };
-use cranelift_module::{DataContext, Linkage, Module};
+
 use cranelift_object::ObjectModule;
 use log::info;
 
@@ -99,7 +99,7 @@ impl CraneliftBackend {
         //     }
         // }
 
-        let mut translator = CraneliftFunctionTranslator {
+        let translator = CraneliftFunctionTranslator {
             func_builder: &mut builder,
             module: &mut self.module,
             constant_pool,
@@ -124,7 +124,7 @@ pub(crate) struct CraneliftFunctionTranslator<'a> {
     pub(crate) var_map: &'a mut HashMap<String, Variable>,
 }
 impl CraneliftFunctionTranslator<'_> {
-    pub(crate) fn translate_instruction(&mut self, instr: MIRInstruction) {
+    pub(crate) fn translate_instruction(&mut self, _instr: MIRInstruction) {
         todo!()
         // match instr {
         //     MIRInstruction::Return(arg) => {
