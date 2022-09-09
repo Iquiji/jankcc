@@ -79,10 +79,9 @@ impl CraneliftBackend {
             if let Err(error) = errors{
                 println!("{:?}", error.source());
             }
+            // Now that compilation is finished, we can clear out the context state.
+            self.module.clear_context(&mut self.ctx);
         }
-
-        // Now that compilation is finished, we can clear out the context state.
-        self.module.clear_context(&mut self.ctx);
     }
     pub(crate) fn finish(self) -> Vec<u8> {
         // Finalize the functions which we just defined, which resolves any

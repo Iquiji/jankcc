@@ -178,7 +178,7 @@
       alignment: ~
     declarator:
       base:
-        identifier: add
+        identifier: fib
       derive:
         FunctionType:
           parameter_type_list:
@@ -205,75 +205,81 @@
                     alignment: ~
                   declarator:
                     base:
-                      identifier: a
-                    derive: Base
-              - Declarator:
-                  specifiers:
-                    storage:
-                      typedef_c: false
-                      extern_c: false
-                      static_c: false
-                      thread_local_c: false
-                      auto_c: false
-                      register_c: false
-                    qualifiers:
-                      const_q: false
-                      restrict_q: false
-                      volatile_q: false
-                      atomic_q: false
-                    specifiers:
-                      Basic: Int
-                    function:
-                      inline: false
-                      no_return: false
-                    alignment: ~
-                  declarator:
-                    base:
-                      identifier: b
+                      identifier: num
                     derive: Base
             ellipsis: false
           to: Base
     declarations: []
     body:
       Compound:
-        - Declaration:
-            Declaration:
-              specifiers:
-                storage:
-                  typedef_c: false
-                  extern_c: false
-                  static_c: false
-                  thread_local_c: false
-                  auto_c: false
-                  register_c: false
-                qualifiers:
-                  const_q: false
-                  restrict_q: false
-                  volatile_q: false
-                  atomic_q: false
-                specifiers:
-                  Basic: Int
-                function:
-                  inline: false
-                  no_return: false
-                alignment: ~
-              init:
-                - - base:
-                      identifier: c
-                    derive: Base
-                  - Single:
-                      Additive:
-                        left_value:
-                          Identifier:
-                            identifier: a
-                        op: Plus
-                        right_value:
-                          Identifier:
-                            identifier: b
         - Statement:
-            Return:
-              Identifier:
-                identifier: c
+            If:
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Identifier:
+                      identifier: num
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "0"
+              true_body:
+                Compound:
+                  - Statement:
+                      Return:
+                        Constant:
+                          Number: "0"
+              else_body:
+                If:
+                  controlling_expr:
+                    Equality:
+                      left_piece:
+                        Identifier:
+                          identifier: num
+                      equality_op: Equal
+                      right_piece:
+                        Constant:
+                          Number: "1"
+                  true_body:
+                    Compound:
+                      - Statement:
+                          Return:
+                            Constant:
+                              Number: "1"
+                  else_body:
+                    Compound:
+                      - Statement:
+                          Return:
+                            Additive:
+                              left_value:
+                                FunctionCall:
+                                  function:
+                                    Identifier:
+                                      identifier: fib
+                                  arguments:
+                                    - Additive:
+                                        left_value:
+                                          Identifier:
+                                            identifier: num
+                                        op: Minus
+                                        right_value:
+                                          Constant:
+                                            Number: "1"
+                              op: Plus
+                              right_value:
+                                FunctionCall:
+                                  function:
+                                    Identifier:
+                                      identifier: fib
+                                  arguments:
+                                    - Additive:
+                                        left_value:
+                                          Identifier:
+                                            identifier: num
+                                        op: Minus
+                                        right_value:
+                                          Constant:
+                                            Number: "2"
 - FunctionDefinition:
     function_specifiers:
       storage:
@@ -296,7 +302,7 @@
       alignment: ~
     declarator:
       base:
-        identifier: dumb_func
+        identifier: fib_easy
       derive:
         FunctionType:
           parameter_type_list:
@@ -323,7 +329,7 @@
                     alignment: ~
                   declarator:
                     base:
-                      identifier: wow
+                      identifier: num
                     derive: Base
             ellipsis: false
           to: Base
@@ -331,9 +337,73 @@
     body:
       Compound:
         - Statement:
+            If:
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Identifier:
+                      identifier: num
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "0"
+              true_body:
+                Compound:
+                  - Statement:
+                      Return:
+                        Constant:
+                          Number: "0"
+              else_body: ~
+        - Statement:
+            If:
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Identifier:
+                      identifier: num
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "1"
+              true_body:
+                Compound:
+                  - Statement:
+                      Return:
+                        Constant:
+                          Number: "1"
+              else_body: ~
+        - Statement:
             Return:
-              Identifier:
-                identifier: wow
+              Additive:
+                left_value:
+                  FunctionCall:
+                    function:
+                      Identifier:
+                        identifier: fib_easy
+                    arguments:
+                      - Additive:
+                          left_value:
+                            Identifier:
+                              identifier: num
+                          op: Minus
+                          right_value:
+                            Constant:
+                              Number: "1"
+                op: Plus
+                right_value:
+                  FunctionCall:
+                    function:
+                      Identifier:
+                        identifier: fib_easy
+                    arguments:
+                      - Additive:
+                          left_value:
+                            Identifier:
+                              identifier: num
+                          op: Minus
+                          right_value:
+                            Constant:
+                              Number: "2"
 - FunctionDefinition:
     function_specifiers:
       storage:
@@ -367,28 +437,270 @@
     body:
       Compound:
         - Statement:
-            If:
-              controlling_expr:
-                Equality:
-                  left_piece:
-                    Constant:
-                      Number: "5"
-                  equality_op: Equal
-                  right_piece:
-                    Constant:
-                      Number: "5"
-              true_body:
-                Compound:
-                  - Statement:
-                      CExpression:
-                        FunctionCall:
-                          function:
-                            Identifier:
-                              identifier: puts
-                          arguments:
-                            - StringLiteral:
-                                value: if 5==5!
-              else_body: ~
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: I was compiled by JankCC!
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 0: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "0"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 1: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "1"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 2: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "2"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 3: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "3"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 4: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "4"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 5: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "5"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 6: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "6"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib_easy 7: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib_easy
+                      arguments:
+                        - Constant:
+                            Number: "7"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 0: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "0"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 1: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "1"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 2: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "2"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 3: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "3"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 4: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "4"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 5: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "5"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 6: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "6"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "fib 7: %d\n"
+                  - FunctionCall:
+                      function:
+                        Identifier:
+                          identifier: fib
+                      arguments:
+                        - Constant:
+                            Number: "7"
         - Statement:
             Return:
               Constant:

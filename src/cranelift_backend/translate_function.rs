@@ -113,7 +113,7 @@ impl CraneliftBackend {
         // initialize all blocks
         for block in translator.mir_function.blocks.iter().enumerate(){
             if block.0 == 0{
-                continue;
+                translator.block_map.insert(block.0, entry_block);
             }else{
                 let new_block = translator.func_builder.create_block();
                 translator.block_map.insert(block.0, new_block);
@@ -153,6 +153,8 @@ impl CraneliftFunctionTranslator<'_> {
         if block_idx != 0{
             self.func_builder.seal_block(current_cranelift_block);
             debug!("sealing block: {:?}",block_idx);
+            debug!("block: {:?},func: {}",block_idx,self.func_builder.func);
+            debug!("block: {:?},func.is_filled: {}",block_idx,self.func_builder.is_filled());
         }
 
         let current_block = current_block.borrow();
@@ -162,8 +164,10 @@ impl CraneliftFunctionTranslator<'_> {
         }
 
         if let Some(branches) = &current_block.branches{
+            debug!("adding branching to func/block: {}",self.func_builder.func);
             let cond_value = self.mir_value_to_cranelift_value(branches.0);
             for branch in &branches.1{
+                debug!("adding branching jump: {:?}",branch);
                 if branch.is_default{
                     self.func_builder.ins().jump(*self.block_map.get(&branch.to_block).unwrap(), &[]);
                 }else{
@@ -246,11 +250,17 @@ impl CraneliftFunctionTranslator<'_> {
 
                 self.func_builder.def_var(*variable, cranelift_assign_value);
             },
-            MIRInstruction::Add(result_mir_value, left_mir_value, right_mir_value) => {
+            MIRInstruction::IntMath(result_mir_value, left_mir_value, right_mir_value,op_kind) => {
                 let left_value = self.mir_value_to_cranelift_value(left_mir_value);
                 let right_value = self.mir_value_to_cranelift_value(right_mir_value);
-                let add_value = self.func_builder.ins().iadd(left_value, right_value);
-                self.insert_value_trans_pair(result_mir_value, add_value);
+                let math_res_value = match op_kind{
+                    crate::mir::IntMathKind::Add =>  self.func_builder.ins().iadd(left_value, right_value),
+                    crate::mir::IntMathKind::Sub =>  self.func_builder.ins().isub(left_value, right_value),
+                    crate::mir::IntMathKind::Mul =>  self.func_builder.ins().imul(left_value, right_value),
+                    crate::mir::IntMathKind::Div =>  self.func_builder.ins().sdiv(left_value, right_value), // TODO: this stuff needs to be signed dependent
+                    crate::mir::IntMathKind::Mod => todo!(),
+                }; //;
+                self.insert_value_trans_pair(result_mir_value, math_res_value);
             },
             MIRInstruction::Call(
                 mir_return_value,

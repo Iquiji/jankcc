@@ -36,7 +36,7 @@ impl EnvironmentController {
             let else_block_id = ctx.mir_function.blocks.len();
             else_block_id_link = else_block_id as i32;
             let else_block = MIRBlock::new_wrapped(); 
-            ctx.mir_function.blocks.push(else_block.clone());
+            ctx.mir_function.blocks.push(else_block);
         }
 
         // merge block:
@@ -60,9 +60,11 @@ impl EnvironmentController {
         ctx.mir_function.current_block = if_true_block.clone();
         self.walk_statement(ctx, true_body.clone());
         // set branch at end
-        if_true_block.borrow_mut().branches = Some((cond_value,vec![
-            MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
-        ]));
+        if !if_true_block.borrow().is_exit_block{ // only if we dont return from that block
+            if_true_block.borrow_mut().branches = Some((cond_value,vec![
+                MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
+            ]));
+        }
 
         // if else_block then do instr in there
         if let Some(else_body) = else_body{
@@ -70,9 +72,11 @@ impl EnvironmentController {
             ctx.mir_function.current_block = else_block.clone();
             self.walk_statement(ctx, else_body.clone());
             // set branch at end
-            else_block.borrow_mut().branches = Some((cond_value,vec![
-                MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
-            ]));
+            if !else_block.borrow().is_exit_block{ // only if we dont return from that block
+                else_block.borrow_mut().branches = Some((cond_value,vec![
+                    MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
+                ]));
+            }
         }
 
         // set merge_block to current

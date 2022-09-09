@@ -17,6 +17,7 @@ impl EnvironmentController {
                 &ctx.mir_function.current_block,
                 MIRInstruction::Return(return_value),
             );
+            ctx.mir_function.current_block.borrow_mut().is_exit_block = true; // no branching from here on out we already returned!
         } else {
             warn!("return without parameter is probably not functioning correctly!");
             // ctx.mir_function.blocks[0]

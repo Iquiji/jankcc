@@ -4,6 +4,7 @@ use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct MIRBlock {
+    pub(crate) is_exit_block: bool,
     pub(crate) instr: Vec<MIRInstruction>,
     pub(crate) branches: Option<(MIRValue, Vec<MIRBranch>)>,
 }
@@ -21,6 +22,7 @@ impl MIRBlock {
         MIRBlock {
             instr: vec![],
             branches: None,
+            is_exit_block: false,
         }
     }
     pub(crate) fn new_wrapped() -> Rc<RefCell<Self>> {

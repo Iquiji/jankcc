@@ -5,7 +5,7 @@ use crate::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue},
+    mir::{MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue, IntMathKind},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -78,9 +78,15 @@ impl EnvironmentController {
             } => todo!(),
             CExpression::Additive {
                 left_value,
-                op: _,
+                op,
                 right_value,
-            } => {
+            } => {  
+                // CExpression Add Op to IntMathKind
+                let math_kind = match op{
+                    crate::parser::parse_nodes::expressions::AdditiveOperator::Plus => IntMathKind::Add,
+                    crate::parser::parse_nodes::expressions::AdditiveOperator::Minus => IntMathKind::Sub,
+                };
+                //
                 let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
                 let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
                 let output_value = ctx
@@ -88,7 +94,7 @@ impl EnvironmentController {
                     .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
-                    MIRInstruction::Add(output_value, left_value, right_value),
+                    MIRInstruction::IntMath(output_value, left_value, right_value,math_kind),
                 );
                 output_value
             }
