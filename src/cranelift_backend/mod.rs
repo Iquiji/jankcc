@@ -78,9 +78,8 @@ impl CraneliftBackend {
             // cannot finish relocations until all functions to be called are
             // defined. For this toy demo for now, we'll just finalize the
             // function below.
-            let errors = self.module
-                .define_function(id, &mut self.ctx);
-            if let Err(error) = errors{
+            let errors = self.module.define_function(id, &mut self.ctx);
+            if let Err(error) = errors {
                 error!("{:?}", error.source());
             }
             // Now that compilation is finished, we can clear out the context state.

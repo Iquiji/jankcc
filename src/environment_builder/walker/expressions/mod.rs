@@ -5,7 +5,7 @@ use crate::{
         ext_type::{ExtType, FunctionParameter, PrettyType},
         EnvironmentController,
     },
-    mir::{MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue, IntMathKind},
+    mir::{IntMathKind, MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue},
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
@@ -32,11 +32,11 @@ impl EnvironmentController {
                 value,
             } => {
                 let lvalue = self.walk_expression_get_lvalue(ctx, to_assign.clone(), wanted_type);
-                
+
                 let rvalue = self.walk_expression(ctx, value.clone(), &lvalue.get_pretty_type());
                 lvalue.assign_value(ctx, rvalue);
                 lvalue.into_rvlaue(ctx)
-            },
+            }
             CExpression::Ternary {
                 condition: _,
                 if_true: _,
@@ -48,8 +48,8 @@ impl EnvironmentController {
             CExpression::ExlusiveOr(_) => todo!(),
             CExpression::And(_) => todo!(),
             CExpression::Equality {
-                left_piece ,
-                equality_op: _,
+                left_piece,
+                equality_op,
                 right_piece,
             } => {
                 let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
@@ -59,13 +59,25 @@ impl EnvironmentController {
                     .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
-                    MIRInstruction::Compare(output_value, left_value, right_value),
+                    MIRInstruction::Compare(
+                        output_value,
+                        left_value,
+                        right_value,
+                        match equality_op {
+                            crate::parser::parse_nodes::expressions::EqualityOperator::Equal => {
+                                crate::mir::IntCmpKind::Eq
+                            }
+                            crate::parser::parse_nodes::expressions::EqualityOperator::NotEqual => {
+                                crate::mir::IntCmpKind::UnEq
+                            }
+                        },
+                    ),
                 );
                 output_value
-            },
+            }
             CExpression::Relational {
                 left_piece,
-                equality_op: _,
+                equality_op,
                 right_piece,
             } => {
                 let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
@@ -75,10 +87,15 @@ impl EnvironmentController {
                     .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
-                    MIRInstruction::Compare(output_value, left_value, right_value),
+                    MIRInstruction::Compare(output_value, left_value, right_value,match equality_op{
+                        crate::parser::parse_nodes::expressions::RelationalOperator::Lesser => crate::mir::IntCmpKind::LT,
+                        crate::parser::parse_nodes::expressions::RelationalOperator::Greater => crate::mir::IntCmpKind::GT,
+                        crate::parser::parse_nodes::expressions::RelationalOperator::LesserEqual => crate::mir::IntCmpKind::LET,
+                        crate::parser::parse_nodes::expressions::RelationalOperator::GreaterEqual => crate::mir::IntCmpKind::GET,
+                    }),
                 );
                 output_value
-            },
+            }
             CExpression::Shift {
                 value: _,
                 shift_type: _,
@@ -88,11 +105,15 @@ impl EnvironmentController {
                 left_value,
                 op,
                 right_value,
-            } => {  
+            } => {
                 // CExpression Add Op to IntMathKind
-                let math_kind = match op{
-                    crate::parser::parse_nodes::expressions::AdditiveOperator::Plus => IntMathKind::Add,
-                    crate::parser::parse_nodes::expressions::AdditiveOperator::Minus => IntMathKind::Sub,
+                let math_kind = match op {
+                    crate::parser::parse_nodes::expressions::AdditiveOperator::Plus => {
+                        IntMathKind::Add
+                    }
+                    crate::parser::parse_nodes::expressions::AdditiveOperator::Minus => {
+                        IntMathKind::Sub
+                    }
                 };
                 //
                 let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
@@ -102,7 +123,7 @@ impl EnvironmentController {
                     .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
-                    MIRInstruction::IntMath(output_value, left_value, right_value,math_kind),
+                    MIRInstruction::IntMath(output_value, left_value, right_value, math_kind),
                 );
                 output_value
             }
@@ -112,10 +133,16 @@ impl EnvironmentController {
                 right_value,
             } => {
                 // CExpression Mul Op to IntMathKind
-                let math_kind = match op{
-                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mult => IntMathKind::Mul,
-                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Div => IntMathKind::Div,
-                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mod => IntMathKind::Mod,
+                let math_kind = match op {
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mult => {
+                        IntMathKind::Mul
+                    }
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Div => {
+                        IntMathKind::Div
+                    }
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mod => {
+                        IntMathKind::Mod
+                    }
                 };
                 //
                 let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
@@ -125,10 +152,10 @@ impl EnvironmentController {
                     .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
-                    MIRInstruction::IntMath(output_value, left_value, right_value,math_kind),
+                    MIRInstruction::IntMath(output_value, left_value, right_value, math_kind),
                 );
                 output_value
-            },
+            }
             CExpression::Cast {
                 type_name: _,
                 value: _,
@@ -137,52 +164,52 @@ impl EnvironmentController {
                 increment_type: _,
                 value: _,
             } => todo!(),
-            CExpression::Unary {
-                unary_op,
-                value,
-            } => {
+            CExpression::Unary { unary_op, value } => {
                 use crate::parser::parse_nodes::expressions::*;
-                match unary_op{
+                match unary_op {
                     UnaryOperator::REF => {
-                        let lvalue = self.walk_expression_get_lvalue(ctx, value.clone(), &ExtType::Void.into_pretty());
-                        
-                        match lvalue{
+                        let lvalue = self.walk_expression_get_lvalue(
+                            ctx,
+                            value.clone(),
+                            &ExtType::Void.into_pretty(),
+                        );
+
+                        match lvalue {
                             crate::mir::MIRLocatorValue::LocalVar(local_ref, pretty_type) => {
                                 let output_value = ctx.mir_function.make_intermediate_value_typed(
-                                    MIRType::extract_from_pretty_type(&ExtType::Pointer { is_const: false, is_volatile: false, to: Box::new(pretty_type.inner_type) }.into_pretty()),
+                                    MIRType::extract_from_pretty_type(
+                                        &ExtType::Pointer {
+                                            is_const: false,
+                                            is_volatile: false,
+                                            to: Box::new(pretty_type.inner_type),
+                                        }
+                                        .into_pretty(),
+                                    ),
                                 );
                                 MIRBlock::ins_instr(
                                     &ctx.mir_function.current_block,
-                                    MIRInstruction::GetAddrOfLocal(
-                                        output_value,
-                                        local_ref,
-                                    ),
+                                    MIRInstruction::GetAddrOfLocal(output_value, local_ref),
                                 );
                                 output_value
-                            },
+                            }
                         }
-                    },
+                    }
                     UnaryOperator::DEREF => {
                         let value_to_deref = self.walk_expression(ctx, value.clone(), wanted_type);
-                        let output_value = ctx.mir_function.make_intermediate_value_typed(
-                            MIRType::I32,
-                        );
+                        let output_value =
+                            ctx.mir_function.make_intermediate_value_typed(MIRType::I32);
                         MIRBlock::ins_instr(
                             &ctx.mir_function.current_block,
-                            MIRInstruction::Deref(
-                                output_value,
-                                value_to_deref,
-                                MIRType::I32,
-                            ),
+                            MIRInstruction::Deref(output_value, value_to_deref, MIRType::I32),
                         );
                         output_value
-                    },
+                    }
                     UnaryOperator::VALUE => todo!(),
                     UnaryOperator::NEGATIVE => todo!(),
                     UnaryOperator::BITWISEINVERT => todo!(),
                     UnaryOperator::BOOLEANINVERT => todo!(),
                 }
-            },
+            }
             CExpression::SizeOf { value: _ } => todo!(),
             CExpression::SizeOfType { type_name: _ } => todo!(),
             CExpression::AlignOfType { type_name: _ } => todo!(),
@@ -210,7 +237,12 @@ impl EnvironmentController {
                         // this is for variadic functions so if there is a variadic function we can extend the type iter and dont care about overloading the function
                         let temp = vec![FunctionParameter {
                             ident: String::new(),
-                            parameter_type: Box::new(ExtType::Int { is_const: false, is_volatile: false, signed: true, size: 4 }), // todo!(this needs better default handling or something if we dont have a wanted type);
+                            parameter_type: Box::new(ExtType::Int {
+                                is_const: false,
+                                is_volatile: false,
+                                signed: true,
+                                size: 4,
+                            }), // todo!(this needs better default handling or something if we dont have a wanted type);
                         }];
                         let temp_non_extending = vec![];
                         let iter_extension = if *overextendable {
@@ -288,11 +320,19 @@ impl EnvironmentController {
 
                 if &var_type != wanted_type {
                     // todo!(: fix this)
-                    if wanted_type == &ExtType::Void.into_pretty(){
-                        warn!("wanted type is void, ignoring in current version, subject to rework!");
-                        expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
-                    }else{
-                        expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
+                    if wanted_type == &ExtType::Void.into_pretty() {
+                        warn!(
+                            "wanted type is void, ignoring in current version, subject to rework!"
+                        );
+                        expression.span.error_at_span(&format!(
+                            "var type different from wanted type!: {:#?} vs {:#?}",
+                            var_type, wanted_type
+                        ));
+                    } else {
+                        expression.span.error_at_span(&format!(
+                            "var type different from wanted type!: {:#?} vs {:#?}",
+                            var_type, wanted_type
+                        ));
                         // panic!("var type different from wanted type!");
                     }
                 }
@@ -304,8 +344,11 @@ impl EnvironmentController {
                     &ctx.mir_function.current_block,
                     MIRInstruction::ReadLocal(value_ref, local_ref),
                 );
-                info!("ident: '{}' read value_ref: {} ",ident.identifier,value_ref.opaque_ref);
-                assert_ne!(MIRValue{ opaque_ref: 0 },MIRValue{ opaque_ref: 2 });
+                info!(
+                    "ident: '{}' read value_ref: {} ",
+                    ident.identifier, value_ref.opaque_ref
+                );
+                assert_ne!(MIRValue { opaque_ref: 0 }, MIRValue { opaque_ref: 2 });
                 value_ref
             }
             CExpression::Constant(constant) => match constant {

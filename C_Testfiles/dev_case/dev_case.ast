@@ -36,6 +36,32 @@
     Declaration:
       specifiers:
         storage:
+          typedef_c: true
+          extern_c: false
+          static_c: false
+          thread_local_c: false
+          auto_c: false
+          register_c: false
+        qualifiers:
+          const_q: false
+          restrict_q: false
+          volatile_q: false
+          atomic_q: false
+        specifiers:
+          Basic: UnLong
+        function:
+          inline: false
+          no_return: false
+        alignment: ~
+      init:
+        - - base:
+              identifier: size_t
+            derive: Base
+          - ~
+- Declaration:
+    Declaration:
+      specifiers:
+        storage:
           typedef_c: false
           extern_c: true
           static_c: false
@@ -156,6 +182,241 @@
                   ellipsis: true
                 to: Base
           - ~
+- Declaration:
+    Declaration:
+      specifiers:
+        storage:
+          typedef_c: false
+          extern_c: true
+          static_c: false
+          thread_local_c: false
+          auto_c: false
+          register_c: false
+        qualifiers:
+          const_q: false
+          restrict_q: false
+          volatile_q: false
+          atomic_q: false
+        specifiers:
+          Basic: Void
+        function:
+          inline: false
+          no_return: false
+        alignment: ~
+      init:
+        - - base:
+              identifier: malloc
+            derive:
+              FunctionType:
+                parameter_type_list:
+                  parameter_list:
+                    - Declarator:
+                        specifiers:
+                          storage:
+                            typedef_c: false
+                            extern_c: false
+                            static_c: false
+                            thread_local_c: false
+                            auto_c: false
+                            register_c: false
+                          qualifiers:
+                            const_q: false
+                            restrict_q: false
+                            volatile_q: false
+                            atomic_q: false
+                          specifiers:
+                            Typedefed:
+                              identifier: size_t
+                          function:
+                            inline: false
+                            no_return: false
+                          alignment: ~
+                        declarator:
+                          base:
+                            identifier: size
+                          derive: Base
+                  ellipsis: false
+                to:
+                  Pointer:
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    to: Base
+          - ~
+- FunctionDefinition:
+    function_specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    declarator:
+      base:
+        identifier: fib
+      derive:
+        FunctionType:
+          parameter_type_list:
+            parameter_list:
+              - Declarator:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Int
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  declarator:
+                    base:
+                      identifier: num
+                    derive: Base
+            ellipsis: false
+          to: Base
+    declarations: []
+    body:
+      Compound:
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: result
+                    derive: Base
+                  - ~
+        - Statement:
+            If:
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Identifier:
+                      identifier: num
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "0"
+              true_body:
+                Compound:
+                  - Statement:
+                      CExpression:
+                        Assignment:
+                          to_assign:
+                            Identifier:
+                              identifier: result
+                          operator: Assign
+                          value:
+                            Constant:
+                              Number: "0"
+              else_body:
+                If:
+                  controlling_expr:
+                    Equality:
+                      left_piece:
+                        Identifier:
+                          identifier: num
+                      equality_op: Equal
+                      right_piece:
+                        Constant:
+                          Number: "1"
+                  true_body:
+                    Compound:
+                      - Statement:
+                          CExpression:
+                            Assignment:
+                              to_assign:
+                                Identifier:
+                                  identifier: result
+                              operator: Assign
+                              value:
+                                Constant:
+                                  Number: "1"
+                  else_body:
+                    Compound:
+                      - Statement:
+                          CExpression:
+                            Assignment:
+                              to_assign:
+                                Identifier:
+                                  identifier: result
+                              operator: Assign
+                              value:
+                                Additive:
+                                  left_value:
+                                    FunctionCall:
+                                      function:
+                                        Identifier:
+                                          identifier: fib
+                                      arguments:
+                                        - Additive:
+                                            left_value:
+                                              Identifier:
+                                                identifier: num
+                                            op: Minus
+                                            right_value:
+                                              Constant:
+                                                Number: "1"
+                                  op: Plus
+                                  right_value:
+                                    FunctionCall:
+                                      function:
+                                        Identifier:
+                                          identifier: fib
+                                      arguments:
+                                        - Additive:
+                                            left_value:
+                                              Identifier:
+                                                identifier: num
+                                            op: Minus
+                                            right_value:
+                                              Constant:
+                                                Number: "2"
+        - Statement:
+            Return:
+              Identifier:
+                identifier: result
 - FunctionDefinition:
     function_specifiers:
       storage:
@@ -212,6 +473,32 @@
     declarations: []
     body:
       Compound:
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: res
+                    derive: Base
+                  - ~
         - Statement:
             If:
               controlling_expr:
@@ -225,111 +512,138 @@
                       Number: "0"
               true_body:
                 Compound:
-                  - Declaration:
-                      Declaration:
-                        specifiers:
-                          storage:
-                            typedef_c: false
-                            extern_c: false
-                            static_c: false
-                            thread_local_c: false
-                            auto_c: false
-                            register_c: false
-                          qualifiers:
-                            const_q: false
-                            restrict_q: false
-                            volatile_q: false
-                            atomic_q: false
-                          specifiers:
-                            Basic: Int
-                          function:
-                            inline: false
-                            no_return: false
-                          alignment: ~
-                        init:
-                          - - base:
-                                identifier: res
-                              derive: Base
-                            - Single:
-                                Constant:
-                                  Number: "1"
                   - Statement:
                       CExpression:
-                        FunctionCall:
-                          function:
+                        Assignment:
+                          to_assign:
                             Identifier:
-                              identifier: printf
-                          arguments:
-                            - StringLiteral:
-                                value: "%d! = %d"
-                            - Identifier:
-                                identifier: x
-                            - Identifier:
-                                identifier: res
+                              identifier: res
+                          operator: Assign
+                          value:
+                            Constant:
+                              Number: "1"
               else_body:
                 Compound:
-                  - Declaration:
-                      Declaration:
-                        specifiers:
-                          storage:
-                            typedef_c: false
-                            extern_c: false
-                            static_c: false
-                            thread_local_c: false
-                            auto_c: false
-                            register_c: false
-                          qualifiers:
-                            const_q: false
-                            restrict_q: false
-                            volatile_q: false
-                            atomic_q: false
-                          specifiers:
-                            Basic: Int
-                          function:
-                            inline: false
-                            no_return: false
-                          alignment: ~
-                        init:
-                          - - base:
-                                identifier: res_2
-                              derive: Base
-                            - Single:
-                                Multiplicative:
-                                  left_value:
-                                    Identifier:
-                                      identifier: x
-                                  op: Mult
-                                  right_value:
-                                    FunctionCall:
-                                      function:
-                                        Identifier:
-                                          identifier: factorial
-                                      arguments:
-                                        - Additive:
-                                            left_value:
-                                              Identifier:
-                                                identifier: x
-                                            op: Minus
-                                            right_value:
-                                              Constant:
-                                                Number: "1"
                   - Statement:
                       CExpression:
-                        FunctionCall:
-                          function:
+                        Assignment:
+                          to_assign:
                             Identifier:
-                              identifier: printf
-                          arguments:
-                            - StringLiteral:
-                                value: "%d! = %d"
-                            - Identifier:
-                                identifier: x
-                            - Identifier:
-                                identifier: res_2
+                              identifier: res
+                          operator: Assign
+                          value:
+                            Multiplicative:
+                              left_value:
+                                Identifier:
+                                  identifier: x
+                              op: Mult
+                              right_value:
+                                FunctionCall:
+                                  function:
+                                    Identifier:
+                                      identifier: factorial
+                                  arguments:
+                                    - Additive:
+                                        left_value:
+                                          Identifier:
+                                            identifier: x
+                                        op: Minus
+                                        right_value:
+                                          Constant:
+                                            Number: "1"
         - Statement:
             Return:
-              Constant:
-                Number: "1337"
+              Identifier:
+                identifier: res
+- FunctionDefinition:
+    function_specifiers:
+      storage:
+        typedef_c: false
+        extern_c: false
+        static_c: false
+        thread_local_c: false
+        auto_c: false
+        register_c: false
+      qualifiers:
+        const_q: false
+        restrict_q: false
+        volatile_q: false
+        atomic_q: false
+      specifiers:
+        Basic: Int
+      function:
+        inline: false
+        no_return: false
+      alignment: ~
+    declarator:
+      base:
+        identifier: bored_malloc
+      derive:
+        FunctionType:
+          parameter_type_list:
+            parameter_list:
+              - Declarator:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Int
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  declarator:
+                    base:
+                      identifier: x
+                    derive: Base
+            ellipsis: false
+          to: Base
+    declarations: []
+    body:
+      Compound:
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: malloc
+                arguments:
+                  - Constant:
+                      Number: "1024000"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: "malloc'd 1024B"
+        - Statement:
+            Return:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: bored_malloc
+                arguments:
+                  - Additive:
+                      left_value:
+                        Identifier:
+                          identifier: x
+                      op: Plus
+                      right_value:
+                        Constant:
+                          Number: "1"
 - FunctionDefinition:
     function_specifiers:
       storage:
@@ -371,6 +685,222 @@
                 arguments:
                   - StringLiteral:
                       value: I was compiled by JankCC!
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: a
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "1"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: b
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "2"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: c
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "3"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: d
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "4"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: e
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "5"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: f
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "6"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: g
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "7"
+        - Statement:
+            CExpression:
+              Assignment:
+                to_assign:
+                  Identifier:
+                    identifier: b
+                operator: Assign
+                value:
+                  Constant:
+                    Number: "2"
+        - Statement:
+            CExpression:
+              Assignment:
+                to_assign:
+                  Identifier:
+                    identifier: a
+                operator: Assign
+                value:
+                  Constant:
+                    Number: "1"
         - Statement:
             CExpression:
               FunctionCall:
@@ -379,16 +909,14 @@
                     identifier: printf
                 arguments:
                   - StringLiteral:
-                      value: "factorial %d: %d\n"
-                  - Constant:
-                      Number: "0"
-                  - FunctionCall:
-                      function:
+                      value: "a.addr=%#018x,a.val=%d\n"
+                  - Unary:
+                      unary_op: REF
+                      value:
                         Identifier:
-                          identifier: factorial
-                      arguments:
-                        - Constant:
-                            Number: "0"
+                          identifier: a
+                  - Identifier:
+                      identifier: a
         - Statement:
             CExpression:
               FunctionCall:
@@ -397,16 +925,177 @@
                     identifier: printf
                 arguments:
                   - StringLiteral:
-                      value: "factorial %d: %d\n"
-                  - Constant:
-                      Number: "5"
-                  - FunctionCall:
-                      function:
+                      value: "b.addr=%#018x,b.val=%d\n"
+                  - Unary:
+                      unary_op: REF
+                      value:
                         Identifier:
-                          identifier: factorial
-                      arguments:
-                        - Constant:
+                          identifier: b
+                  - Identifier:
+                      identifier: b
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: UnLong
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: malloc_addr
+                    derive: Base
+                  - Single:
+                      FunctionCall:
+                        function:
+                          Identifier:
+                            identifier: malloc
+                        arguments:
+                          - Constant:
+                              Number: "16"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "malloc_addr: %#018x,stored_data: %d \n"
+                  - Identifier:
+                      identifier: malloc_addr
+                  - Unary:
+                      unary_op: DEREF
+                      value:
+                        Identifier:
+                          identifier: malloc_addr
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: a_ptr
+                    derive:
+                      Pointer:
+                        qualifiers:
+                          const_q: false
+                          restrict_q: false
+                          volatile_q: false
+                          atomic_q: false
+                        to: Base
+                  - Single:
+                      Unary:
+                        unary_op: REF
+                        value:
+                          Identifier:
+                            identifier: a
+        - Statement:
+            CExpression:
+              Assignment:
+                to_assign:
+                  Identifier:
+                    identifier: a_ptr
+                operator: Assign
+                value:
+                  Additive:
+                    left_value:
+                      Identifier:
+                        identifier: a_ptr
+                    op: Plus
+                    right_value:
+                      Multiplicative:
+                        left_value:
+                          Constant:
+                            Number: "8"
+                        op: Mult
+                        right_value:
+                          Constant:
                             Number: "5"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: b_ptr
+                    derive:
+                      Pointer:
+                        qualifiers:
+                          const_q: false
+                          restrict_q: false
+                          volatile_q: false
+                          atomic_q: false
+                        to: Base
+                  - Single:
+                      Unary:
+                        unary_op: REF
+                        value:
+                          Identifier:
+                            identifier: b
+        - Statement:
+            CExpression:
+              Assignment:
+                to_assign:
+                  Identifier:
+                    identifier: b_ptr
+                operator: Assign
+                value:
+                  Additive:
+                    left_value:
+                      Identifier:
+                        identifier: b_ptr
+                    op: Minus
+                    right_value:
+                      Constant:
+                        Number: "8"
         - Statement:
             CExpression:
               FunctionCall:
@@ -415,16 +1104,112 @@
                     identifier: printf
                 arguments:
                   - StringLiteral:
-                      value: "factorial %d: %d\n"
-                  - Constant:
-                      Number: "27"
-                  - FunctionCall:
-                      function:
+                      value: "a addr: %#018x,deref again: %d\n"
+                  - Identifier:
+                      identifier: a_ptr
+                  - Unary:
+                      unary_op: DEREF
+                      value:
                         Identifier:
-                          identifier: factorial
-                      arguments:
-                        - Constant:
-                            Number: "27"
+                          identifier: a_ptr
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - StringLiteral:
+                      value: "b addr: %#018x,deref again: %d\n"
+                  - Identifier:
+                      identifier: b_ptr
+                  - Unary:
+                      unary_op: DEREF
+                      value:
+                        Identifier:
+                          identifier: b_ptr
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: printf
+                arguments:
+                  - Identifier:
+                      identifier: a_ptr
+                  - Identifier:
+                      identifier: a_ptr
+                  - Unary:
+                      unary_op: DEREF
+                      value:
+                        Identifier:
+                          identifier: b_ptr
+        - Statement:
+            For:
+              decl_clause:
+                Declaration:
+                  specifiers:
+                    storage:
+                      typedef_c: false
+                      extern_c: false
+                      static_c: false
+                      thread_local_c: false
+                      auto_c: false
+                      register_c: false
+                    qualifiers:
+                      const_q: false
+                      restrict_q: false
+                      volatile_q: false
+                      atomic_q: false
+                    specifiers:
+                      Basic: Int
+                    function:
+                      inline: false
+                      no_return: false
+                    alignment: ~
+                  init:
+                    - - base:
+                          identifier: x
+                        derive: Base
+                      - Single:
+                          Constant:
+                            Number: "0"
+              expr_clause: ~
+              controlling_expr:
+                Equality:
+                  left_piece:
+                    Identifier:
+                      identifier: x
+                  equality_op: Equal
+                  right_piece:
+                    Constant:
+                      Number: "5"
+              after_expr:
+                Assignment:
+                  to_assign:
+                    Identifier:
+                      identifier: x
+                  operator: Assign
+                  value:
+                    Additive:
+                      left_value:
+                        Identifier:
+                          identifier: x
+                      op: Plus
+                      right_value:
+                        Constant:
+                          Number: "1"
+              body:
+                Compound:
+                  - Statement:
+                      CExpression:
+                        FunctionCall:
+                          function:
+                            Identifier:
+                              identifier: puts
+                          arguments:
+                            - StringLiteral:
+                                value: hello for_loop!
         - Statement:
             Return:
               Constant:

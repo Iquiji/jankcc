@@ -20,11 +20,11 @@ IR:
 - Globals? -> Static Vals as Pointer :)
 */
 pub mod blocks;
+mod display_impl;
 pub mod function;
 pub mod instruction;
 pub mod programm;
 pub mod types;
-mod display_impl;
 
 pub(crate) use blocks::*;
 pub(crate) use function::*;

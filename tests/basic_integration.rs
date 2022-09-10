@@ -24,7 +24,6 @@ fn simple_hello_world() {
     );
 }
 
-
 #[test]
 fn simple_recursive_fibonacci_easy() {
     let path = "tests/source_files/fib_easy_blocks.c";

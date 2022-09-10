@@ -82,9 +82,9 @@ impl MIRType {
     }
 }
 
-impl MIRType{
-    pub(crate) fn get_size_in_bytes(&self) -> u32{
-        match self{
+impl MIRType {
+    pub(crate) fn get_size_in_bytes(&self) -> u32 {
+        match self {
             MIRType::U8 => 1,
             MIRType::I8 => 1,
             MIRType::U16 => 2,

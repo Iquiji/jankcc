@@ -35,7 +35,7 @@
   - Error Continuation :o:
 - Enviroment Builder :warning:
   - Symbol Table extraction :warning:
-  - Type Checking on AST :radioactive:
+  - Type Checking on AST :radioactive: <- Needed to Continue on Translating Expressions ;)
   - Constant Expression Runner :o:
   - MIR generation :warning:
 - MIR to cranelift backend :warning:

@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, cell::RefCell};
 
-use log::{info, debug};
+use log::{debug, info};
 
 use crate::{
     environment_builder::{
@@ -81,9 +81,12 @@ impl EnvironmentController {
             .join("\n");
 
         info!("all_used_vars: {}", used_vars);
-        
-        debug!("{:#?}",func_ctx.mir_function.ctx_gen.intermediate_value_counter);
-        debug!("{:#?}",func_ctx.mir_function.value_type_map);
+
+        debug!(
+            "{:#?}",
+            func_ctx.mir_function.ctx_gen.intermediate_value_counter
+        );
+        debug!("{:#?}", func_ctx.mir_function.value_type_map);
 
         self.mir_programm.functions.push(func_ctx.mir_function);
 
@@ -99,7 +102,6 @@ impl EnvironmentController {
                     extern_linkage: extern_var.1.borrow().is_extern,
                 }),
         );
-
     }
 }
 

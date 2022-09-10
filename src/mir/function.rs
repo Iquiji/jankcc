@@ -86,9 +86,8 @@ impl MIRFunction {
     }
     pub(crate) fn insert_constant(&mut self, constant: MIRConstant) -> DataConstantRef {
         let c_ref = self.ctx_gen.make_data_const_ref();
-        self.data_const_id_map
-            .insert(c_ref, constant);
-            //.expect("internal data const ref error");
+        self.data_const_id_map.insert(c_ref, constant);
+        //.expect("internal data const ref error");
         c_ref
     }
     pub(crate) fn insert_variable(&mut self, var: String, var_type: MIRType) -> LocalRef {

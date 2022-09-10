@@ -10,8 +10,9 @@ pub(crate) use crate::{
 };
 
 mod compound;
-mod r#return;
+mod for_statement;
 mod if_statement;
+mod r#return;
 
 impl EnvironmentController {
     pub(crate) fn walk_statement(
@@ -39,8 +40,8 @@ impl EnvironmentController {
                 true_body,
                 else_body,
             } => {
-                self.handle_if_statement(ctx, controlling_expr,true_body,else_body);
-            },
+                self.handle_if_statement(ctx, controlling_expr, true_body, else_body);
+            }
             Statement::Switch {
                 controlling_expr: _,
                 body: _,
@@ -51,12 +52,21 @@ impl EnvironmentController {
                 body: _,
             } => todo!(),
             Statement::For {
-                decl_clause: _,
-                expr_clause: _,
-                controlling_expr: _,
-                after_expr: _,
-                body: _,
-            } => todo!(),
+                decl_clause,
+                expr_clause,
+                controlling_expr,
+                after_expr,
+                body,
+            } => {
+                self.handle_for_statement(
+                    ctx,
+                    decl_clause,
+                    expr_clause,
+                    controlling_expr,
+                    after_expr,
+                    body,
+                );
+            }
             Statement::Goto(_) => todo!(),
             Statement::Continue => todo!(),
             Statement::Break => todo!(),

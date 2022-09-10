@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum MIRLocatorValue {
-    LocalVar(LocalRef,PrettyType),
+    LocalVar(LocalRef, PrettyType),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Copy)]
