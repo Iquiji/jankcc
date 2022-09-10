@@ -16,21 +16,24 @@ extern int printf (const char *restrict __format, ...);
 //     return wow;
 // }
 int factorial(int x){
+    int res;
     if (x == 0){
-        int res = 1;
-        printf("%d! => %d\n",x,res);
-        return res;
+        res = 1;
+        
     } else {
-        int res_2 = x * factorial(x - 1);
-        printf("%d! => %d\n",x,res_2);
-        return res_2;
+        res = x * factorial(x - 1);
     }
-    // :/
-    // return 1337;
+    printf("%d! => %d\n",x,res);
+    return res;
 }
 
 
 int main() {
+    int a = 5;
+    int b = 0;
+    b = 1;
+    printf("a=%d,b=%d\n",a,b);
+    a = 7;
     puts("I was compiled by JankCC!");
     printf("factorial %d: %d\n",0,factorial(0));
     printf("factorial %d: %d\n",5,factorial(5));

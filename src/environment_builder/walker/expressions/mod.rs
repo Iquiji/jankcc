@@ -9,6 +9,8 @@ use crate::{
     parser::{parse_nodes::expressions::CExpression, span::Spanned},
 };
 
+mod walk_get_lvalue;
+
 use super::walk_func::FunctionContext;
 /*
 for type-checking i will need a wanted type parameter that is optional tho :/ <= Is it?
@@ -29,44 +31,11 @@ impl EnvironmentController {
                 operator,
                 value,
             } => {
-                // get local_ref
-                // let local_ref = *ctx
-                //     .mir_function
-                //     .var_name_id_map
-                //     .get_by_right(&ident.identifier)
-                //     .unwrap_or_else(|| panic!("using undeclared variable"));
-                // let _mir_var_type = ctx.mir_function.var_type_map.get(&local_ref).unwrap();
-                // let var_type = self
-                //     .symbol_table
-                //     .get_top_variable(&ident.identifier)
-                //     .unwrap_or_else(|| panic!("using undeclared variable"))
-                //     .borrow()
-                //     .associated_type
-                //     .clone();
-
-                // if &var_type != wanted_type {
-                //     // todo!(: fix this)
-                //     if wanted_type == &ExtType::Void.into_pretty(){
-                //         warn!("wanted type is void, ignoring in current version, subject to rework!");
-                //         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
-                //     }else{
-                //         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
-                //         panic!("var type different from wanted type!");
-                //     }
-                // }
-
-                // // get assignment value
-                // let expr_result =
-                //     self.walk_expression(ctx, *value, &wanted_type);
-                // // assign
-                // MIRBlock::ins_instr(
-                //     &ctx.mir_function.current_block,
-                //     MIRInstruction::AssignLocal(local_ref, expr_result),
-                // );
+                let lvalue = self.walk_expression_get_lvalue(ctx, to_assign.clone(), wanted_type);
                 
-                // read back out to get value after assignment
-
-                unimplemented!()
+                let rvalue = self.walk_expression(ctx, value.clone(), &lvalue.get_pretty_type());
+                lvalue.assign_value(ctx, rvalue);
+                lvalue.into_rvlaue(ctx)
             },
             CExpression::Ternary {
                 condition: _,
