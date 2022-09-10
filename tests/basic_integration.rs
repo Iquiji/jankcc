@@ -23,3 +23,28 @@ fn simple_hello_world() {
         expected_output
     );
 }
+
+
+#[test]
+fn simple_recursive_fibonacci_easy() {
+    let path = "tests/source_files/fib_easy_blocks.c";
+
+    let expected_output = "fib_easy 27: 196418\n";
+
+    assert_eq!(
+        common::execute_and_cleanup_capturing_stdout(path),
+        expected_output
+    );
+}
+
+#[test]
+fn simple_recursive_fibonacci_harder_blocks_hacky() {
+    let path = "tests/source_files/fib_harder_blocks.c";
+
+    let expected_output = "fib 27: 196418\n";
+
+    assert_eq!(
+        common::execute_and_cleanup_capturing_stdout(path),
+        expected_output
+    );
+}
