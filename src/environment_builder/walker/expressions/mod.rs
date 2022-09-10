@@ -25,10 +25,49 @@ impl EnvironmentController {
         match &*expression.inner {
             CExpression::Expression(_) => todo!(),
             CExpression::Assignment {
-                to_assign: _,
-                operator: _,
-                value: _,
-            } => todo!(),
+                to_assign,
+                operator,
+                value,
+            } => {
+                // get local_ref
+                // let local_ref = *ctx
+                //     .mir_function
+                //     .var_name_id_map
+                //     .get_by_right(&ident.identifier)
+                //     .unwrap_or_else(|| panic!("using undeclared variable"));
+                // let _mir_var_type = ctx.mir_function.var_type_map.get(&local_ref).unwrap();
+                // let var_type = self
+                //     .symbol_table
+                //     .get_top_variable(&ident.identifier)
+                //     .unwrap_or_else(|| panic!("using undeclared variable"))
+                //     .borrow()
+                //     .associated_type
+                //     .clone();
+
+                // if &var_type != wanted_type {
+                //     // todo!(: fix this)
+                //     if wanted_type == &ExtType::Void.into_pretty(){
+                //         warn!("wanted type is void, ignoring in current version, subject to rework!");
+                //         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
+                //     }else{
+                //         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
+                //         panic!("var type different from wanted type!");
+                //     }
+                // }
+
+                // // get assignment value
+                // let expr_result =
+                //     self.walk_expression(ctx, *value, &wanted_type);
+                // // assign
+                // MIRBlock::ins_instr(
+                //     &ctx.mir_function.current_block,
+                //     MIRInstruction::AssignLocal(local_ref, expr_result),
+                // );
+                
+                // read back out to get value after assignment
+
+                unimplemented!()
+            },
             CExpression::Ternary {
                 condition: _,
                 if_true: _,
@@ -99,10 +138,28 @@ impl EnvironmentController {
                 output_value
             }
             CExpression::Multiplicative {
-                left_value: _,
-                op: _,
-                right_value: _,
-            } => todo!(),
+                left_value,
+                op,
+                right_value,
+            } => {
+                // CExpression Mul Op to IntMathKind
+                let math_kind = match op{
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mult => IntMathKind::Mul,
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Div => IntMathKind::Div,
+                    crate::parser::parse_nodes::expressions::MultiplicativeOperator::Mod => IntMathKind::Mod,
+                };
+                //
+                let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
+                let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
+                let output_value = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::IntMath(output_value, left_value, right_value,math_kind),
+                );
+                output_value
+            },
             CExpression::Cast {
                 type_name: _,
                 value: _,
@@ -236,7 +293,7 @@ impl EnvironmentController {
                     &ctx.mir_function.current_block,
                     MIRInstruction::ReadLocal(value_ref, local_ref),
                 );
-                println!("ident: '{}' read value_ref: {} ",ident.identifier,value_ref.opaque_ref);
+                info!("ident: '{}' read value_ref: {} ",ident.identifier,value_ref.opaque_ref);
                 assert_ne!(MIRValue{ opaque_ref: 0 },MIRValue{ opaque_ref: 2 });
                 value_ref
             }

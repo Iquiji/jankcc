@@ -35,7 +35,7 @@
   - Error Continuation :o:
 - Enviroment Builder :warning:
   - Symbol Table extraction :warning:
-  - Type Checking on AST :warning:
+  - Type Checking on AST :radioactive:
   - Constant Expression Runner :o:
   - MIR generation :warning:
 - MIR to cranelift backend :warning:
@@ -60,12 +60,18 @@
 
 #### Enviroment Builder:
   - Early Work started, extremely unstable API and many features missing
+  - no Tag completion for structs
+  - no Type Checking, Number inherintly *int*, and no casting 
 
 ### MIR:
-  - Currently only a jankc custom Call and Return command are semi working
+  - limited Instruction Pool
+  - Block System still heavily WIP and needs to be reworked
 
 ### MIR to Cranelift:
   - [minimal example](C_Testfiles/minimal/minimal.c) works :)
   - to see more working examples look at the [integration test C-Files](tests/source_files/) :)
   - only 1 kind of signature to a function like printf that has varargs is supported :/
   - more will come as MIR is developed further ;) 
+  - #### Current Limitations:
+    - only if statement and recursion semi-working
+    - no Arrays, Structs, Unions, Enums

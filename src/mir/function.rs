@@ -11,7 +11,7 @@ pub(crate) struct MIRFunction {
     pub(crate) parameter_names: Vec<String>,
     pub(crate) var_name_id_map: BiBTreeMap<LocalRef, String>,
     pub(crate) var_type_map: BTreeMap<LocalRef, MIRType>,
-    pub(crate) data_const_id_map: BiBTreeMap<DataConstantRef, MIRConstant>,
+    pub(crate) data_const_id_map: BTreeMap<DataConstantRef, MIRConstant>,
     pub(crate) blocks: Vec<Rc<RefCell<MIRBlock>>>,
     pub(crate) current_block: Rc<RefCell<MIRBlock>>,
     pub(crate) ctx_gen: MIRFunctionContextGenerator,
@@ -30,7 +30,7 @@ impl MIRFunction {
             parameter_names: vec![],
             var_name_id_map: BiBTreeMap::new(),
             var_type_map: BTreeMap::new(),
-            data_const_id_map: BiBTreeMap::new(),
+            data_const_id_map: BTreeMap::new(),
             blocks: vec![origin_block.clone()],
             current_block: origin_block,
             value_type_map: BTreeMap::new(),
@@ -87,8 +87,8 @@ impl MIRFunction {
     pub(crate) fn insert_constant(&mut self, constant: MIRConstant) -> DataConstantRef {
         let c_ref = self.ctx_gen.make_data_const_ref();
         self.data_const_id_map
-            .insert_no_overwrite(c_ref, constant)
-            .expect("internal data const ref error");
+            .insert(c_ref, constant);
+            //.expect("internal data const ref error");
         c_ref
     }
     pub(crate) fn insert_variable(&mut self, var: String, var_type: MIRType) -> LocalRef {

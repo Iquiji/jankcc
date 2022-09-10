@@ -192,7 +192,7 @@ impl CraneliftFunctionTranslator<'_> {
                 data_ctx.define(
                     self.mir_function
                         .data_const_id_map
-                        .get_by_left(&const_ref)
+                        .get(&const_ref)
                         .unwrap_or_else(|| panic!("integrity error with constant map"))
                         .value
                         .clone()

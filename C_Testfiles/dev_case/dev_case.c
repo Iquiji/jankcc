@@ -15,64 +15,26 @@ extern int printf (const char *restrict __format, ...);
 // int dumb_func(int wow){
 //     return wow;
 // }
-
-int fib(int num)
-{
-    if (num == 0) {
-
-        return 0;
-    } else if (num == 1) {
-
-        return 1;
+int factorial(int x){
+    if (x == 0){
+        int res = 1;
+        printf("%d! => %d\n",x,res);
+        return res;
     } else {
-
-        return fib(num - 1) + fib(num - 2);
+        int res_2 = x * factorial(x - 1);
+        printf("%d! => %d\n",x,res_2);
+        return res_2;
     }
-    // this is here because blocks have to be filled :/ idk how to solve that right now
-    puts("unreachable! :/");
-    return 7;
+    // :/
+    // return 1337;
 }
 
-int fib_easy(int num){
-    // printf("fib_easy called with num=%d\n",num);
-    if (num == 0){
-        return 0;
-    }
-    if (num == 1){
-        return 1;
-    }
-    return fib_easy(num - 1) + fib_easy(num - 2);
-}
 
 int main() {
     puts("I was compiled by JankCC!");
-    // add(4,9);
-    // int res = add(4,7);
-    // printf("4+7=%d\n",res);
-    // printf("7==7: %d\n",7==7);
-    // printf("5==8: %d\n",5==8);
-    // if (5==5){
-    //     puts("if 5==5!");
-    // }
-    printf("fib_easy 0: %d\n",fib_easy(0));
-    printf("fib_easy 1: %d\n",fib_easy(1));
-    printf("fib_easy 2: %d\n",fib_easy(2));
-    printf("fib_easy 3: %d\n",fib_easy(3));
-    printf("fib_easy 4: %d\n",fib_easy(4));
-    printf("fib_easy 5: %d\n",fib_easy(5));
-    printf("fib_easy 6: %d\n",fib_easy(6));
-    printf("fib_easy 7: %d\n",fib_easy(7));
-    printf("fib 0: %d\n",fib(0));
-    printf("fib 1: %d\n",fib(1));
-    printf("fib 2: %d\n",fib(2));
-    printf("fib 3: %d\n",fib(3));
-    printf("fib 4: %d\n",fib(4));
-    printf("fib 5: %d\n",fib(5));
-    printf("fib 6: %d\n",fib(6));
-    printf("fib 7: %d\n",fib(7));
-    printf("fib 25: %d\n",fib(25));
-    printf("fib 35: %d\n",fib(35));
-    printf("fib 42: %d\n",fib(42));
+    printf("factorial %d: %d\n",0,factorial(0));
+    printf("factorial %d: %d\n",5,factorial(5));
+    printf("factorial %d: %d\n",12,factorial(12));
     return 77;
 }
 
