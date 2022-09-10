@@ -25,6 +25,8 @@ int fib(int num)
 
         return fib(num - 1) + fib(num - 2);
     }
+    puts("unreachable! :/");
+    return 7;
 }
 
 int fib_easy(int num){
@@ -40,7 +42,7 @@ int fib_easy(int num){
 
 int main() {
     puts("I was compiled by JankCC!");
-# 54 "C_Testfiles/dev_case/dev_case.c"
+# 56 "C_Testfiles/dev_case/dev_case.c"
     printf("fib_easy 0: %d\n",fib_easy(0));
     printf("fib_easy 1: %d\n",fib_easy(1));
     printf("fib_easy 2: %d\n",fib_easy(2));

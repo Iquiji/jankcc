@@ -28,6 +28,9 @@ int fib(int num)
 
         return fib(num - 1) + fib(num - 2);
     }
+    // this is here because blocks have to be filled :/ idk how to solve that right now
+    puts("unreachable! :/");
+    return 7;
 }
 
 int fib_easy(int num){
@@ -67,6 +70,9 @@ int main() {
     printf("fib 5: %d\n",fib(5));
     printf("fib 6: %d\n",fib(6));
     printf("fib 7: %d\n",fib(7));
+    printf("fib 25: %d\n",fib(25));
+    printf("fib 35: %d\n",fib(35));
+    printf("fib 42: %d\n",fib(42));
     return 77;
 }
 

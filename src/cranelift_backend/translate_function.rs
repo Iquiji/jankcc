@@ -124,6 +124,8 @@ impl CraneliftBackend {
         for block in translator.mir_function.blocks.iter().enumerate(){
             translator.translate_block(block.1.clone(),block.0);
         }
+        // seal all blocks
+        translator.func_builder.seal_all_blocks();
 
         // Tell the builder we're done with this function.
         translator.func_builder.finalize();
@@ -151,8 +153,8 @@ impl CraneliftFunctionTranslator<'_> {
         self.func_builder.switch_to_block(current_cranelift_block);
 
         if block_idx != 0{
-            self.func_builder.seal_block(current_cranelift_block);
-            debug!("sealing block: {:?}",block_idx);
+            // self.func_builder.seal_block(current_cranelift_block);
+            // debug!("sealing block: {:?}",block_idx);
             debug!("block: {:?},func: {}",block_idx,self.func_builder.func);
             debug!("block: {:?},func.is_filled: {}",block_idx,self.func_builder.is_filled());
         }

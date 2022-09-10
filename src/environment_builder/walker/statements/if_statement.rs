@@ -57,11 +57,11 @@ impl EnvironmentController {
         }
 
         // instr in true block
-        ctx.mir_function.current_block = if_true_block.clone();
+        ctx.mir_function.current_block = if_true_block;
         self.walk_statement(ctx, true_body.clone());
-        // set branch at end
-        if !if_true_block.borrow().is_exit_block{ // only if we dont return from that block
-            if_true_block.borrow_mut().branches = Some((cond_value,vec![
+        // set branch at end of then current block
+        if !ctx.mir_function.current_block.borrow().is_exit_block{ // only if we dont return from that block
+            ctx.mir_function.current_block.borrow_mut().branches = Some((cond_value,vec![
                 MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
             ]));
         }
@@ -69,11 +69,11 @@ impl EnvironmentController {
         // if else_block then do instr in there
         if let Some(else_body) = else_body{
             let else_block = ctx.mir_function.blocks[else_block_id_link as usize].clone();
-            ctx.mir_function.current_block = else_block.clone();
+            ctx.mir_function.current_block = else_block;
             self.walk_statement(ctx, else_body.clone());
-            // set branch at end
-            if !else_block.borrow().is_exit_block{ // only if we dont return from that block
-                else_block.borrow_mut().branches = Some((cond_value,vec![
+            // set branch at end of then current block
+            if !ctx.mir_function.current_block.borrow().is_exit_block{ // only if we dont return from that block
+                ctx.mir_function.current_block.borrow_mut().branches = Some((cond_value,vec![
                     MIRBranch{ is_default: true, value_needed: 0, to_block: merge_block_id }
                 ]));
             }

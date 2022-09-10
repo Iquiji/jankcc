@@ -3,6 +3,8 @@ mod translate_function;
 
 use std::error::Error;
 
+use log::error;
+
 use cranelift::{
     codegen::ir::{ConstantData, ConstantPool},
     prelude::*,
@@ -77,7 +79,7 @@ impl CraneliftBackend {
             let errors = self.module
                 .define_function(id, &mut self.ctx);
             if let Err(error) = errors{
-                println!("{:?}", error.source());
+                error!("{:?}", error.source());
             }
             // Now that compilation is finished, we can clear out the context state.
             self.module.clear_context(&mut self.ctx);

@@ -280,6 +280,19 @@
                                         right_value:
                                           Constant:
                                             Number: "2"
+        - Statement:
+            CExpression:
+              FunctionCall:
+                function:
+                  Identifier:
+                    identifier: puts
+                arguments:
+                  - StringLiteral:
+                      value: "unreachable! :/"
+        - Statement:
+            Return:
+              Constant:
+                Number: "7"
 - FunctionDefinition:
     function_specifiers:
       storage:
