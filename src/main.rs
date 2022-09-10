@@ -92,6 +92,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let preprocessed_file: String;
 
+    let timer_start_preprocessing = Instant::now();
+    info!("Starting Preprocessing of file: {:?}", in_file_path);
+
     if opt.internal_preprocessor {
         let mut preprocessor = Preprocessor::new();
         let preprocessed_file_temp =
@@ -142,6 +145,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    let timer_end_preprocessing = timer_start_preprocessing.elapsed();
+    info!("Preprocessing of file took: {:?}", timer_end_preprocessing);
+
     let timer_start_lexing = Instant::now();
     info!("Starting Lexing of file: {:?}", in_file_path);
 
@@ -189,14 +195,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut controller = EnvironmentController::new();
     controller.build(parsed);
 
-    let timer_end_parsing = timer_start_parsing.elapsed();
-    info!("Building of Environment took: {:?}", timer_end_parsing);
+    let timer_end_environment = timer_start_environment.elapsed();
+    info!("Building of Environment took: {:?}", timer_end_environment);
 
     let timer_start_codegen = Instant::now();
     info!("Starting Codegen of file: {:?}", in_file_path);
 
     let mir_programm = controller.get_mir();
-    println!("{}", serde_yaml::to_string(&mir_programm).unwrap());
+    debug!("{}", serde_yaml::to_string(&mir_programm).unwrap());
 
     let mut cranelift_backend = CraneliftBackend::default();
     cranelift_backend.compile(mir_programm);

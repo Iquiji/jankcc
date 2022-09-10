@@ -6,7 +6,7 @@ use crate::{
 impl EnvironmentController {
     pub(crate) fn handle_static_assert(
         &mut self,
-        static_assert: &Spanned<StaticAssertDeclaration>,
+        _static_assert: &Spanned<StaticAssertDeclaration>,
     ) {
     }
 }

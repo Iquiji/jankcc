@@ -17,9 +17,9 @@ pub fn execute_and_cleanup_capturing_stdout(path_to_c_file: &str) -> String {
                 .unwrap(),
             "-o",
             Path::new(&path_to_c_file)
-            .with_extension("out")
-            .to_str()
-            .unwrap(),
+                .with_extension("out")
+                .to_str()
+                .unwrap(),
             "-no-pie",
             "-static",
         ])

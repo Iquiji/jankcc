@@ -42,24 +42,50 @@ Three Different Name Spaces for:
 
 use std::{cell::RefCell, collections::HashMap};
 
-use crate::parser::{
-    parse_nodes::declarations::{CAlignmentSpecifier, CFunctionSpecifier, DerivedDeclarator},
-    types::{CTypeQualifiers, CTypeSpecifier},
-};
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 use super::ext_type::PrettyType;
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct BlockContainer {
     pub(crate) scope: ScopeContainer,
     pub(crate) active_inner: Option<Box<BlockContainer>>,
     pub(crate) past_inner: Vec<BlockContainer>,
 }
 impl BlockContainer {
+    pub(crate) fn new() -> Self {
+        Self {
+            scope: ScopeContainer::new(),
+            active_inner: None,
+            past_inner: vec![],
+        }
+    }
     pub(crate) fn get_current_scope(&mut self) -> &mut ScopeContainer {
         if let Some(active) = &mut self.active_inner {
             active.get_current_scope()
         } else {
             &mut self.scope
+        }
+    }
+    pub(crate) fn enter_new_level(&mut self) {
+        debug!("entered new scope level");
+        if let Some(active) = &mut self.active_inner {
+            active.enter_new_level();
+        } else {
+            self.active_inner = Some(Box::new(BlockContainer::new()));
+        }
+    }
+    pub(crate) fn exit_new_level(&mut self) {
+        debug!("exited new scope level");
+        if let Some(active) = &mut self.active_inner {
+            if active.active_inner.is_some() {
+                active.exit_new_level();
+            } else {
+                let temp = *active.clone();
+                self.active_inner = None;
+                self.past_inner.push(temp);
+            }
         }
     }
 }
@@ -100,6 +126,7 @@ impl BlockContainer {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ScopeContainer {
     pub(crate) variables: HashMap<String, RefCell<VariableInstance>>,
     pub(crate) typedefs: HashMap<String, RefCell<TypedefInstance>>,
@@ -118,19 +145,23 @@ impl ScopeContainer {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct VariableInstance {
     pub(crate) is_extern: bool,
     pub(crate) usage_counter: usize,
     pub(crate) associated_type: PrettyType,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TypedefInstance {
     pub(crate) def_type: PrettyType,
 }
 
 /// Must Refer to enum or union or struct :)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TagInstance {
     pub(crate) tag_type: PrettyType,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct MemberInstance {}
