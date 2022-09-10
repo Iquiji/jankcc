@@ -333,13 +333,18 @@ impl CraneliftFunctionTranslator<'_> {
                 let cmp_value = self.func_builder.ins().bint(self.mir_function.value_type_map.get(&compare_result).unwrap().into_cranelift_type(), cmp_value);
                 self.insert_value_trans_pair(compare_result, cmp_value);
             },
-            #[allow(unreachable_patterns)]
             MIRInstruction::GetAddrOfLocal(ouput_result, local_ref) => {
                 let var_name = self.mir_function.var_name_id_map.get_by_left(&local_ref).unwrap();
                 let var_stack_slot = self.var_stack_slot_map.get(var_name).unwrap();
                 let ref_value = self.func_builder.ins().stack_addr(self.module.target_config().pointer_type(), *var_stack_slot, 0);
                 self.insert_value_trans_pair(ouput_result, ref_value);
             },
+            MIRInstruction::Deref(output_res,value_to_deref, wanted_deref_type) => {
+                let cranelift_value_to_deref = self.mir_value_to_cranelift_value(value_to_deref);
+                let value = self.func_builder.ins().load(wanted_deref_type.into_cranelift_type(), MemFlags::new(), cranelift_value_to_deref, 0);
+                self.insert_value_trans_pair(output_res, value);
+            },
+            #[allow(unreachable_patterns)]
             _ => unimplemented!(),
         }
     }

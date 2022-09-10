@@ -13,6 +13,8 @@ pub(crate) enum MIRInstruction {
     ReadLocal(MIRValue, LocalRef),
     AssignLocal(LocalRef, MIRValue),
     GetAddrOfLocal(MIRValue,LocalRef),
+    /// return value, input value, wanted type
+    Deref(MIRValue,MIRValue,MIRType),
     IntMath(MIRValue, MIRValue, MIRValue,IntMathKind),
     Compare(MIRValue,MIRValue,MIRValue),
     Call(MIRValue, String, Vec<MIRValue>, MIRSignature),

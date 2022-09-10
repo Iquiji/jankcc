@@ -162,7 +162,21 @@ impl EnvironmentController {
                             },
                         }
                     },
-                    UnaryOperator::DEREF => todo!(),
+                    UnaryOperator::DEREF => {
+                        let value_to_deref = self.walk_expression(ctx, value.clone(), wanted_type);
+                        let output_value = ctx.mir_function.make_intermediate_value_typed(
+                            MIRType::I32,
+                        );
+                        MIRBlock::ins_instr(
+                            &ctx.mir_function.current_block,
+                            MIRInstruction::Deref(
+                                output_value,
+                                value_to_deref,
+                                MIRType::I32,
+                            ),
+                        );
+                        output_value
+                    },
                     UnaryOperator::VALUE => todo!(),
                     UnaryOperator::NEGATIVE => todo!(),
                     UnaryOperator::BITWISEINVERT => todo!(),

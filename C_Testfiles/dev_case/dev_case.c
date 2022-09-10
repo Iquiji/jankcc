@@ -36,8 +36,9 @@ int main() {
     int a = 5;
     int b = 0;
     b = 1;
-    // printf("a=%d,b=%d\n",a,b);
     a = 7;
+    printf("a.addr=%#018x,a.val=%d\n",&a,a);
+    printf("b.addr=%#018x,b.val=%d\n",&b,b);
 
     long unsigned int malloc_addr = malloc(15);
 
@@ -45,9 +46,13 @@ int main() {
     // printf("factorial %d: %d\n",0,factorial(0));
     // printf("factorial %d: %d\n",5,factorial(5));
     // printf("factorial %d: %d\n",12,factorial(12));
-    printf("malloc_addr: %#018x \n",malloc_addr);
-    printf("a addr: %#018x \n",&a);
-    printf("b addr: %#018x \n",&b);
+    printf("malloc_addr: %#018x,%d \n",malloc_addr,0);
+    int* a_ptr = &a;
+    a_ptr = a_ptr + 8;
+    int* b_ptr = &b;
+    b_ptr = b_ptr - 8;
+    printf("a addr: %#018x,deref again: %d\n",a_ptr,*a_ptr);
+    printf("b addr: %#018x,deref again: %d\n",&b,*b_ptr);
 
     return 77;
 }
