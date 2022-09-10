@@ -1,20 +1,23 @@
 extern int puts (const char *__s);
 extern int printf (const char *restrict __format, ...);
 
-// int main() {
-//     return 42;
-// }
+int fib(int num)
+{
+    int result;
+    if (num == 0) {
 
+        result = 0;
+    } else if (num == 1) {
 
-// int add(int a,int b){
-//     int c = a + b;
-//     //printf("add called! :) a: %d b: %d c: %d \n",a,b,c);
-//     return c;
-// }
+        result = 1;
+    } else {
 
-// int dumb_func(int wow){
-//     return wow;
-// }
+        result = fib(num - 1) + fib(num - 2);
+    }
+    // printf("fib(%d) => %d \n",num,result);
+    return result;
+}
+
 int factorial(int x){
     int res;
     if (x == 0){
@@ -35,9 +38,10 @@ int main() {
     printf("a=%d,b=%d\n",a,b);
     a = 7;
     puts("I was compiled by JankCC!");
-    printf("factorial %d: %d\n",0,factorial(0));
-    printf("factorial %d: %d\n",5,factorial(5));
-    printf("factorial %d: %d\n",12,factorial(12));
+    // printf("factorial %d: %d\n",0,factorial(0));
+    // printf("factorial %d: %d\n",5,factorial(5));
+    // printf("factorial %d: %d\n",12,factorial(12));
+    printf("fib %d returned %d \n",40,fib(40));
     return 77;
 }
 

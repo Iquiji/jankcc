@@ -35,10 +35,12 @@ pub struct CraneliftBackend {
 
 impl Default for CraneliftBackend {
     fn default() -> Self {
+        let mut settings_builder = settings::builder();
+        settings_builder.set("opt_level", "speed").unwrap();
         let builder = ObjectBuilder::new(
             cranelift::codegen::isa::lookup_by_name("x86_64-linux")
                 .unwrap()
-                .finish(settings::Flags::new(settings::builder()))
+                .finish(settings::Flags::new(settings_builder))
                 .unwrap(),
             "x64",
             cranelift_module::default_libcall_names(),
