@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, HashMap}, cell::RefCell, rc::Rc};
 
 use cranelift::{
-    codegen::ir::{Constant, ConstantData, ConstantPool},
+    codegen::ir::{Constant, ConstantData, ConstantPool, StackSlot},
     prelude::{isa::CallConv, *},
 };
 
@@ -22,7 +22,7 @@ impl MIRType {
             MIRType::I16 => todo!(),
             MIRType::U32 => todo!(),
             MIRType::I32 => types::I32,
-            MIRType::U64 => todo!(),
+            MIRType::U64 => types::I64,
             MIRType::I64 => types::I64,
         }
     }
@@ -69,7 +69,7 @@ impl CraneliftBackend {
         builder.seal_block(entry_block);
 
         // var map for later
-        let mut var_map: HashMap<String, Variable> = HashMap::new();
+        let mut var_stack_slot_map: HashMap<String, StackSlot> = HashMap::new();
         let mut var_idx_counter = 0;
         // register function parameters as variables
         for (param_idx, (param, param_type)) in input
@@ -79,11 +79,11 @@ impl CraneliftBackend {
             .enumerate()
         {
             let val = builder.block_params(entry_block)[param_idx];
-            let var = Variable::new(var_idx_counter);
-            if let std::collections::hash_map::Entry::Vacant(e) = var_map.entry(param.to_string()) {
-                e.insert(var);
-                builder.declare_var(var, param_type.into_cranelift_type());
-                builder.def_var(var, val);
+            let data = StackSlotData::new(StackSlotKind::ExplicitSlot, param_type.get_size_in_bytes());
+            let var_slot = builder.create_sized_stack_slot(data);
+            builder.ins().stack_store(val, var_slot, 0);
+            if let std::collections::hash_map::Entry::Vacant(e) = var_stack_slot_map.entry(param.to_string()) {
+                e.insert(var_slot);
                 var_idx_counter += 1;
             }
         }
@@ -91,12 +91,13 @@ impl CraneliftBackend {
         // register all function variables
         for var_local_ref_pair in &input.var_name_id_map {
             let mir_type_of_var = input.var_type_map.get(var_local_ref_pair.0).unwrap();
-            let var = Variable::new(var_idx_counter);
+            let var_type = input.var_type_map.get(var_local_ref_pair.0).unwrap();
+            let data = StackSlotData::new(StackSlotKind::ExplicitSlot, var_type.get_size_in_bytes());
+            let var_slot = builder.create_sized_stack_slot(data);
             if let std::collections::hash_map::Entry::Vacant(e) =
-                var_map.entry(var_local_ref_pair.1.to_string())
+                var_stack_slot_map.entry(var_local_ref_pair.1.to_string())
             {
-                e.insert(var);
-                builder.declare_var(var, mir_type_of_var.into_cranelift_type());
+                e.insert(var_slot);
                 var_idx_counter += 1;
             }
         }
@@ -105,7 +106,7 @@ impl CraneliftBackend {
             mir_function: &input,
             func_builder: &mut builder,
             module: &mut self.module,
-            var_map: &mut var_map,
+            var_stack_slot_map: &mut var_stack_slot_map,
             block_map: HashMap::new(),
             value_trans_map: BTreeMap::new(),
         };
@@ -138,7 +139,7 @@ pub(crate) struct CraneliftFunctionTranslator<'a> {
     pub(crate) mir_function: &'a MIRFunction,
     pub(crate) func_builder: &'a mut FunctionBuilder<'a>,
     pub(crate) module: &'a mut ObjectModule,
-    pub(crate) var_map: &'a mut HashMap<String, Variable>,
+    pub(crate) var_stack_slot_map: &'a mut HashMap<String, StackSlot>,
     pub(crate) block_map: HashMap<usize,Block>,
     pub(crate) value_trans_map: BTreeMap<MIRValue, Value>,
 }
@@ -150,7 +151,9 @@ impl CraneliftFunctionTranslator<'_> {
         }else{
             self.func_builder.current_block().unwrap()
         };
-        self.func_builder.switch_to_block(current_cranelift_block);
+        if block_idx != 0{
+            self.func_builder.switch_to_block(current_cranelift_block);
+        }
 
         if block_idx != 0{
             // self.func_builder.seal_block(current_cranelift_block);
@@ -226,12 +229,12 @@ impl CraneliftFunctionTranslator<'_> {
                     .unwrap_or_else(|| {
                         panic!("variable not defined => impossible: {:?}", mir_local_ref)
                     });
-                let variable = self.var_map.get(variable_name).unwrap_or_else(|| {
+                let variable_slot = self.var_stack_slot_map.get(variable_name).unwrap_or_else(|| {
                     panic!("variable not defined => impossible: {}", variable_name)
                 });
-
+                let variable_type = self.mir_function.var_type_map.get(&mir_local_ref).unwrap();
                 // use var
-                let cranelift_output_value = self.func_builder.use_var(*variable);
+                let cranelift_output_value = self.func_builder.ins().stack_load(variable_type.into_cranelift_type(), *variable_slot, 0);
 
                 // gen link
                 self.insert_value_trans_pair(mir_output_value, cranelift_output_value);
@@ -244,13 +247,13 @@ impl CraneliftFunctionTranslator<'_> {
                     .unwrap_or_else(|| {
                         panic!("variable not defined => impossible: {:?}", mir_local_ref)
                     });
-                let variable = self.var_map.get(variable_name).unwrap_or_else(|| {
+                let variable_slot = self.var_stack_slot_map.get(variable_name).unwrap_or_else(|| {
                     panic!("variable not defined => impossible: {}", variable_name)
                 });
 
                 let cranelift_assign_value = self.mir_value_to_cranelift_value(mir_value_to_assign_to);
 
-                self.func_builder.def_var(*variable, cranelift_assign_value);
+                self.func_builder.ins().stack_store(cranelift_assign_value, *variable_slot, 0);
             },
             MIRInstruction::IntMath(result_mir_value, left_mir_value, right_mir_value,op_kind) => {
                 let left_value = self.mir_value_to_cranelift_value(left_mir_value);
@@ -331,6 +334,12 @@ impl CraneliftFunctionTranslator<'_> {
                 self.insert_value_trans_pair(compare_result, cmp_value);
             },
             #[allow(unreachable_patterns)]
+            MIRInstruction::GetAddrOfLocal(ouput_result, local_ref) => {
+                let var_name = self.mir_function.var_name_id_map.get_by_left(&local_ref).unwrap();
+                let var_stack_slot = self.var_stack_slot_map.get(var_name).unwrap();
+                let ref_value = self.func_builder.ins().stack_addr(self.module.target_config().pointer_type(), *var_stack_slot, 0);
+                self.insert_value_trans_pair(ouput_result, ref_value);
+            },
             _ => unimplemented!(),
         }
     }

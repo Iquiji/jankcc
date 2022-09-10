@@ -138,9 +138,37 @@ impl EnvironmentController {
                 value: _,
             } => todo!(),
             CExpression::Unary {
-                unary_op: _,
-                value: _,
-            } => todo!(),
+                unary_op,
+                value,
+            } => {
+                use crate::parser::parse_nodes::expressions::*;
+                match unary_op{
+                    UnaryOperator::REF => {
+                        let lvalue = self.walk_expression_get_lvalue(ctx, value.clone(), &ExtType::Void.into_pretty());
+                        
+                        match lvalue{
+                            crate::mir::MIRLocatorValue::LocalVar(local_ref, pretty_type) => {
+                                let output_value = ctx.mir_function.make_intermediate_value_typed(
+                                    MIRType::extract_from_pretty_type(&ExtType::Pointer { is_const: false, is_volatile: false, to: Box::new(pretty_type.inner_type) }.into_pretty()),
+                                );
+                                MIRBlock::ins_instr(
+                                    &ctx.mir_function.current_block,
+                                    MIRInstruction::GetAddrOfLocal(
+                                        output_value,
+                                        local_ref,
+                                    ),
+                                );
+                                output_value
+                            },
+                        }
+                    },
+                    UnaryOperator::DEREF => todo!(),
+                    UnaryOperator::VALUE => todo!(),
+                    UnaryOperator::NEGATIVE => todo!(),
+                    UnaryOperator::BITWISEINVERT => todo!(),
+                    UnaryOperator::BOOLEANINVERT => todo!(),
+                }
+            },
             CExpression::SizeOf { value: _ } => todo!(),
             CExpression::SizeOfType { type_name: _ } => todo!(),
             CExpression::AlignOfType { type_name: _ } => todo!(),
@@ -251,7 +279,7 @@ impl EnvironmentController {
                         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
                     }else{
                         expression.span.error_at_span(&format!("var type different from wanted type!: {:#?} vs {:#?}",var_type,wanted_type));
-                        panic!("var type different from wanted type!");
+                        // panic!("var type different from wanted type!");
                     }
                 }
                 // insert load local instruction

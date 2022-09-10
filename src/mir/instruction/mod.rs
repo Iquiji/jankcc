@@ -12,6 +12,7 @@ pub(crate) enum MIRInstruction {
     ConstNum(MIRValue, i64, MIRType),
     ReadLocal(MIRValue, LocalRef),
     AssignLocal(LocalRef, MIRValue),
+    GetAddrOfLocal(MIRValue,LocalRef),
     IntMath(MIRValue, MIRValue, MIRValue,IntMathKind),
     Compare(MIRValue,MIRValue,MIRValue),
     Call(MIRValue, String, Vec<MIRValue>, MIRSignature),
