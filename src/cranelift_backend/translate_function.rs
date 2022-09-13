@@ -20,11 +20,11 @@ use super::CraneliftBackend;
 impl MIRType {
     pub(crate) fn into_cranelift_type(&self) -> Type {
         match self {
-            MIRType::U8 => todo!(),
-            MIRType::I8 => todo!(),
-            MIRType::U16 => todo!(),
-            MIRType::I16 => todo!(),
-            MIRType::U32 => todo!(),
+            MIRType::U8 => types::I8,
+            MIRType::I8 => types::I8,
+            MIRType::U16 => types::I16,
+            MIRType::I16 => types::I16,
+            MIRType::U32 => types::I32,
             MIRType::I32 => types::I32,
             MIRType::U64 => types::I64,
             MIRType::I64 => types::I64,
@@ -417,6 +417,82 @@ impl CraneliftFunctionTranslator<'_> {
                     0,
                 );
                 self.insert_value_trans_pair(output_res, value);
+            }
+            MIRInstruction::IntConvert(output_value, input_value, target_type) => {
+                let cranelift_input_value = self.mir_value_to_cranelift_value(input_value);
+                let current_type = self.mir_function.value_type_map.get(&input_value).unwrap();
+
+                let cranelift_ouput_value = match (&current_type, &target_type) {
+                    (MIRType::U8, MIRType::U8) => cranelift_input_value,
+                    (MIRType::U8, MIRType::I8) => todo!(),
+                    (MIRType::U8, MIRType::U16) => todo!(),
+                    (MIRType::U8, MIRType::I16) => todo!(),
+                    (MIRType::U8, MIRType::U32) => todo!(),
+                    (MIRType::U8, MIRType::I32) => todo!(),
+                    (MIRType::U8, MIRType::U64) => todo!(),
+                    (MIRType::U8, MIRType::I64) => todo!(),
+                    (MIRType::I8, MIRType::U8) => todo!(),
+                    (MIRType::I8, MIRType::I8) => cranelift_input_value,
+                    (MIRType::I8, MIRType::U16) => todo!(),
+                    (MIRType::I8, MIRType::I16) => todo!(),
+                    (MIRType::I8, MIRType::U32) => todo!(),
+                    (MIRType::I8, MIRType::I32) => todo!(),
+                    (MIRType::I8, MIRType::U64) => todo!(),
+                    (MIRType::I8, MIRType::I64) => todo!(),
+                    (MIRType::U16, MIRType::U8) => todo!(),
+                    (MIRType::U16, MIRType::I8) => todo!(),
+                    (MIRType::U16, MIRType::U16) => cranelift_input_value,
+                    (MIRType::U16, MIRType::I16) => todo!(),
+                    (MIRType::U16, MIRType::U32) => todo!(),
+                    (MIRType::U16, MIRType::I32) => todo!(),
+                    (MIRType::U16, MIRType::U64) => todo!(),
+                    (MIRType::U16, MIRType::I64) => todo!(),
+                    (MIRType::I16, MIRType::U8) => todo!(),
+                    (MIRType::I16, MIRType::I8) => todo!(),
+                    (MIRType::I16, MIRType::U16) => todo!(),
+                    (MIRType::I16, MIRType::I16) => cranelift_input_value,
+                    (MIRType::I16, MIRType::U32) => todo!(),
+                    (MIRType::I16, MIRType::I32) => todo!(),
+                    (MIRType::I16, MIRType::U64) => todo!(),
+                    (MIRType::I16, MIRType::I64) => todo!(),
+                    (MIRType::U32, MIRType::U8) => todo!(),
+                    (MIRType::U32, MIRType::I8) => todo!(),
+                    (MIRType::U32, MIRType::U16) => todo!(),
+                    (MIRType::U32, MIRType::I16) => todo!(),
+                    (MIRType::U32, MIRType::U32) => cranelift_input_value,
+                    (MIRType::U32, MIRType::I32) => todo!(),
+                    (MIRType::U32, MIRType::U64) => todo!(),
+                    (MIRType::U32, MIRType::I64) => todo!(),
+                    (MIRType::I32, MIRType::U8) => todo!(),
+                    (MIRType::I32, MIRType::I8) => todo!(),
+                    (MIRType::I32, MIRType::U16) => todo!(),
+                    (MIRType::I32, MIRType::I16) => todo!(),
+                    (MIRType::I32, MIRType::U32) => todo!(),
+                    (MIRType::I32, MIRType::I32) => cranelift_input_value,
+                    (MIRType::I32, MIRType::U64) => todo!(),
+                    (MIRType::I32, MIRType::I64) => self
+                        .func_builder
+                        .ins()
+                        .sextend(target_type.into_cranelift_type(), cranelift_input_value),
+                    (MIRType::U64, MIRType::U8) => todo!(),
+                    (MIRType::U64, MIRType::I8) => todo!(),
+                    (MIRType::U64, MIRType::U16) => todo!(),
+                    (MIRType::U64, MIRType::I16) => todo!(),
+                    (MIRType::U64, MIRType::U32) => todo!(),
+                    (MIRType::U64, MIRType::I32) => todo!(),
+                    (MIRType::U64, MIRType::U64) => cranelift_input_value,
+                    (MIRType::U64, MIRType::I64) => todo!(),
+                    (MIRType::I64, MIRType::U8) => todo!(),
+                    (MIRType::I64, MIRType::I8) => todo!(),
+                    (MIRType::I64, MIRType::U16) => todo!(),
+                    (MIRType::I64, MIRType::I16) => todo!(),
+                    (MIRType::I64, MIRType::U32) => todo!(),
+                    (MIRType::I64, MIRType::I32) => todo!(),
+                    (MIRType::I64, MIRType::U64) => todo!(),
+                    (MIRType::I64, MIRType::I64) => cranelift_input_value,
+                };
+
+                self.insert_value_trans_pair(output_value, cranelift_ouput_value);
             }
             #[allow(unreachable_patterns)]
             _ => unimplemented!(),

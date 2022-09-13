@@ -9,7 +9,7 @@ use std::{
     fs::read_to_string,
 };
 
-use log::{error, trace};
+use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
 use token_types::*;
 
@@ -179,9 +179,14 @@ impl Lexer {
                         current_token_string.push(character);
                         let mut end_char = '`';
                         let mut point_seperator_reached = false;
+                        let mut hex_x_reached = false;
                         for character in char_line_iter.by_ref() {
                             // as long as we have digit or nondigit
-                            if helper_funcs::is_digit(character) {
+                            if (hex_x_reached
+                                && ['a', 'b', 'c', 'd', 'e', 'f']
+                                    .contains(&character.to_ascii_lowercase()))
+                                || helper_funcs::is_digit(character)
+                            {
                                 current_token_string.push(character);
                             } else if character == '.' {
                                 if point_seperator_reached {
@@ -189,6 +194,32 @@ impl Lexer {
                                 }
                                 point_seperator_reached = true;
                                 current_token_string.push(character);
+                            } else if character.to_ascii_lowercase() == 'x' {
+                                if hex_x_reached {
+                                    panic!("Second Hex 'x' seperator in number")
+                                }
+                                current_token_string.push(character);
+                                hex_x_reached = true;
+                            } else if hex_x_reached
+                                && (character.to_ascii_uppercase() == 'L'
+                                    || character.to_ascii_uppercase() == 'U')
+                            {
+                                current_token_string.push(character);
+                                if let Some(second_l_maybe) = char_line_iter.next() {
+                                    if second_l_maybe.to_ascii_uppercase() == 'L' {
+                                        current_token_string.push(character);
+                                        if let Some(second_l_maybe) = char_line_iter.next() {
+                                            if second_l_maybe.to_ascii_uppercase() == 'L' {
+                                                current_token_string.push(character);
+                                            } else {
+                                                end_char = second_l_maybe;
+                                            }
+                                        }
+                                    } else {
+                                        end_char = second_l_maybe;
+                                    }
+                                }
+                                break;
                             } else {
                                 end_char = character;
                                 break;
@@ -199,6 +230,9 @@ impl Lexer {
                             original: current_token_string.clone(),
                             loc: self.current_loc.clone(),
                         });
+                        if hex_x_reached {
+                            debug!("hex_constant!: {:?}", current_token_string);
+                        }
                         current_token_string = String::new();
                         if end_char != '`' {
                             current_token_string.push(end_char);

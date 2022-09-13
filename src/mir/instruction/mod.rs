@@ -21,6 +21,8 @@ pub(crate) enum MIRInstruction {
     Compare(MIRValue, MIRValue, MIRValue, IntCmpKind),
     Call(MIRValue, String, Vec<MIRValue>, MIRSignature),
     Return(MIRValue),
+    /// ouput,input,target_type
+    IntConvert(MIRValue, MIRValue, MIRType),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

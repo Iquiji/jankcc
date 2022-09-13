@@ -6,11 +6,14 @@ Qualifiers?
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 
-use crate::parser::parse_nodes::declarations::{
-    CFunctionSpecifier, CStorageClass, DeclarationSpecifiers, DerivedDeclarator,
+use crate::{
+    mir::{MIRBlock, MIRInstruction, MIRType, MIRValue},
+    parser::parse_nodes::declarations::{
+        CFunctionSpecifier, CStorageClass, DeclarationSpecifiers, DerivedDeclarator,
+    },
 };
 
-use super::{CompileTimeValue, EnvironmentController};
+use super::{walker::walk_func::FunctionContext, CompileTimeValue, EnvironmentController};
 
 /// A transformed Type from the Parser
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -334,6 +337,121 @@ impl EnvironmentController {
                 identifier_list: _,
                 to: _,
             } => unimplemented!("DerivedDeclarator::FunctionIdentified unsupported currently :/"),
+        }
+    }
+}
+
+impl EnvironmentController {
+    pub(crate) fn arithmatic_conversion(
+        &mut self,
+        ctx: &mut FunctionContext,
+        left_value: MIRValue,
+        right_value: MIRValue,
+    ) -> (MIRValue, MIRValue) {
+        let left_type_orig = ctx
+            .mir_function
+            .value_type_map_pretty
+            .get(&left_value)
+            .unwrap();
+        let right_type_orig = ctx
+            .mir_function
+            .value_type_map_pretty
+            .get(&right_value)
+            .unwrap();
+        if left_type_orig == right_type_orig {
+            return (left_value, right_value);
+        }
+        match &left_type_orig.inner_type {
+            ExtType::Int {
+                is_const,
+                is_volatile,
+                signed,
+                size,
+            } => {
+                let left_is_const = *is_const;
+                let left_is_volatile = *is_volatile;
+                let left_is_signed = *signed;
+                let left_size = *size;
+                match &right_type_orig.inner_type {
+                    ExtType::Int {
+                        is_const,
+                        is_volatile,
+                        signed,
+                        size,
+                    } => {
+                        let right_is_const = *is_const;
+                        let right_is_volatile = *is_volatile;
+                        let right_is_signed = *signed;
+                        let right_size = *size;
+                        // both Int
+                        if !left_is_signed && !right_is_signed {
+                            let new_type = ExtType::Int {
+                                is_const: false,
+                                is_volatile: false,
+                                signed: false,
+                                size: left_size.max(right_size),
+                            }
+                            .into_pretty();
+                            let output_value_left = ctx
+                                .mir_function
+                                .make_intermediate_value_typed(new_type.clone());
+                            MIRBlock::ins_instr(
+                                &ctx.mir_function.current_block,
+                                MIRInstruction::IntConvert(
+                                    output_value_left,
+                                    left_value,
+                                    MIRType::extract_from_pretty_type(&new_type),
+                                ),
+                            );
+                            let output_value_right = ctx
+                                .mir_function
+                                .make_intermediate_value_typed(new_type.clone());
+                            MIRBlock::ins_instr(
+                                &ctx.mir_function.current_block,
+                                MIRInstruction::IntConvert(
+                                    output_value_right,
+                                    right_value,
+                                    MIRType::extract_from_pretty_type(&new_type),
+                                ),
+                            );
+                            return (output_value_left, output_value_right);
+                        } else {
+                            let new_type = ExtType::Int {
+                                is_const: false,
+                                is_volatile: false,
+                                signed: true,
+                                size: left_size.max(right_size),
+                            }
+                            .into_pretty();
+                            let output_value_left = ctx
+                                .mir_function
+                                .make_intermediate_value_typed(new_type.clone());
+                            MIRBlock::ins_instr(
+                                &ctx.mir_function.current_block,
+                                MIRInstruction::IntConvert(
+                                    output_value_left,
+                                    left_value,
+                                    MIRType::extract_from_pretty_type(&new_type),
+                                ),
+                            );
+                            let output_value_right = ctx
+                                .mir_function
+                                .make_intermediate_value_typed(new_type.clone());
+                            MIRBlock::ins_instr(
+                                &ctx.mir_function.current_block,
+                                MIRInstruction::IntConvert(
+                                    output_value_right,
+                                    right_value,
+                                    MIRType::extract_from_pretty_type(&new_type),
+                                ),
+                            );
+                            return (output_value_left, output_value_right);
+                        }
+                    }
+                    _ => unimplemented!(),
+                }
+            }
+            _ => unimplemented!(),
         }
     }
 }

@@ -46,12 +46,16 @@ int main() {
     int e = 5;
     int f = 6;
     int g = 7;
+    long long_var = 5;
+    if (long_var == 5){
+        puts("long_var == 5");
+    }
     b = 2;
     a = 1;
     printf("a.addr=%#018x,a.val=%d\n",&a,a);
     printf("b.addr=%#018x,b.val=%d\n",&b,b);
 
-    long unsigned int malloc_addr = malloc(16);
+    int* malloc_addr = malloc(16);
 
     // printf("factorial %d: %d\n",0,factorial(0));
     // printf("factorial %d: %d\n",5,factorial(5));

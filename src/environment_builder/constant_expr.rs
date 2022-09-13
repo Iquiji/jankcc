@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::parser::parse_nodes::expressions::{CExpression, ConstantExpression};
 
 use super::{CompileTimeValue, EnvironmentController};
@@ -97,7 +99,15 @@ impl EnvironmentController {
                             "failed to convert string to float in constant expression runner",
                         ))
                     } else {
-                        CompileTimeValue::Int(og.parse::<i128>().expect(
+                        let og_trimmed = og
+                            .trim_end_matches('l')
+                            .trim_end_matches('L')
+                            .trim_end_matches('l')
+                            .trim_end_matches('L')
+                            .trim_end_matches('u')
+                            .trim_end_matches('U');
+                        debug!("og: {},og_trimmed: {}", og, og_trimmed);
+                        CompileTimeValue::Int(og_trimmed.parse::<i128>().expect(
                             "failed to convert string to int in constant expression runner",
                         ))
                     }

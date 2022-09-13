@@ -64,7 +64,7 @@ impl EnvironmentController {
             // make local_ref
             let local_ref = ctx
                 .mir_function
-                .insert_variable(var_name, MIRType::extract_from_pretty_type(&extracted_type));
+                .insert_variable(var_name, extracted_type.clone());
 
             debug!(
                 "Variable decl as Compound Item: {:?} -> {:?}",

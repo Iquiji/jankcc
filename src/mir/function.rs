@@ -11,11 +11,13 @@ pub(crate) struct MIRFunction {
     pub(crate) parameter_names: Vec<String>,
     pub(crate) var_name_id_map: BiBTreeMap<LocalRef, String>,
     pub(crate) var_type_map: BTreeMap<LocalRef, MIRType>,
+    pub(crate) var_type_map_pretty: BTreeMap<LocalRef, PrettyType>,
     pub(crate) data_const_id_map: BTreeMap<DataConstantRef, MIRConstant>,
     pub(crate) blocks: Vec<Rc<RefCell<MIRBlock>>>,
     pub(crate) current_block: Rc<RefCell<MIRBlock>>,
     pub(crate) ctx_gen: MIRFunctionContextGenerator,
     pub(crate) value_type_map: BTreeMap<MIRValue, MIRType>,
+    pub(crate) value_type_map_pretty: BTreeMap<MIRValue, PrettyType>,
 }
 impl MIRFunction {
     pub(crate) fn new() -> MIRFunction {
@@ -30,11 +32,13 @@ impl MIRFunction {
             parameter_names: vec![],
             var_name_id_map: BiBTreeMap::new(),
             var_type_map: BTreeMap::new(),
+            var_type_map_pretty: BTreeMap::new(),
             data_const_id_map: BTreeMap::new(),
             blocks: vec![origin_block.clone()],
             current_block: origin_block,
-            value_type_map: BTreeMap::new(),
             ctx_gen: MIRFunctionContextGenerator::new(),
+            value_type_map: BTreeMap::new(),
+            value_type_map_pretty: BTreeMap::new(),
         }
     }
 }
@@ -79,9 +83,11 @@ impl MIRFunctionContextGenerator {
 }
 
 impl MIRFunction {
-    pub(crate) fn make_intermediate_value_typed(&mut self, mir_type: MIRType) -> MIRValue {
+    pub(crate) fn make_intermediate_value_typed(&mut self, p_type: PrettyType) -> MIRValue {
         let value = self.ctx_gen.make_intermediate_value();
-        self.value_type_map.insert(value, mir_type);
+        self.value_type_map
+            .insert(value, MIRType::extract_from_pretty_type(&p_type));
+        self.value_type_map_pretty.insert(value, p_type);
         value
     }
     pub(crate) fn insert_constant(&mut self, constant: MIRConstant) -> DataConstantRef {
@@ -90,12 +96,14 @@ impl MIRFunction {
         //.expect("internal data const ref error");
         c_ref
     }
-    pub(crate) fn insert_variable(&mut self, var: String, var_type: MIRType) -> LocalRef {
+    pub(crate) fn insert_variable(&mut self, var: String, var_type: PrettyType) -> LocalRef {
         let var_ref = self.ctx_gen.make_var_ref();
         self.var_name_id_map
             .insert_no_overwrite(var_ref, var)
             .expect("internal var ref error");
-        self.var_type_map.insert(var_ref, var_type);
+        self.var_type_map
+            .insert(var_ref, MIRType::extract_from_pretty_type(&var_type));
+        self.var_type_map_pretty.insert(var_ref, var_type);
         var_ref
     }
 }

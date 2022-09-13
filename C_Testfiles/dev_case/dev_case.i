@@ -58,12 +58,13 @@ int main() {
     int e = 5;
     int f = 6;
     int g = 7;
+    long long_var = 5;
     b = 2;
     a = 1;
     printf("a.addr=%#018x,a.val=%d\n",&a,a);
     printf("b.addr=%#018x,b.val=%d\n",&b,b);
 
-    long unsigned int malloc_addr = malloc(16);
+    int* malloc_addr = malloc(16);
 
 
 
@@ -78,8 +79,11 @@ int main() {
     printf(a_ptr,a_ptr,*b_ptr);
 
 
-    for(int x = 0; x==5; x = x + 1){
+    int* var_ptr = &a;
+    for(int x = 0; x < 10; x = x + 1){
         puts("hello for_loop!");
+        printf("addr: %#018x,deref + x: %d\n",var_ptr,*var_ptr);
+        var_ptr = var_ptr + 8;
     }
 
     return 77;

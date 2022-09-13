@@ -22,10 +22,10 @@ impl MIRLocatorValue {
     pub(crate) fn into_rvlaue(&self, ctx: &mut FunctionContext) -> MIRValue {
         match self {
             MIRLocatorValue::LocalVar(local_ref, pretty_type) => {
-                let mir_var_type = ctx.mir_function.var_type_map.get(local_ref).unwrap();
+                let var_type = ctx.mir_function.var_type_map_pretty.get(local_ref).unwrap();
                 let value_ref = ctx
                     .mir_function
-                    .make_intermediate_value_typed(*mir_var_type);
+                    .make_intermediate_value_typed(var_type.clone());
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::ReadLocal(value_ref, *local_ref),

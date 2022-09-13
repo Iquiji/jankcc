@@ -31,8 +31,8 @@ pub(crate) struct CTypeName {
     // need here Basic and then the new derived declarator in declarations.rs
 
     // this needs to be returned by parse_type_name
-    base: Spanned<CTypeBasic>,
-    declarator: Spanned<DerivedDeclarator>,
+    pub(crate) base: Spanned<CTypeBasic>,
+    pub(crate) declarator: Spanned<DerivedDeclarator>,
 }
 
 /*

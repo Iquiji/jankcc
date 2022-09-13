@@ -6,7 +6,13 @@ use crate::{
         EnvironmentController,
     },
     mir::{IntMathKind, MIRBlock, MIRConstant, MIRInstruction, MIRSignature, MIRType, MIRValue},
-    parser::{parse_nodes::expressions::CExpression, span::Spanned},
+    parser::{
+        parse_nodes::{
+            declarations::{CFunctionSpecifier, CStorageClass, DeclarationSpecifiers},
+            expressions::CExpression,
+        },
+        span::Spanned,
+    },
 };
 
 mod walk_get_lvalue;
@@ -54,9 +60,19 @@ impl EnvironmentController {
             } => {
                 let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
                 let right_value = self.walk_expression(ctx, right_piece.clone(), wanted_type);
-                let output_value = ctx
-                    .mir_function
-                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                let (left_value, right_value) =
+                    self.arithmatic_conversion(ctx, left_value, right_value);
+
+                // Equality always returns an int
+                let output_value = ctx.mir_function.make_intermediate_value_typed(
+                    ExtType::Int {
+                        is_const: false,
+                        is_volatile: false,
+                        signed: true,
+                        size: 4,
+                    }
+                    .into_pretty(),
+                );
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::Compare(
@@ -82,9 +98,19 @@ impl EnvironmentController {
             } => {
                 let left_value = self.walk_expression(ctx, left_piece.clone(), wanted_type);
                 let right_value = self.walk_expression(ctx, right_piece.clone(), wanted_type);
-                let output_value = ctx
-                    .mir_function
-                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                let (left_value, right_value) =
+                    self.arithmatic_conversion(ctx, left_value, right_value);
+
+                // Relational always returns an int
+                let output_value = ctx.mir_function.make_intermediate_value_typed(
+                    ExtType::Int {
+                        is_const: false,
+                        is_volatile: false,
+                        signed: true,
+                        size: 4,
+                    }
+                    .into_pretty(),
+                );
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::Compare(output_value, left_value, right_value,match equality_op{
@@ -118,9 +144,16 @@ impl EnvironmentController {
                 //
                 let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
                 let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
-                let output_value = ctx
-                    .mir_function
-                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                let (left_value, right_value) =
+                    self.arithmatic_conversion(ctx, left_value, right_value);
+
+                let output_value = ctx.mir_function.make_intermediate_value_typed(
+                    ctx.mir_function
+                        .value_type_map_pretty
+                        .get(&left_value)
+                        .unwrap()
+                        .clone(),
+                );
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::IntMath(output_value, left_value, right_value, math_kind),
@@ -147,19 +180,60 @@ impl EnvironmentController {
                 //
                 let left_value = self.walk_expression(ctx, left_value.clone(), wanted_type);
                 let right_value = self.walk_expression(ctx, right_value.clone(), wanted_type);
-                let output_value = ctx
-                    .mir_function
-                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(wanted_type));
+                let (left_value, right_value) =
+                    self.arithmatic_conversion(ctx, left_value, right_value);
+
+                let output_value = ctx.mir_function.make_intermediate_value_typed(
+                    ctx.mir_function
+                        .value_type_map_pretty
+                        .get(&left_value)
+                        .unwrap()
+                        .clone(),
+                );
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::IntMath(output_value, left_value, right_value, math_kind),
                 );
                 output_value
             }
-            CExpression::Cast {
-                type_name: _,
-                value: _,
-            } => todo!(),
+            CExpression::Cast { type_name, value } => {
+                let target_type = self
+                    .extract_pretty_type_from_declaration_specifiers_and_derived_declarator(
+                        DeclarationSpecifiers {
+                            storage: CStorageClass {
+                                typedef_c: false,
+                                extern_c: false,
+                                static_c: false,
+                                thread_local_c: false,
+                                auto_c: false,
+                                register_c: false,
+                            },
+                            qualifiers: type_name.inner.base.qualifiers.clone(),
+                            specifiers: type_name.inner.base.specifier.clone(),
+                            function: CFunctionSpecifier {
+                                inline: false,
+                                no_return: false,
+                            },
+                            alignment: None,
+                        },
+                        *type_name.inner.declarator.inner.clone(),
+                    );
+
+                let base = self.walk_expression(ctx, value.clone(), &PrettyType::default_void());
+
+                let output_value = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(target_type.clone());
+                MIRBlock::ins_instr(
+                    &ctx.mir_function.current_block,
+                    MIRInstruction::IntConvert(
+                        output_value,
+                        base,
+                        MIRType::extract_from_pretty_type(&target_type),
+                    ),
+                );
+                output_value
+            }
             CExpression::PrefixIncrement {
                 increment_type: _,
                 value: _,
@@ -177,14 +251,12 @@ impl EnvironmentController {
                         match lvalue {
                             crate::mir::MIRLocatorValue::LocalVar(local_ref, pretty_type) => {
                                 let output_value = ctx.mir_function.make_intermediate_value_typed(
-                                    MIRType::extract_from_pretty_type(
-                                        &ExtType::Pointer {
-                                            is_const: false,
-                                            is_volatile: false,
-                                            to: Box::new(pretty_type.inner_type),
-                                        }
-                                        .into_pretty(),
-                                    ),
+                                    ExtType::Pointer {
+                                        is_const: false,
+                                        is_volatile: false,
+                                        to: Box::new(pretty_type.inner_type),
+                                    }
+                                    .into_pretty(),
                                 );
                                 MIRBlock::ins_instr(
                                     &ctx.mir_function.current_block,
@@ -196,13 +268,29 @@ impl EnvironmentController {
                     }
                     UnaryOperator::DEREF => {
                         let value_to_deref = self.walk_expression(ctx, value.clone(), wanted_type);
-                        let output_value =
-                            ctx.mir_function.make_intermediate_value_typed(MIRType::I32);
-                        MIRBlock::ins_instr(
-                            &ctx.mir_function.current_block,
-                            MIRInstruction::Deref(output_value, value_to_deref, MIRType::I32),
-                        );
-                        output_value
+                        let type_of_deref = ctx
+                            .mir_function
+                            .value_type_map_pretty
+                            .get(&value_to_deref)
+                            .unwrap();
+                        if let ExtType::Pointer {
+                            is_const,
+                            is_volatile,
+                            to,
+                        } = &type_of_deref.inner_type
+                        {
+                            let output_value = ctx
+                                .mir_function
+                                .make_intermediate_value_typed(to.into_pretty());
+                            MIRBlock::ins_instr(
+                                &ctx.mir_function.current_block,
+                                MIRInstruction::Deref(output_value, value_to_deref, MIRType::I32),
+                            );
+                            output_value
+                        } else {
+                            expression.span.error_at_span("cannot deref not pointer!");
+                            panic!()
+                        }
                     }
                     UnaryOperator::VALUE => todo!(),
                     UnaryOperator::NEGATIVE => todo!(),
@@ -265,9 +353,9 @@ impl EnvironmentController {
                         }
 
                         // push the actual call and return the MIRValue that results from that :)
-                        let output_value = ctx.mir_function.make_intermediate_value_typed(
-                            MIRType::extract_from_pretty_type(&returns.into_pretty()),
-                        );
+                        let output_value = ctx
+                            .mir_function
+                            .make_intermediate_value_typed(returns.into_pretty());
                         MIRBlock::ins_instr(
                             &ctx.mir_function.current_block,
                             MIRInstruction::Call(
@@ -337,9 +425,7 @@ impl EnvironmentController {
                     }
                 }
                 // insert load local instruction
-                let value_ref = ctx
-                    .mir_function
-                    .make_intermediate_value_typed(MIRType::extract_from_pretty_type(&var_type));
+                let value_ref = ctx.mir_function.make_intermediate_value_typed(var_type);
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::ReadLocal(value_ref, local_ref),
@@ -355,7 +441,9 @@ impl EnvironmentController {
                 crate::parser::parse_nodes::Constant::Number(numberlike) => {
                     let mir_type = MIRType::extract_from_pretty_type(wanted_type);
                     // make intermediate value insert instr to fetch constant number and return the opaque pointer to the value
-                    let value_ref = ctx.mir_function.make_intermediate_value_typed(mir_type);
+                    let value_ref = ctx
+                        .mir_function
+                        .make_intermediate_value_typed(wanted_type.clone());
                     MIRBlock::ins_instr(
                         &ctx.mir_function.current_block,
                         MIRInstruction::ConstNum(
@@ -379,14 +467,18 @@ impl EnvironmentController {
                 let constant_ref = ctx.mir_function.insert_constant(constant);
 
                 // insert the GetConstDataPtr instr and return the value ref
-                let value_ref = ctx.mir_function.make_intermediate_value_typed(mir_type);
+                let value_ref = ctx
+                    .mir_function
+                    .make_intermediate_value_typed(wanted_type.clone());
                 MIRBlock::ins_instr(
                     &ctx.mir_function.current_block,
                     MIRInstruction::GetConstDataPtr(value_ref, constant_ref),
                 );
                 value_ref
             }
-            CExpression::Paranthesised(_) => todo!(),
+            CExpression::Paranthesised(expr) => {
+                self.walk_expression(ctx, expr.clone(), wanted_type)
+            }
             CExpression::GenericSelection(_) => todo!(),
         }
     }

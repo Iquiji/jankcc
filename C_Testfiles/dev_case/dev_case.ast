@@ -881,6 +881,34 @@
                   - Single:
                       Constant:
                         Number: "7"
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Long
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: long_var
+                    derive: Base
+                  - Single:
+                      Constant:
+                        Number: "5"
         - Statement:
             CExpression:
               Assignment:
@@ -949,7 +977,7 @@
                   volatile_q: false
                   atomic_q: false
                 specifiers:
-                  Basic: UnLong
+                  Basic: Int
                 function:
                   inline: false
                   no_return: false
@@ -957,7 +985,14 @@
               init:
                 - - base:
                       identifier: malloc_addr
-                    derive: Base
+                    derive:
+                      Pointer:
+                        qualifiers:
+                          const_q: false
+                          restrict_q: false
+                          volatile_q: false
+                          atomic_q: false
+                        to: Base
                   - Single:
                       FunctionCall:
                         function:
@@ -1144,6 +1179,44 @@
                       value:
                         Identifier:
                           identifier: b_ptr
+        - Declaration:
+            Declaration:
+              specifiers:
+                storage:
+                  typedef_c: false
+                  extern_c: false
+                  static_c: false
+                  thread_local_c: false
+                  auto_c: false
+                  register_c: false
+                qualifiers:
+                  const_q: false
+                  restrict_q: false
+                  volatile_q: false
+                  atomic_q: false
+                specifiers:
+                  Basic: Int
+                function:
+                  inline: false
+                  no_return: false
+                alignment: ~
+              init:
+                - - base:
+                      identifier: var_ptr
+                    derive:
+                      Pointer:
+                        qualifiers:
+                          const_q: false
+                          restrict_q: false
+                          volatile_q: false
+                          atomic_q: false
+                        to: Base
+                  - Single:
+                      Unary:
+                        unary_op: REF
+                        value:
+                          Identifier:
+                            identifier: a
         - Statement:
             For:
               decl_clause:
@@ -1176,14 +1249,14 @@
                             Number: "0"
               expr_clause: ~
               controlling_expr:
-                Equality:
+                Relational:
                   left_piece:
                     Identifier:
                       identifier: x
-                  equality_op: Equal
+                  equality_op: Lesser
                   right_piece:
                     Constant:
-                      Number: "5"
+                      Number: "10"
               after_expr:
                 Assignment:
                   to_assign:
@@ -1210,6 +1283,38 @@
                           arguments:
                             - StringLiteral:
                                 value: hello for_loop!
+                  - Statement:
+                      CExpression:
+                        FunctionCall:
+                          function:
+                            Identifier:
+                              identifier: printf
+                          arguments:
+                            - StringLiteral:
+                                value: "addr: %#018x,deref + x: %d\n"
+                            - Identifier:
+                                identifier: var_ptr
+                            - Unary:
+                                unary_op: DEREF
+                                value:
+                                  Identifier:
+                                    identifier: var_ptr
+                  - Statement:
+                      CExpression:
+                        Assignment:
+                          to_assign:
+                            Identifier:
+                              identifier: var_ptr
+                          operator: Assign
+                          value:
+                            Additive:
+                              left_value:
+                                Identifier:
+                                  identifier: var_ptr
+                              op: Plus
+                              right_value:
+                                Constant:
+                                  Number: "8"
         - Statement:
             Return:
               Constant:

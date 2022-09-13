@@ -51,7 +51,7 @@ impl EnvironmentController {
                 // param is also a local variable
                 func_ctx.mir_function.insert_variable(
                     parameter_name.ident.clone(),
-                    MIRType::extract_from_pretty_type(&parameter_name.parameter_type.into_pretty()),
+                    parameter_name.parameter_type.into_pretty(),
                 );
                 // it is also in the symbol table
                 self.symbol_table.get_current_scope().variables.insert(

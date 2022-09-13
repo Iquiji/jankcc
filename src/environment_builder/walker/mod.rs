@@ -14,7 +14,7 @@ pub(crate) use crate::parser::span::Spanned;
 mod expressions;
 mod statements;
 mod static_and_constant_expr;
-mod walk_func;
+pub mod walk_func;
 
 impl EnvironmentController {
     pub(crate) fn walk_translation_unit(&mut self, translation_unit: TranslationUnit) {
