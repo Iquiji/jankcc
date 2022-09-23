@@ -76,10 +76,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if !opt.quiet {
         println!(
-            r#"      _             _       ____ ____ 
+            r#"      _             _       ____ ____
     | | __ _ _ __ | | __  / ___/ ___|
- _  | |/ _` | '_ \| |/ / | |  | |    
-| |_| | (_| | | | |   <  | |__| |___ 
+ _  | |/ _` | '_ \| |/ / | |  | |
+| |_| | (_| | | | |   <  | |__| |___
  \___/ \__,_|_| |_|_|\_\  \____\____|
                                      "#
         );
@@ -178,13 +178,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Starting Flushing of Ast: {:?}",
             Path::new(&in_file_path).with_extension("ast")
         );
-        let mut ast_file_handle =
-            File::create(Path::new(&in_file_path).with_extension("ast")).unwrap();
+        let ast_file_handle = File::create(Path::new(&in_file_path).with_extension("ast")).unwrap();
 
         // Write ast_file_handle
-        ast_file_handle
-            .write_all(serde_yaml::to_string(&parsed).unwrap().as_bytes())
-            .unwrap();
+        serde_yaml::to_writer(ast_file_handle, &parsed).unwrap();
         let timer_end_flushing_ast = timer_start_flushing_ast.elapsed();
         info!("Flushing of Ast took: {:?}", timer_end_flushing_ast);
     }
